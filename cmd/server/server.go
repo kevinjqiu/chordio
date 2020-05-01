@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/kevinjqiu/chordio/pkg"
+	"github.com/kevinjqiu/chordio"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -21,12 +21,12 @@ func NewServerCommand() *cobra.Command {
 				return errors.New("Chord ring rank (m) must be specified")
 			}
 
-			config := pkg.Config{
-				M:    pkg.Rank(flags.m),
+			config := chordio.Config{
+				M:    chordio.Rank(flags.m),
 				Bind: flags.bind,
 			}
 
-			server, err := pkg.NewServer(config)
+			server, err := chordio.NewServer(config)
 			if err != nil {
 				logrus.Fatal(err)
 			}

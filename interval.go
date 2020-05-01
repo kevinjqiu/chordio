@@ -1,6 +1,8 @@
-package pkg
+package chordio
 
-import "math"
+import (
+	"math"
+)
 
 // An interval between [Start, End)
 type Interval struct {

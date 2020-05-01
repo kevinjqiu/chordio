@@ -1,4 +1,4 @@
-package pkg
+package chordio
 
 import (
 	"github.com/stretchr/testify/assert"

@@ -1,4 +1,4 @@
-package pkg
+package chordio
 
 type Server struct {
 	config Config
