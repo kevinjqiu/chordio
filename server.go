@@ -30,19 +30,26 @@ func (n *Server) JoinRing(_ context.Context, request *pb.JoinRingRequest) (*pb.J
 	panic("implement me")
 }
 
-func (n *Server) initFinger(remote *RemoteNode) {
+func (n *Server) initFinger(remote *RemoteNode) error {
 	local := &n.local
-	succ := remote.FindSuccessor(n.finger.entries[0].start)
+	succ, err := remote.FindSuccessor(n.finger.entries[0].start)
+	if err != nil {
+		return err
+	}
 	local.pred = succ.pred
 
 	for i := 0; i < int(n.m)-1; i++ {
 		if n.finger.entries[i+1].start.In(local.id, n.finger.entries[i].node, n.m) {
 			n.finger.entries[i+1].node = n.finger.entries[i].node
 		} else {
-			newSucc := remote.FindSuccessor(n.finger.entries[i+1].start)
+			newSucc, err := remote.FindSuccessor(n.finger.entries[i+1].start)
+			if err != nil {
+				return err
+			}
 			n.finger.entries[i+1].node = newSucc.id
 		}
 	}
+	return nil
 }
 
 func (n *Server) join(introducerNode Node) error {
