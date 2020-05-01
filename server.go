@@ -8,6 +8,10 @@ type Server struct {
 	finger FingerTable
 }
 
+func (s *Server) join(node Node) {
+
+}
+
 func (s *Server) Serve() error {
 	return nil
 }
@@ -18,8 +22,8 @@ func NewServer(config Config) (*Server, error) {
 		bind: config.Bind,
 
 		local: newNode(config.Bind, config.M),
-		finger: newFingerTable(),
 	}
 
+	s.finger = newFingerTable(s.local, s.m)
 	return &s, nil
 }
