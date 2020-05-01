@@ -1,7 +1,11 @@
 package chordio
 
 type Server struct {
-	config Config
+	m    Rank
+	bind string
+
+	local  Node
+	finger FingerTable
 }
 
 func (s *Server) Serve() error {
@@ -9,7 +13,13 @@ func (s *Server) Serve() error {
 }
 
 func NewServer(config Config) (*Server, error) {
-	s := Server{config: config}
+	s := Server{
+		m:    config.M,
+		bind: config.Bind,
+
+		local: newNode(config.Bind, config.M),
+		finger: newFingerTable(),
+	}
 
 	return &s, nil
 }
