@@ -1,0 +1,85 @@
+syntax = "proto3";
+option go_package = "pb";
+
+//message Node {
+//    uint32 id = 1;
+//    string addr = 2;
+//    uint32 port = 3;
+//    Node prev = 4;
+//    Node next = 5;
+//}
+//
+//message FingerTable {
+//    repeated FingerTableEntry entries = 1;
+//}
+//
+//message FingerTableEntry {
+//    uint32 start = 1;
+//    uint32 end = 2;
+//    Node successor = 3;
+//}
+//
+message GetIDRequest {
+}
+
+message GetIDResponse {
+    uint64 id = 1;
+}
+//
+//message FindClosestFingerRequest {
+//    uint32 keyID = 1;
+//}
+//
+//message FindClosestFingerResponse {
+//    Node node = 1;
+//}
+//
+//message GetFingerTableRequest {
+//}
+//
+//message GetFingerTableResponse {
+//    FingerTable fingertable = 1;
+//}
+//
+//message JoinRingRequest {
+//    Node introducer = 1;
+//}
+//
+//message JoinRingResponse {
+//}
+//
+//message FindPredecessorRequest {
+//    uint32 keyID = 1;
+//}
+//
+//message FindPredecessorResponse {
+//    Node node = 1;
+//}
+//
+//message FindSuccessorRequest {
+//    uint32 keyID = 1;
+//}
+//
+//message FindSuccessorResponse {
+//    Node node = 2;
+//}
+//
+service Chord {
+    rpc GetID (GetIDRequest) returns (GetIDResponse) {
+    }
+
+//    rpc FindClosestFinger (FindClosestFingerRequest) returns (FindClosestFingerResponse) {
+//    }
+//
+//    rpc GetFingerTable (GetFingerTableRequest) returns (GetFingerTableResponse) {
+//    }
+//
+//    rpc JoinRing (JoinRingRequest) returns (JoinRingResponse) {
+//    }
+//
+//    rpc FindPredecessor (FindPredecessorRequest) returns (FindPredecessorResponse) {
+//    }
+//
+//    rpc FindSuccessor (FindSuccessorRequest) returns (FindSuccessorResponse) {
+//    }
+}
