@@ -29,7 +29,11 @@ func (n *Server) GetID(_ context.Context, _ *pb.GetIDRequest) (*pb.GetIDResponse
 }
 
 func (n *Server) JoinRing(_ context.Context, request *pb.JoinRingRequest) (*pb.JoinRingResponse, error) {
-	panic("implement me")
+	introNode := newNode(request.Introducer.Bind, n.m)
+	if err := n.join(introNode); err != nil {
+		return nil, err
+	}
+	return &pb.JoinRingResponse{}, nil
 }
 
 func (n *Server) initFinger(remote *RemoteNode) error {
