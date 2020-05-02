@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/kevinjqiu/chordio/cmd/client"
 	"github.com/kevinjqiu/chordio/cmd/server"
 	"github.com/spf13/cobra"
 	"os"
@@ -15,7 +16,7 @@ func NewRootCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(server.NewServerCommand())
-	//cmd.AddCommand(client.NewClientCommand())
+	cmd.AddCommand(client.NewClientCommand())
 	return cmd
 }
 
