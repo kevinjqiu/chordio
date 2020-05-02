@@ -17,6 +17,25 @@ In a chord system of rank `m`, a node is assigned an ID (using sha1) that's betw
 ## Node structure
 In this implementation of chord (chordio), every node is a GRPC server maintaining a finger table of `m` entries.
 
+### Basic Node operations
+#### Find Successor
+```
+def find_succ(n, id)
+    n' = find_pred(n, id)
+    return n'.succ
+```
+
+#### Find Predecessor
+```
+def find_pred(n, id)
+    n' = n
+    while id not in (n', n'.succ]:
+        n' = n'.closest_preceding_finger(id)
+    return n'
+```
+
+#### Closest Preceding Finger
+
 ### Node join
 When a node `n` is first started, it initiates its finger table like so:
 

@@ -19,7 +19,31 @@ type Server struct {
 }
 
 func (n *Server) FindSuccessor(_ context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
-	panic("implement me")
+	var err error
+	id := ChordID(request.KeyID)
+
+	if !id.In(n.local.id, n.local.succ, n.m) {
+		return // n.local
+	}
+
+	n_, err := n.closestPrecedingFinger(id)
+	if err != nil {
+		return nil, err
+	}
+
+	remoteNode, err := newRemoteNode(n_)
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if !id.In(n_.id, n_.succ, n.m) {  // FIXME: not in (a, b]
+			remoteNode = remoteNode.ClosestPrecedingFinger(id)
+		} else {
+			break
+		}
+	}
+	// return remoteNode
 }
 
 func (n *Server) GetID(_ context.Context, _ *pb.GetIDRequest) (*pb.GetIDResponse, error) {
