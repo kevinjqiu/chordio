@@ -65,7 +65,7 @@ func newRemoteNode(node Node) (*RemoteNode, error) {
 
 	conn, err := grpc.Dial(node.bind, grpc.WithInsecure())
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to initiate grpc client for node: %s", node)
+		return nil, errors.Wrapf(err, "unable to initiate grpc client for node: %v", node)
 	}
 
 	rn.client = pb.NewChordClient(conn)

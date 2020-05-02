@@ -69,7 +69,7 @@ func (n *Server) join(introducerNode Node) error {
 func (n *Server) closestPrecedingFinger(id ChordID) Node {
 	for i := n.m-1; i>=0; i-- {
 		if n.finger.entries[i].node.In(n.local.id, id, n.m) {
-			return n.finger.entries[i].node  // TODO: full fledged node or just id?
+			//return n.finger.entries[i].node  // TODO: full fledged node or just id?
 		}
 	}
 	return n.local
