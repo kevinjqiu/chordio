@@ -51,8 +51,8 @@ func (rn *RemoteNode) FindSuccessor(id ChordID) (*RemoteNode, error) {
 	n := Node{
 		id:   ChordID(resp.Node.Id),
 		bind: resp.Node.Bind,
-		pred: ChordID(resp.Node.Prev.Id),  // TODO: rename to Pred
-		succ: ChordID(resp.Node.Next.Id),  // TODO: rename to Succ
+		pred: ChordID(resp.Node.Pred.Id),
+		succ: ChordID(resp.Node.Succ.Id),
 	}
 
 	return newRemoteNode(n)

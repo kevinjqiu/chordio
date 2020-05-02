@@ -9,7 +9,7 @@ var (
 	errNodeIDConflict = errors.New("conflict node id")
 )
 
-type nodeList []*Node
+type nodeList []Node
 
 func (n nodeList) Len() int {
 	return len(n)
@@ -26,17 +26,17 @@ func (n nodeList) Swap(i, j int) {
 // A neighbourhood is a group of nodes that a local node knows about
 type Neighbourhood struct {
 	nodes nodeList
-	idMap map[ChordID]*Node
+	idMap map[ChordID]interface{}
 }
 
-func (n *Neighbourhood) Add(node *Node) error {
+func (n *Neighbourhood) Add(node Node) error {
 	_, ok := n.idMap[node.id]
 	if ok {
 		return errNodeIDConflict
 	}
 
 	n.nodes = append(n.nodes, node)
-	n.idMap[node.id] = node
+	n.idMap[node.id] = ""
 	sort.Sort(n.nodes)
 	return nil
 }
@@ -70,7 +70,7 @@ func (n *Neighbourhood) Get(id ChordID) (Node, bool) {
 
 func newNeighbourhood(m Rank) *Neighbourhood {
 	return &Neighbourhood{
-		nodes: make([]*Node, 0, int(m)),
-		idMap: make(map[ChordID]*Node),
+		nodes: make([]Node, 0, int(m)),
+		idMap: make(map[ChordID]interface{}),
 	}
 }

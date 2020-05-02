@@ -4,8 +4,8 @@ option go_package = "pb";
 message Node {
     uint64 id = 1;
     string bind = 2;
-    Node prev = 3;
-    Node next = 4;
+    Node pred = 3;
+    Node succ = 4;
 }
 
 //message FingerTable {

@@ -2,6 +2,7 @@ package chordio
 
 import (
 	context "context"
+	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -12,8 +13,9 @@ type Server struct {
 	m    Rank
 	bind string
 
-	local  Node
-	finger FingerTable
+	neighbourhood *Neighbourhood
+	local         Node
+	finger        FingerTable
 }
 
 func (n *Server) FindSuccessor(_ context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
@@ -66,13 +68,18 @@ func (n *Server) join(introducerNode Node) error {
 	return nil
 }
 
-func (n *Server) closestPrecedingFinger(id ChordID) Node {
-	for i := n.m-1; i>=0; i-- {
+func (n *Server) closestPrecedingFinger(id ChordID) (Node, error) {
+	for i := n.m - 1; i >= 0; i-- {
 		if n.finger.entries[i].node.In(n.local.id, id, n.m) {
-			//return n.finger.entries[i].node  // TODO: full fledged node or just id?
+			nodeID := n.finger.entries[i].node
+			n, ok := n.neighbourhood.Get(nodeID)
+			if !ok {
+				return Node{}, fmt.Errorf("node not found: %d", nodeID)
+			}
+			return n, nil
 		}
 	}
-	return n.local
+	return n.local, nil
 }
 
 func (n *Server) Serve() error {
@@ -89,11 +96,16 @@ func (n *Server) Serve() error {
 }
 
 func NewServer(config Config) (*Server, error) {
+	localNode := newNode(config.Bind, config.M)
+	neighbourhood := newNeighbourhood(config.M)
+	neighbourhood.Add(localNode)
+
 	s := Server{
 		m:    config.M,
 		bind: config.Bind,
 
-		local: newNode(config.Bind, config.M),
+		neighbourhood: neighbourhood,
+		local:         localNode,
 	}
 
 	s.finger = newFingerTable(s.local, s.m)
