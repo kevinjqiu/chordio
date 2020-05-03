@@ -18,12 +18,19 @@ type Server struct {
 	finger        FingerTable
 }
 
-func (n *Server) FindSuccessor(_ context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
+func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorRequest) (*pb.FindPredecessorResponse, error) {
 	var err error
-	id := ChordID(request.KeyID)
+	id := ChordID(request.Id)
 
 	if !id.In(n.local.id, n.local.succ, n.m) {
-		return // n.local
+		return &pb.FindPredecessorResponse{
+			Node: &pb.Node{
+				Id:   uint64(n.local.id),
+				Bind: n.local.bind,
+				Pred: nil, // TODO
+				Succ: nil, // TODO
+			},
+		}, nil
 	}
 
 	n_, err := n.closestPrecedingFinger(id)
@@ -37,13 +44,42 @@ func (n *Server) FindSuccessor(_ context.Context, request *pb.FindSuccessorReque
 	}
 
 	for {
-		if !id.In(n_.id, n_.succ, n.m) {  // FIXME: not in (a, b]
-			remoteNode = remoteNode.ClosestPrecedingFinger(id)
+		if !id.In(n_.id, n_.succ, n.m) { // FIXME: not in (a, b]
+			remoteNode, err = remoteNode.ClosestPrecedingFinger(id)
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			break
 		}
 	}
-	// return remoteNode
+	return &pb.FindPredecessorResponse{
+		Node: &pb.Node{
+			Id:   uint64(remoteNode.id),
+			Bind: remoteNode.bind,
+			Pred: nil, // TODO
+			Succ: nil, // TODO
+		},
+	}, nil
+}
+
+func (n *Server) FindSuccessor(_ context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
+	return nil, nil
+}
+
+func (n *Server) ClosestPrecedingFinger(_ context.Context, request *pb.ClosestPrecedingFingerRequest) (*pb.ClosestPrecedingFingerResponse, error) {
+	node, err := n.closestPrecedingFinger(ChordID(request.Id))
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ClosestPrecedingFingerResponse{
+		Node: &pb.Node{
+			Id:   uint64(node.id),
+			Bind: node.bind,
+			Pred: nil,
+			Succ: nil,
+		},
+	}, nil
 }
 
 func (n *Server) GetID(_ context.Context, _ *pb.GetIDRequest) (*pb.GetIDResponse, error) {

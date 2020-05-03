@@ -167,6 +167,84 @@ func (m *GetIDResponse) GetId() uint64 {
 	return 0
 }
 
+type ClosestPrecedingFingerRequest struct {
+	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ClosestPrecedingFingerRequest) Reset()         { *m = ClosestPrecedingFingerRequest{} }
+func (m *ClosestPrecedingFingerRequest) String() string { return proto.CompactTextString(m) }
+func (*ClosestPrecedingFingerRequest) ProtoMessage()    {}
+func (*ClosestPrecedingFingerRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d572f8aeec35237e, []int{3}
+}
+
+func (m *ClosestPrecedingFingerRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ClosestPrecedingFingerRequest.Unmarshal(m, b)
+}
+func (m *ClosestPrecedingFingerRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ClosestPrecedingFingerRequest.Marshal(b, m, deterministic)
+}
+func (m *ClosestPrecedingFingerRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClosestPrecedingFingerRequest.Merge(m, src)
+}
+func (m *ClosestPrecedingFingerRequest) XXX_Size() int {
+	return xxx_messageInfo_ClosestPrecedingFingerRequest.Size(m)
+}
+func (m *ClosestPrecedingFingerRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClosestPrecedingFingerRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClosestPrecedingFingerRequest proto.InternalMessageInfo
+
+func (m *ClosestPrecedingFingerRequest) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+type ClosestPrecedingFingerResponse struct {
+	Node                 *Node    `protobuf:"bytes,1,opt,name=node,proto3" json:"node,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ClosestPrecedingFingerResponse) Reset()         { *m = ClosestPrecedingFingerResponse{} }
+func (m *ClosestPrecedingFingerResponse) String() string { return proto.CompactTextString(m) }
+func (*ClosestPrecedingFingerResponse) ProtoMessage()    {}
+func (*ClosestPrecedingFingerResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d572f8aeec35237e, []int{4}
+}
+
+func (m *ClosestPrecedingFingerResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ClosestPrecedingFingerResponse.Unmarshal(m, b)
+}
+func (m *ClosestPrecedingFingerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ClosestPrecedingFingerResponse.Marshal(b, m, deterministic)
+}
+func (m *ClosestPrecedingFingerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClosestPrecedingFingerResponse.Merge(m, src)
+}
+func (m *ClosestPrecedingFingerResponse) XXX_Size() int {
+	return xxx_messageInfo_ClosestPrecedingFingerResponse.Size(m)
+}
+func (m *ClosestPrecedingFingerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClosestPrecedingFingerResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClosestPrecedingFingerResponse proto.InternalMessageInfo
+
+func (m *ClosestPrecedingFingerResponse) GetNode() *Node {
+	if m != nil {
+		return m.Node
+	}
+	return nil
+}
+
 //
 //message FindClosestFingerRequest {
 //    uint32 keyID = 1;
@@ -194,7 +272,7 @@ func (m *JoinRingRequest) Reset()         { *m = JoinRingRequest{} }
 func (m *JoinRingRequest) String() string { return proto.CompactTextString(m) }
 func (*JoinRingRequest) ProtoMessage()    {}
 func (*JoinRingRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d572f8aeec35237e, []int{3}
+	return fileDescriptor_d572f8aeec35237e, []int{5}
 }
 
 func (m *JoinRingRequest) XXX_Unmarshal(b []byte) error {
@@ -232,7 +310,7 @@ func (m *JoinRingResponse) Reset()         { *m = JoinRingResponse{} }
 func (m *JoinRingResponse) String() string { return proto.CompactTextString(m) }
 func (*JoinRingResponse) ProtoMessage()    {}
 func (*JoinRingResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d572f8aeec35237e, []int{4}
+	return fileDescriptor_d572f8aeec35237e, []int{6}
 }
 
 func (m *JoinRingResponse) XXX_Unmarshal(b []byte) error {
@@ -253,6 +331,84 @@ func (m *JoinRingResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_JoinRingResponse proto.InternalMessageInfo
 
+type FindPredecessorRequest struct {
+	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *FindPredecessorRequest) Reset()         { *m = FindPredecessorRequest{} }
+func (m *FindPredecessorRequest) String() string { return proto.CompactTextString(m) }
+func (*FindPredecessorRequest) ProtoMessage()    {}
+func (*FindPredecessorRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d572f8aeec35237e, []int{7}
+}
+
+func (m *FindPredecessorRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FindPredecessorRequest.Unmarshal(m, b)
+}
+func (m *FindPredecessorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FindPredecessorRequest.Marshal(b, m, deterministic)
+}
+func (m *FindPredecessorRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FindPredecessorRequest.Merge(m, src)
+}
+func (m *FindPredecessorRequest) XXX_Size() int {
+	return xxx_messageInfo_FindPredecessorRequest.Size(m)
+}
+func (m *FindPredecessorRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_FindPredecessorRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FindPredecessorRequest proto.InternalMessageInfo
+
+func (m *FindPredecessorRequest) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+type FindPredecessorResponse struct {
+	Node                 *Node    `protobuf:"bytes,1,opt,name=node,proto3" json:"node,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *FindPredecessorResponse) Reset()         { *m = FindPredecessorResponse{} }
+func (m *FindPredecessorResponse) String() string { return proto.CompactTextString(m) }
+func (*FindPredecessorResponse) ProtoMessage()    {}
+func (*FindPredecessorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d572f8aeec35237e, []int{8}
+}
+
+func (m *FindPredecessorResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FindPredecessorResponse.Unmarshal(m, b)
+}
+func (m *FindPredecessorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FindPredecessorResponse.Marshal(b, m, deterministic)
+}
+func (m *FindPredecessorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FindPredecessorResponse.Merge(m, src)
+}
+func (m *FindPredecessorResponse) XXX_Size() int {
+	return xxx_messageInfo_FindPredecessorResponse.Size(m)
+}
+func (m *FindPredecessorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_FindPredecessorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FindPredecessorResponse proto.InternalMessageInfo
+
+func (m *FindPredecessorResponse) GetNode() *Node {
+	if m != nil {
+		return m.Node
+	}
+	return nil
+}
+
 type FindSuccessorRequest struct {
 	KeyID                uint64   `protobuf:"varint,1,opt,name=keyID,proto3" json:"keyID,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -264,7 +420,7 @@ func (m *FindSuccessorRequest) Reset()         { *m = FindSuccessorRequest{} }
 func (m *FindSuccessorRequest) String() string { return proto.CompactTextString(m) }
 func (*FindSuccessorRequest) ProtoMessage()    {}
 func (*FindSuccessorRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d572f8aeec35237e, []int{5}
+	return fileDescriptor_d572f8aeec35237e, []int{9}
 }
 
 func (m *FindSuccessorRequest) XXX_Unmarshal(b []byte) error {
@@ -303,7 +459,7 @@ func (m *FindSuccessorResponse) Reset()         { *m = FindSuccessorResponse{} }
 func (m *FindSuccessorResponse) String() string { return proto.CompactTextString(m) }
 func (*FindSuccessorResponse) ProtoMessage()    {}
 func (*FindSuccessorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d572f8aeec35237e, []int{6}
+	return fileDescriptor_d572f8aeec35237e, []int{10}
 }
 
 func (m *FindSuccessorResponse) XXX_Unmarshal(b []byte) error {
@@ -335,8 +491,12 @@ func init() {
 	proto.RegisterType((*Node)(nil), "Node")
 	proto.RegisterType((*GetIDRequest)(nil), "GetIDRequest")
 	proto.RegisterType((*GetIDResponse)(nil), "GetIDResponse")
+	proto.RegisterType((*ClosestPrecedingFingerRequest)(nil), "ClosestPrecedingFingerRequest")
+	proto.RegisterType((*ClosestPrecedingFingerResponse)(nil), "ClosestPrecedingFingerResponse")
 	proto.RegisterType((*JoinRingRequest)(nil), "JoinRingRequest")
 	proto.RegisterType((*JoinRingResponse)(nil), "JoinRingResponse")
+	proto.RegisterType((*FindPredecessorRequest)(nil), "FindPredecessorRequest")
+	proto.RegisterType((*FindPredecessorResponse)(nil), "FindPredecessorResponse")
 	proto.RegisterType((*FindSuccessorRequest)(nil), "FindSuccessorRequest")
 	proto.RegisterType((*FindSuccessorResponse)(nil), "FindSuccessorResponse")
 }
@@ -346,26 +506,31 @@ func init() {
 }
 
 var fileDescriptor_d572f8aeec35237e = []byte{
-	// 298 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x6c, 0x91, 0x31, 0x4f, 0xfb, 0x30,
-	0x10, 0xc5, 0xdb, 0xfc, 0x9d, 0xbf, 0xe0, 0x20, 0xa1, 0x9c, 0x5a, 0x14, 0xb2, 0x80, 0x2c, 0x21,
-	0x75, 0x40, 0x96, 0x08, 0x0b, 0x23, 0x82, 0x0a, 0x54, 0x06, 0x86, 0xb0, 0x31, 0xa1, 0xc4, 0x16,
-	0x58, 0x48, 0x76, 0xb0, 0x93, 0x81, 0x2f, 0xc4, 0xe7, 0xc4, 0x71, 0x53, 0xda, 0xb4, 0xdd, 0xec,
-	0x77, 0xbe, 0x7b, 0xef, 0x77, 0x86, 0xa8, 0xfc, 0xd0, 0x86, 0x4b, 0xcd, 0x2a, 0xa3, 0x6b, 0x4d,
-	0xdf, 0x80, 0x3c, 0x6b, 0x2e, 0x30, 0x86, 0x40, 0xf2, 0x64, 0x78, 0x3e, 0x9c, 0x92, 0xdc, 0x9d,
-	0x10, 0x81, 0x14, 0x52, 0xf1, 0x24, 0x70, 0xca, 0x7e, 0xee, 0xcf, 0x78, 0x0a, 0xa4, 0x32, 0x82,
-	0x27, 0xff, 0x9c, 0x76, 0x90, 0x85, 0xac, 0x6d, 0xcc, 0xbd, 0xd4, 0x96, 0x6c, 0x53, 0x96, 0x09,
-	0xe9, 0x95, 0x5a, 0x89, 0xc6, 0x70, 0xf8, 0x28, 0xea, 0xf9, 0x2c, 0x17, 0x5f, 0x8d, 0xb0, 0x35,
-	0x3d, 0x83, 0xa8, 0xbb, 0xdb, 0x4a, 0x2b, 0xbb, 0x65, 0x4d, 0x6f, 0xe0, 0xe8, 0x49, 0x4b, 0x95,
-	0x4b, 0xf5, 0xde, 0xf5, 0xe0, 0x05, 0x80, 0x54, 0xb5, 0xd1, 0xbc, 0x29, 0x85, 0xf1, 0x4f, 0xff,
-	0x4c, 0xd6, 0x0a, 0x14, 0x61, 0xb4, 0xea, 0x5c, 0x4c, 0xa7, 0x97, 0x30, 0x7e, 0x70, 0xe1, 0x5f,
-	0x5c, 0x14, 0x61, 0xad, 0x36, 0xcb, 0x91, 0x63, 0x08, 0x3f, 0xc5, 0xf7, 0x7c, 0xd6, 0x19, 0x2f,
-	0x2e, 0x34, 0x83, 0xc9, 0xc6, 0xeb, 0x2e, 0xa4, 0x03, 0x54, 0xce, 0xce, 0xef, 0x63, 0x05, 0xd8,
-	0x4a, 0xd9, 0xcf, 0x10, 0xc2, 0xfb, 0x76, 0xa9, 0x38, 0x85, 0xd0, 0xa3, 0x61, 0xc4, 0xd6, 0x91,
-	0xd3, 0x98, 0xf5, 0x88, 0xe9, 0x00, 0xaf, 0x60, 0x6f, 0x99, 0x14, 0x47, 0x6c, 0x03, 0x37, 0x3d,
-	0x66, 0x5b, 0x18, 0x03, 0xbc, 0x85, 0xa8, 0x17, 0x0d, 0x27, 0x6c, 0x17, 0x58, 0x7a, 0xc2, 0x76,
-	0x12, 0xd0, 0xc1, 0x1d, 0x79, 0x0d, 0xaa, 0xa2, 0xf8, 0xef, 0x3f, 0xfe, 0xfa, 0x37, 0x00, 0x00,
-	0xff, 0xff, 0x5a, 0x54, 0x5e, 0x68, 0x09, 0x02, 0x00, 0x00,
+	// 384 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x84, 0x53, 0xcf, 0x4b, 0xeb, 0x40,
+	0x10, 0x6e, 0xf3, 0x92, 0xc7, 0x7b, 0xf3, 0x5e, 0xda, 0xba, 0xf4, 0x47, 0x0c, 0xd8, 0xca, 0x82,
+	0xd0, 0x83, 0xac, 0x58, 0x3d, 0x08, 0x5e, 0xc4, 0x96, 0x4a, 0x3d, 0x88, 0xc4, 0x9b, 0x5e, 0xa4,
+	0xd9, 0x45, 0x83, 0x92, 0x8d, 0xbb, 0xe9, 0xc1, 0xbf, 0xd1, 0x7f, 0xca, 0x49, 0x9a, 0xd2, 0xe6,
+	0x47, 0xeb, 0x21, 0xb0, 0x3b, 0x33, 0xdf, 0x7c, 0xdf, 0x7e, 0x33, 0x01, 0xdb, 0x7f, 0x95, 0x8a,
+	0x07, 0x92, 0x45, 0x4a, 0xc6, 0x92, 0x3e, 0x83, 0x79, 0x27, 0xb9, 0x20, 0x0d, 0x30, 0x02, 0xee,
+	0xd4, 0x0f, 0xeb, 0x43, 0xd3, 0xc3, 0x13, 0x21, 0x60, 0xce, 0x83, 0x90, 0x3b, 0x06, 0x46, 0xfe,
+	0x7a, 0xe9, 0x99, 0xec, 0x83, 0x19, 0x29, 0xc1, 0x9d, 0x5f, 0x18, 0xfb, 0x37, 0xb2, 0x58, 0x02,
+	0xf4, 0xd2, 0x50, 0x92, 0xd2, 0x0b, 0xdf, 0x77, 0xcc, 0x5c, 0x2a, 0x09, 0xd1, 0x06, 0xfc, 0xbf,
+	0x11, 0xf1, 0x6c, 0xe2, 0x89, 0x8f, 0x85, 0xd0, 0x31, 0x1d, 0x80, 0x9d, 0xdd, 0x75, 0x24, 0x43,
+	0x5d, 0xa2, 0xa6, 0x27, 0x70, 0x30, 0x7e, 0x97, 0x1a, 0x6b, 0xef, 0x95, 0xf0, 0x05, 0x0f, 0xc2,
+	0x97, 0x29, 0x7e, 0x42, 0x65, 0x1d, 0x4a, 0x80, 0x4b, 0xe8, 0x6f, 0x03, 0x64, 0x14, 0x28, 0x2f,
+	0x44, 0x45, 0x29, 0x66, 0x2d, 0x2f, 0x09, 0xd1, 0x0b, 0x68, 0xde, 0xca, 0x20, 0xf4, 0x10, 0xb0,
+	0xea, 0x7f, 0x04, 0x10, 0x84, 0xb1, 0x92, 0x7c, 0xe1, 0x0b, 0x95, 0xc7, 0x6c, 0x24, 0x28, 0x81,
+	0xd6, 0x1a, 0xb9, 0x24, 0xa2, 0x43, 0xe8, 0x22, 0x35, 0x47, 0x1d, 0x1c, 0x95, 0x68, 0x2d, 0xb7,
+	0x8a, 0x3e, 0x87, 0x5e, 0xa9, 0xf2, 0x67, 0xb5, 0xc7, 0xd0, 0x4e, 0x50, 0x0f, 0x68, 0x6c, 0xae,
+	0x7b, 0x1b, 0xac, 0x37, 0xf1, 0x39, 0x9b, 0x64, 0x04, 0xcb, 0x0b, 0x1d, 0x41, 0xa7, 0x50, 0x5d,
+	0x60, 0x30, 0x4a, 0x0c, 0xa3, 0x2f, 0x03, 0xac, 0x71, 0xb2, 0x22, 0x64, 0x08, 0x56, 0x3a, 0x28,
+	0x62, 0xb3, 0xcd, 0x01, 0xba, 0x0d, 0x96, 0x9b, 0x1f, 0xad, 0x91, 0x53, 0xf8, 0xb3, 0x72, 0x82,
+	0xb4, 0x58, 0xc1, 0x4e, 0x77, 0x8f, 0x95, 0x6c, 0xaa, 0x91, 0x29, 0x34, 0x0b, 0xcf, 0x27, 0x3d,
+	0x56, 0x6d, 0x9d, 0xeb, 0xb0, 0x2d, 0x4e, 0x61, 0x9f, 0x2b, 0xb0, 0x73, 0x4f, 0x24, 0x1d, 0x56,
+	0x65, 0x90, 0xdb, 0x65, 0x95, 0x4e, 0x60, 0x87, 0x27, 0xe8, 0x56, 0x6f, 0x0f, 0xe9, 0xb3, 0x9d,
+	0x7b, 0xe8, 0x0e, 0xd8, 0xee, 0xb5, 0xa3, 0xb5, 0x6b, 0xf3, 0xd1, 0x88, 0xe6, 0xf3, 0xdf, 0xe9,
+	0xbf, 0x76, 0xf6, 0x1d, 0x00, 0x00, 0xff, 0xff, 0xb7, 0x0a, 0xd4, 0x65, 0x7c, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -388,11 +553,9 @@ type ChordClient interface {
 	//    }
 	//
 	JoinRing(ctx context.Context, in *JoinRingRequest, opts ...grpc.CallOption) (*JoinRingResponse, error)
-	//
-	//    rpc FindPredecessor (FindPredecessorRequest) returns (FindPredecessorResponse) {
-	//    }
-	//
+	FindPredecessor(ctx context.Context, in *FindPredecessorRequest, opts ...grpc.CallOption) (*FindPredecessorResponse, error)
 	FindSuccessor(ctx context.Context, in *FindSuccessorRequest, opts ...grpc.CallOption) (*FindSuccessorResponse, error)
+	ClosestPrecedingFinger(ctx context.Context, in *ClosestPrecedingFingerRequest, opts ...grpc.CallOption) (*ClosestPrecedingFingerResponse, error)
 }
 
 type chordClient struct {
@@ -421,9 +584,27 @@ func (c *chordClient) JoinRing(ctx context.Context, in *JoinRingRequest, opts ..
 	return out, nil
 }
 
+func (c *chordClient) FindPredecessor(ctx context.Context, in *FindPredecessorRequest, opts ...grpc.CallOption) (*FindPredecessorResponse, error) {
+	out := new(FindPredecessorResponse)
+	err := c.cc.Invoke(ctx, "/Chord/FindPredecessor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *chordClient) FindSuccessor(ctx context.Context, in *FindSuccessorRequest, opts ...grpc.CallOption) (*FindSuccessorResponse, error) {
 	out := new(FindSuccessorResponse)
 	err := c.cc.Invoke(ctx, "/Chord/FindSuccessor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chordClient) ClosestPrecedingFinger(ctx context.Context, in *ClosestPrecedingFingerRequest, opts ...grpc.CallOption) (*ClosestPrecedingFingerResponse, error) {
+	out := new(ClosestPrecedingFingerResponse)
+	err := c.cc.Invoke(ctx, "/Chord/ClosestPrecedingFinger", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -440,11 +621,9 @@ type ChordServer interface {
 	//    }
 	//
 	JoinRing(context.Context, *JoinRingRequest) (*JoinRingResponse, error)
-	//
-	//    rpc FindPredecessor (FindPredecessorRequest) returns (FindPredecessorResponse) {
-	//    }
-	//
+	FindPredecessor(context.Context, *FindPredecessorRequest) (*FindPredecessorResponse, error)
 	FindSuccessor(context.Context, *FindSuccessorRequest) (*FindSuccessorResponse, error)
+	ClosestPrecedingFinger(context.Context, *ClosestPrecedingFingerRequest) (*ClosestPrecedingFingerResponse, error)
 }
 
 // UnimplementedChordServer can be embedded to have forward compatible implementations.
@@ -457,8 +636,14 @@ func (*UnimplementedChordServer) GetID(ctx context.Context, req *GetIDRequest) (
 func (*UnimplementedChordServer) JoinRing(ctx context.Context, req *JoinRingRequest) (*JoinRingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinRing not implemented")
 }
+func (*UnimplementedChordServer) FindPredecessor(ctx context.Context, req *FindPredecessorRequest) (*FindPredecessorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindPredecessor not implemented")
+}
 func (*UnimplementedChordServer) FindSuccessor(ctx context.Context, req *FindSuccessorRequest) (*FindSuccessorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindSuccessor not implemented")
+}
+func (*UnimplementedChordServer) ClosestPrecedingFinger(ctx context.Context, req *ClosestPrecedingFingerRequest) (*ClosestPrecedingFingerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClosestPrecedingFinger not implemented")
 }
 
 func RegisterChordServer(s *grpc.Server, srv ChordServer) {
@@ -501,6 +686,24 @@ func _Chord_JoinRing_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Chord_FindPredecessor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindPredecessorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).FindPredecessor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Chord/FindPredecessor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).FindPredecessor(ctx, req.(*FindPredecessorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Chord_FindSuccessor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FindSuccessorRequest)
 	if err := dec(in); err != nil {
@@ -519,6 +722,24 @@ func _Chord_FindSuccessor_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Chord_ClosestPrecedingFinger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClosestPrecedingFingerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).ClosestPrecedingFinger(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Chord/ClosestPrecedingFinger",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).ClosestPrecedingFinger(ctx, req.(*ClosestPrecedingFingerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Chord_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Chord",
 	HandlerType: (*ChordServer)(nil),
@@ -532,8 +753,16 @@ var _Chord_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Chord_JoinRing_Handler,
 		},
 		{
+			MethodName: "FindPredecessor",
+			Handler:    _Chord_FindPredecessor_Handler,
+		},
+		{
 			MethodName: "FindSuccessor",
 			Handler:    _Chord_FindSuccessor_Handler,
+		},
+		{
+			MethodName: "ClosestPrecedingFinger",
+			Handler:    _Chord_ClosestPrecedingFinger_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

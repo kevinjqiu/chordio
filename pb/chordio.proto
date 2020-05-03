@@ -24,6 +24,14 @@ message GetIDRequest {
 message GetIDResponse {
     uint64 id = 1;
 }
+
+message ClosestPrecedingFingerRequest {
+    uint64 id = 1;
+}
+
+message ClosestPrecedingFingerResponse {
+    Node node = 1;
+}
 //
 //message FindClosestFingerRequest {
 //    uint32 keyID = 1;
@@ -47,13 +55,13 @@ message JoinRingRequest {
 message JoinRingResponse {
 }
 
-//message FindPredecessorRequest {
-//    uint32 keyID = 1;
-//}
-//
-//message FindPredecessorResponse {
-//    Node node = 1;
-//}
+message FindPredecessorRequest {
+    uint64 id = 1;
+}
+
+message FindPredecessorResponse {
+    Node node = 1;
+}
 
 message FindSuccessorRequest {
     uint64 keyID = 1;
@@ -75,10 +83,13 @@ service Chord {
 //
     rpc JoinRing (JoinRingRequest) returns (JoinRingResponse) {
     }
-//
-//    rpc FindPredecessor (FindPredecessorRequest) returns (FindPredecessorResponse) {
-//    }
-//
+
+    rpc FindPredecessor (FindPredecessorRequest) returns (FindPredecessorResponse) {
+    }
+
     rpc FindSuccessor (FindSuccessorRequest) returns (FindSuccessorResponse) {
+    }
+
+    rpc ClosestPrecedingFinger (ClosestPrecedingFingerRequest) returns (ClosestPrecedingFingerResponse) {
     }
 }
