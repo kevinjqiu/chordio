@@ -2,9 +2,9 @@ package chordio
 
 import (
 	"fmt"
+	"github.com/olekukonko/tablewriter"
 	"io"
 	"os"
-	"github.com/olekukonko/tablewriter"
 	"strconv"
 )
 
