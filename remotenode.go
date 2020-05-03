@@ -9,7 +9,17 @@ import (
 
 type RemoteNode struct {
 	Node
+	predNode *pb.Node
+	succNode *pb.Node
 	client pb.ChordClient
+}
+
+func (rn *RemoteNode) getPredNode() (INode, error) {
+	return newINodeFromPB(rn.predNode)
+}
+
+func (rn *RemoteNode) getSuccNode() (INode, error) {
+	return newINodeFromPB(rn.succNode)
 }
 
 func (rn *RemoteNode) FindPredecessor(id ChordID) (*RemoteNode, error) {
@@ -43,7 +53,7 @@ func (rn *RemoteNode) ClosestPrecedingFinger(id ChordID) (*RemoteNode, error) {
 		Id: uint64(id),
 	}
 
-	resp, err := rn.client.FindSuccessor(context.Background(), &req)
+	resp, err := rn.client.ClosestPrecedingFinger(context.Background(), &req)
 	if err != nil {
 		return nil, err
 	}

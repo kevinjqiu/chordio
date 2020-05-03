@@ -19,12 +19,7 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 
 	if !id.In(n.id, n.succ, n.m) {
 		return &pb.FindPredecessorResponse{
-			Node: &pb.Node{
-				Id:   uint64(n.id),
-				Bind: n.bind,
-				Pred: nil, // TODO
-				Succ: nil, // TODO
-			},
+			Node: newPBNodeFromLocalNode(*n.LocalNode),
 		}, nil
 	}
 
@@ -33,13 +28,13 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 		return nil, err
 	}
 
-	remoteNode, err := newRemoteNode(n_)
+	remoteNode, err := newRemoteNode(n_.Node)
 	if err != nil {
 		return nil, err
 	}
 
 	for {
-		if !id.In(n_.id, n_.succ, n.m) { // FIXME: not in (a, b]
+		if !id.In(n_.GetID(), n_.GetSucc(), n.m) { // FIXME: not in (a, b]
 			remoteNode, err = remoteNode.ClosestPrecedingFinger(id)
 			if err != nil {
 				return nil, err
@@ -48,6 +43,9 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 			break
 		}
 	}
+
+	// TODO: newPBNodeFromRemoteNode?
+	// how does the remote node know its pred/succ?
 	return &pb.FindPredecessorResponse{
 		Node: &pb.Node{
 			Id:   uint64(remoteNode.id),
@@ -68,12 +66,7 @@ func (n *Server) ClosestPrecedingFinger(_ context.Context, request *pb.ClosestPr
 		return nil, err
 	}
 	return &pb.ClosestPrecedingFingerResponse{
-		Node: &pb.Node{
-			Id:   uint64(node.id),
-			Bind: node.bind,
-			Pred: nil,
-			Succ: nil,
-		},
+		Node: newPBNodeFromLocalNode(node),
 	}, nil
 }
 

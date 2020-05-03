@@ -6,12 +6,24 @@ import (
 	"fmt"
 )
 
+type INode interface {
+	GetID() ChordID
+	GetBind() string
+	GetPred() ChordID
+	GetSucc() ChordID
+}
+
 type Node struct {
 	id   ChordID
 	bind string
 	pred ChordID
 	succ ChordID
 }
+
+func (n Node) GetID() ChordID   { return n.id }
+func (n Node) GetBind() string  { return n.bind }
+func (n Node) GetPred() ChordID { return n.pred }
+func (n Node) GetSucc() ChordID { return n.succ }
 
 func newNode(bind string, m Rank) Node {
 	n := Node{
@@ -37,18 +49,39 @@ type LocalNode struct {
 	neighbourhood *Neighbourhood
 }
 
-func (n *LocalNode) closestPrecedingFinger(id ChordID) (Node, error) {
+func (n *LocalNode) getPredNode() (INode, error) {
+	node, ok := n.neighbourhood.Get(n.pred)
+	if !ok {
+		return nil, fmt.Errorf("predecessor node %v not found in neighbourhood", n.pred)
+	}
+	return node, nil
+}
+
+func (n *LocalNode) getSuccNode() (INode, error) {
+	node, ok := n.neighbourhood.Get(n.succ)
+	if !ok {
+		return nil, fmt.Errorf("successor node %v not found in neighbourhood", n.pred)
+	}
+	return node, nil
+}
+
+func (n *LocalNode) closestPrecedingFinger(id ChordID) (LocalNode, error) {
 	for i := n.m - 1; i >= 0; i-- {
 		if n.ft.entries[i].node.In(n.id, id, n.m) {
 			nodeID := n.ft.entries[i].node
-			n, ok := n.neighbourhood.Get(nodeID)
+			resultNode, ok := n.neighbourhood.Get(nodeID)
 			if !ok {
-				return Node{}, fmt.Errorf("node not found: %d", nodeID)
+				return LocalNode{}, fmt.Errorf("node not found: %d", nodeID)
 			}
-			return n, nil
+			return LocalNode{
+				Node:          resultNode,
+				m:             n.m,
+				ft:            n.ft,
+				neighbourhood: n.neighbourhood,
+			}, nil
 		}
 	}
-	return n.Node, nil
+	return *n, nil
 }
 
 func (n *LocalNode) initFinger(remote *RemoteNode) error {
@@ -100,7 +133,7 @@ func newLocalNode(bind string, m Rank) *LocalNode {
 		ft:   nil,
 		m:    m,
 	}
-	ft := newFingerTable(localNode.Node, m)  // TODO: make a Node interface
+	ft := newFingerTable(localNode, m)
 	localNode.ft = &ft
 	neighbourhood := newNeighbourhood(m)
 	neighbourhood.Add(localNode.Node)
