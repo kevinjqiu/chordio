@@ -1,6 +1,6 @@
 package chordio
 
 type Config struct {
-	M        Rank
-	Bind     string
+	M         Rank
+	Bind      string
 }

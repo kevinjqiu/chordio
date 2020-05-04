@@ -8,7 +8,7 @@ gen:
 	protoc -I pb pb/chordio.proto --go_out=plugins=grpc:pb
 
 run:
-	docker-compose up -d
+	docker-compose up -d --service-ports
 
 shell:
 	docker-compose run control bash
@@ -24,3 +24,12 @@ test:
 
 run-local:
 	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server -b 127.0.0.1:$(port) -l debug -m 5
+
+vendor:
+	# needed temporarily before https://github.com/open-telemetry/opentelemetry-go/issues/682 is fixed
+	mkdir vendor/
+	git clone git@github.com:kevinjqiu/opentelemetry-go.git vendor/
+	cd vendor/opentelemetry-go && git checkout fix-grpc-method-name-regexp
+
+jaeger:
+	docker-compose run --service-ports jaeger

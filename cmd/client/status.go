@@ -6,6 +6,8 @@ import (
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/metadata"
+	"time"
 )
 
 func newStatusCommand() *cobra.Command {
@@ -14,7 +16,13 @@ func newStatusCommand() *cobra.Command {
 		Aliases: []string{"st"},
 		Short:   "status of the chord server",
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := chordClient.GetNodeInfo(context.Background(), &pb.GetNodeInfoRequest{})
+			md := metadata.Pairs(
+				"timestamp", time.Now().Format(time.StampNano),
+				"operation", "status",
+			)
+			ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+			resp, err := chordClient.GetNodeInfo(ctx, &pb.GetNodeInfoRequest{})
 			if err != nil {
 				logrus.Fatal(err)
 			}

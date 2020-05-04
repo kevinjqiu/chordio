@@ -1,7 +1,9 @@
 package server
 
 import (
+	"fmt"
 	"github.com/kevinjqiu/chordio"
+	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -21,12 +23,16 @@ func NewServerCommand() *cobra.Command {
 			if flags.m == 0 {
 				return errors.New("Chord ring rank (m) must be specified")
 			}
-
 			chordio.SetLogLevel(flags.loglevel)
 
+			// TODO: calculate the bind address here instead of inside Server
+			// this way, we can initiate the tracer with its chordID
+			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/bind=%s", flags.bind), telemetry.Config{})
+			defer flushFunc()
+
 			config := chordio.Config{
-				M:        chordio.Rank(flags.m),
-				Bind:     flags.bind,
+				M:    chordio.Rank(flags.m),
+				Bind: flags.bind,
 			}
 
 			server, err := chordio.NewServer(config)

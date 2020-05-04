@@ -1,6 +1,7 @@
 package chordio
 
 import (
+	"context"
 	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/sirupsen/logrus"
@@ -126,12 +127,12 @@ func (n *LocalNode) closestPrecedingFinger(id ChordID) (LocalNode, error) {
 	return *n, nil
 }
 
-func (n *LocalNode) initFinger(remote *RemoteNode) error {
+func (n *LocalNode) initFinger(ctx context.Context, remote *RemoteNode) error {
 	logger := logrus.WithField("method", "LocalNode.initFinger")
 	logger.Infof("using remote node %s", remote)
 	local := n
 	logger.Debugf("Try to find success for %d on %s", n.ft.entries[0].start, remote)
-	succ, err := remote.FindSuccessor(n.ft.entries[0].start)
+	succ, err := remote.FindSuccessor(ctx, n.ft.entries[0].start)
 	if err != nil {
 		return err
 	}
@@ -155,7 +156,7 @@ func (n *LocalNode) initFinger(remote *RemoteNode) error {
 			logger.Debugf("interval=[%d, %d)", local.id, n.ft.entries[i].node)
 			n.ft.entries[i+1].node = n.ft.entries[i].node
 		} else {
-			newSucc, err := remote.FindSuccessor(n.ft.entries[i+1].start)
+			newSucc, err := remote.FindSuccessor(ctx, n.ft.entries[i+1].start)
 			logger.Debugf("new successor for %d is %v", n.ft.entries[i+1].start, newSucc)
 			if err != nil {
 				return err
@@ -166,11 +167,11 @@ func (n *LocalNode) initFinger(remote *RemoteNode) error {
 	return nil
 }
 
-func (n *LocalNode) join(introducerNode *RemoteNode) error {
+func (n *LocalNode) join(ctx context.Context, introducerNode *RemoteNode) error {
 	logger := logrus.WithField("method", "LocalNode.join")
 	logger.Debugf("introducerNode: %s", introducerNode)
 
-	if err := n.initFinger(introducerNode); err != nil {
+	if err := n.initFinger(ctx, introducerNode); err != nil {
 		return err
 	}
 	n.ft.Print(nil)
@@ -180,7 +181,7 @@ func (n *LocalNode) join(introducerNode *RemoteNode) error {
 }
 
 func newLocalNode(bind string, m Rank) (*LocalNode, error) {
-	id := assignID([]byte(bind), m)
+	id := AssignID([]byte(bind), m)
 	localNode := &LocalNode{
 		id:   id,
 		bind: bind,

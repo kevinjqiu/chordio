@@ -6,6 +6,8 @@ import (
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
 )
 
@@ -51,46 +53,46 @@ func (rn *RemoteNode) GetSuccNode() (*NodeRef, error) {
 	return &NodeRef{ChordID(rn.succNode.Id), rn.succNode.Bind}, nil
 }
 
-func (rn *RemoteNode) FindPredecessor(id ChordID) (*RemoteNode, error) {
+func (rn *RemoteNode) FindPredecessor(ctx context.Context, id ChordID) (*RemoteNode, error) {
 	logrus.Debug("[RemoteNode] FindPredecessor: ", id)
 	req := pb.FindPredecessorRequest{
 		Id: uint64(id),
 	}
 
-	resp, err := rn.client.FindPredecessor(context.Background(), &req)
+	resp, err := rn.client.FindPredecessor(ctx, &req)
 	if err != nil {
 		return nil, err
 	}
 
-	return newRemoteNode(resp.Node.Bind)
+	return newRemoteNode(ctx, resp.Node.Bind)
 }
 
-func (rn *RemoteNode) FindSuccessor(id ChordID) (*RemoteNode, error) {
+func (rn *RemoteNode) FindSuccessor(ctx context.Context, id ChordID) (*RemoteNode, error) {
 	logrus.Debug("[RemoteNode] FindSuccessor: ", id)
 	req := pb.FindSuccessorRequest{
 		Id: uint64(id),
 	}
 
-	resp, err := rn.client.FindSuccessor(context.Background(), &req)
+	resp, err := rn.client.FindSuccessor(ctx, &req)
 	if err != nil {
 		return nil, err
 	}
 
-	return newRemoteNode(resp.Node.Bind)
+	return newRemoteNode(ctx, resp.Node.Bind)
 }
 
-func (rn *RemoteNode) ClosestPrecedingFinger(id ChordID) (*RemoteNode, error) {
+func (rn *RemoteNode) ClosestPrecedingFinger(ctx context.Context, id ChordID) (*RemoteNode, error) {
 	logrus.Debug("[RemoteNode] ClosestPrecedingFinger: ", id)
 	req := pb.ClosestPrecedingFingerRequest{
 		Id: uint64(id),
 	}
 
-	resp, err := rn.client.ClosestPrecedingFinger(context.Background(), &req)
+	resp, err := rn.client.ClosestPrecedingFinger(ctx, &req)
 	if err != nil {
 		return nil, err
 	}
 
-	return newRemoteNode(resp.Node.Bind)
+	return newRemoteNode(ctx, resp.Node.Bind)
 }
 
 func (rn *RemoteNode) AsProtobufNode() *pb.Node {
@@ -120,14 +122,18 @@ func (rn *RemoteNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
-func newRemoteNode(bind string) (*RemoteNode, error) {
-	conn, err := grpc.Dial(bind, grpc.WithInsecure())
+func newRemoteNode(ctx context.Context, bind string) (*RemoteNode, error) {
+	conn, err := grpc.Dial(bind,
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetryServiceName))),
+		grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(global.Tracer(telemetryServiceName))),
+	)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to initiate grpc client for node: %v", bind)
 	}
 
 	client := pb.NewChordClient(conn)
-	resp, err := client.GetNodeInfo(context.Background(), &pb.GetNodeInfoRequest{})
+	resp, err := client.GetNodeInfo(ctx, &pb.GetNodeInfoRequest{})
 	if err != nil {
 		return nil, err
 	}

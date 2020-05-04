@@ -6,9 +6,15 @@ import (
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
 	"net"
 	"strings"
+)
+
+var (
+	telemetryServiceName = ""
 )
 
 type Server struct {
@@ -24,7 +30,7 @@ func (n *Server) GetNodeInfo(_ context.Context, _ *pb.GetNodeInfoRequest) (*pb.G
 	}, nil
 }
 
-func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorRequest) (*pb.FindPredecessorResponse, error) {
+func (n *Server) FindPredecessor(ctx context.Context, request *pb.FindPredecessorRequest) (*pb.FindPredecessorResponse, error) {
 	logger := logrus.WithField("method", "server.FindPredecessor")
 	logger.Debug("id=", request.Id)
 	var err error
@@ -43,7 +49,7 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 	}
 
 	logger.Debugf("the closest preceding node is %v", n_)
-	remoteNode, err := newRemoteNode(n_.GetBind())
+	remoteNode, err := newRemoteNode(ctx, n_.GetBind())
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +57,7 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 	for {
 		if !id.In(n_.GetID(), n_.succ, n.m) { // FIXME: not in (a, b]
 			logger.Debugf("id is not in %v's range", n_)
-			remoteNode, err = remoteNode.ClosestPrecedingFinger(id)
+			remoteNode, err = remoteNode.ClosestPrecedingFinger(ctx, id)
 			if err != nil {
 				return nil, err
 			}
@@ -93,14 +99,14 @@ func (n *Server) ClosestPrecedingFinger(_ context.Context, request *pb.ClosestPr
 	}, nil
 }
 
-func (n *Server) JoinRing(_ context.Context, request *pb.JoinRingRequest) (*pb.JoinRingResponse, error) {
+func (n *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb.JoinRingResponse, error) {
 	logger := logrus.WithField("method", "Server.JoinRing")
 	logger.Debugf("introducer=%v", request.Introducer)
-	introNode, err := newRemoteNode(request.Introducer.Bind)
+	introNode, err := newRemoteNode(ctx, request.Introducer.Bind)
 	if err != nil {
 		return nil, err
 	}
-	if err := n.join(introNode); err != nil {
+	if err := n.join(ctx, introNode); err != nil {
 		return nil, err
 	}
 	return &pb.JoinRingResponse{}, nil
@@ -144,7 +150,11 @@ func NewServer(config Config) (*Server, error) {
 		return nil, errors.Wrap(err, "unable to initiate local node")
 	}
 
-	grpcServer := grpc.NewServer()
+	telemetryServiceName = fmt.Sprintf("chordio/id=%d", localNode.id)
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(grpctrace.UnaryServerInterceptor(global.Tracer(telemetryServiceName))),
+		grpc.StreamInterceptor(grpctrace.StreamServerInterceptor(global.Tracer(telemetryServiceName))),
+	)
 
 	s := Server{
 		LocalNode:  localNode,

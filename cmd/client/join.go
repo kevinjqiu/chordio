@@ -7,6 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/metadata"
+	"time"
 )
 
 type joinFlags struct {
@@ -28,7 +30,14 @@ func newJoinCommand() *cobra.Command {
 					Bind: flags.introducerURL,
 				},
 			}
-			resp, err := chordClient.JoinRing(context.Background(), &joinReq)
+
+			md := metadata.Pairs(
+				"timestamp", time.Now().Format(time.StampNano),
+				"operation", "join",
+			)
+			ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+			resp, err := chordClient.JoinRing(ctx, &joinReq)
 			if err != nil {
 				logrus.Fatal(err)
 			}
