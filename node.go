@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 )
 
-type INode interface {
+type Node interface {
 	GetID() ChordID
 	GetBind() string
 	GetPredNode() (*NodeRef, error)

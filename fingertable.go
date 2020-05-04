@@ -35,7 +35,7 @@ func (ft FingerTable) Print(w io.Writer) {
 	writer.Render()
 }
 
-func newFingerTable(initNode INode, m Rank) FingerTable {
+func newFingerTable(initNode Node, m Rank) FingerTable {
 	ft := FingerTable{m: m}
 	ft.entries = make([]FingerTableEntry, 0, m)
 
