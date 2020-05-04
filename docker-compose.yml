@@ -1,0 +1,39 @@
+version: "3.8"
+services:
+  n1:
+    image: ubuntu:20.04
+    volumes:
+      - "./dist/chordio_linux_amd64/:/opt/chordio/"
+    command:
+      - /opt/chordio/chordio
+      - server
+      - -b
+      - "0.0.0.0:1234"
+      - -m
+      - "5"
+    networks:
+      - chordio
+  n2:
+    image: ubuntu:20.04
+    volumes:
+      - "./dist/chordio_linux_amd64/:/opt/chordio/"
+    command:
+      - /opt/chordio/chordio
+      - server
+      - -b
+      - "0.0.0.0:2345"
+      - -m
+      - "5"
+    networks:
+      - chordio
+  control:
+    image: ubuntu:20.04
+    volumes:
+      - "./dist/chordio_linux_amd64/:/opt/chordio/"
+    command:
+      - sleep
+      - 1d
+    networks:
+      - chordio
+networks:
+  chordio:
