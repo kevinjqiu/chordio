@@ -10,3 +10,6 @@ gen:
 run:
 	docker-compose up -d
 	docker-compose exec control bash
+
+test:
+	go test -v ./...
