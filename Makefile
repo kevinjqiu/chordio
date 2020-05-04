@@ -9,10 +9,15 @@ gen:
 
 run:
 	docker-compose up -d
-	docker-compose run control bash
 
 shell:
 	docker-compose run control bash
+
+logs:
+	docker-compose logs -f $(n)
+
+join:
+	docker-compose run -e CHORDIO_URL=n1:1234 control chordio client join -i n2:2345
 
 test:
 	go test -v -cover ./...

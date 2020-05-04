@@ -126,9 +126,10 @@ func (n *LocalNode) closestPrecedingFinger(id ChordID) (LocalNode, error) {
 }
 
 func (n *LocalNode) initFinger(remote *RemoteNode) error {
-	logrus.Debug("[LocalNode] initFinger: id=", remote)
-	logrus.Info("LocalNode.initFinger: using remote node ", remote)
+	logger := logrus.WithField("method", "LocalNode.initFinger")
+	logger.Infof("using remote node %s", remote)
 	local := n
+	logger.Debugf("Try to find success for %d on %s", n.ft.entries[0].start, remote)
 	succ, err := remote.FindSuccessor(n.ft.entries[0].start)
 	if err != nil {
 		return err
@@ -138,7 +139,9 @@ func (n *LocalNode) initFinger(remote *RemoteNode) error {
 	if err != nil {
 		return err
 	}
+	logger.Debugf("Successor node for %d is %s", n.ft.entries[0].start, succNode)
 	local.SetPredNode(succNode)
+	logger.Debug("Local node's predecessor set")
 
 	for i := 0; i < int(n.m)-1; i++ {
 		if n.ft.entries[i+1].start.In(local.id, n.ft.entries[i].node, n.m) {
@@ -155,9 +158,13 @@ func (n *LocalNode) initFinger(remote *RemoteNode) error {
 }
 
 func (n *LocalNode) join(introducerNode *RemoteNode) error {
+	logger := logrus.WithField("method", "LocalNode.join")
+	logger.Debug("introducerNode: %s", introducerNode)
+
 	if err := n.initFinger(introducerNode); err != nil {
 		return err
 	}
+	n.ft.Print(nil)
 
 	// updateOthers()
 	return nil
