@@ -21,3 +21,6 @@ join:
 
 test:
 	go test -v -cover ./...
+
+run-local:
+	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server -b 127.0.0.1:$(port) -l debug -m 5

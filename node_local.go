@@ -102,7 +102,8 @@ func (n *LocalNode) GetSuccNode() (*NodeRef, error) {
 }
 
 func (n *LocalNode) closestPrecedingFinger(id ChordID) (LocalNode, error) {
-	logrus.Debug("[LocalNode] closestPrecedingFinger: id=", id)
+	logger := logrus.WithField("method", "LocalNode.closestPrecedingFinger")
+	logger.Debugf("id=%d", id)
 	for i := n.m - 1; i >= 0; i-- {
 		if n.ft.entries[i].node.In(n.id, id, n.m) {
 			nodeID := n.ft.entries[i].node
@@ -135,19 +136,27 @@ func (n *LocalNode) initFinger(remote *RemoteNode) error {
 		return err
 	}
 
-	succNode, err := succ.GetSuccNode()
+	logger.Debugf("Successor node for %d is %s", n.ft.entries[0].start, succ)
+	n.ft.entries[0].node = succ.id
+	predNode, err := succ.GetPredNode()
 	if err != nil {
 		return err
 	}
-	logger.Debugf("Successor node for %d is %s", n.ft.entries[0].start, succNode)
-	local.SetPredNode(succNode)
-	logger.Debug("Local node's predecessor set")
+	local.SetPredNode(predNode)
+	logger.Debugf("Local node's predecessor set to %s", predNode)
 
+	logger.Debug("recalc finger table")
 	for i := 0; i < int(n.m)-1; i++ {
+		logger.Debugf("i=%d", i)
+		logger.Debugf("finger[i+1].start=%d", n.ft.entries[i+1].start)
+		logger.Debugf("interval=[%d, %d)", local.id, n.ft.entries[i].node)
+
 		if n.ft.entries[i+1].start.In(local.id, n.ft.entries[i].node, n.m) {
+			logger.Debugf("interval=[%d, %d)", local.id, n.ft.entries[i].node)
 			n.ft.entries[i+1].node = n.ft.entries[i].node
 		} else {
 			newSucc, err := remote.FindSuccessor(n.ft.entries[i+1].start)
+			logger.Debugf("new successor for %d is %v", n.ft.entries[i+1].start, newSucc)
 			if err != nil {
 				return err
 			}
