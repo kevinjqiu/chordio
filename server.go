@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
+	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
 	"net"
 	"strings"
@@ -121,6 +124,10 @@ func (n *Server) Serve() error {
 func NewServer(config Config) (*Server, error) {
 	var err error
 
+	if err := telemetry.Init(config.Telemetry); err != nil {
+		return nil, errors.Wrap(err, "cannot initialize telemetry subsystem")
+	}
+
 	parts := strings.Split(config.Bind, ":")
 	if len(parts) != 2 {
 		return nil, errInvalidBindFormat
@@ -144,7 +151,11 @@ func NewServer(config Config) (*Server, error) {
 		return nil, errors.Wrap(err, "unable to initiate local node")
 	}
 
-	grpcServer := grpc.NewServer()
+	serviceName := fmt.Sprintf("chordio/id=%d", localNode.id)
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(grpctrace.UnaryServerInterceptor(global.Tracer(serviceName))),
+		grpc.StreamInterceptor(grpctrace.StreamServerInterceptor(global.Tracer(serviceName))),
+	)
 
 	s := Server{
 		LocalNode:  localNode,

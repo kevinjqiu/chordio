@@ -9,6 +9,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/cobra v1.0.0
-	github.com/stretchr/testify v1.2.2
-	google.golang.org/grpc v1.27.0
+	github.com/stretchr/testify v1.4.0
+	go.opentelemetry.io/otel v0.4.3
+	google.golang.org/grpc v1.27.1
 )
