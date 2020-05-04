@@ -9,18 +9,27 @@ import (
 )
 
 type RemoteNode struct {
-	Node
+	id ChordID
+	bind string
 	predNode *pb.Node
 	succNode *pb.Node
 	client pb.ChordClient
 }
 
-func (rn *RemoteNode) getPredNode() (INode, error) {
-	return newINodeFromPB(rn.predNode)
+func (rn *RemoteNode) GetID() ChordID {
+	return rn.id
 }
 
-func (rn *RemoteNode) getSuccNode() (INode, error) {
-	return newINodeFromPB(rn.succNode)
+func (rn *RemoteNode) GetBind() string {
+	return rn.bind
+}
+
+func (rn *RemoteNode) GetPredNode() (*NodeRef, error) {
+	return &NodeRef{ChordID(rn.predNode.Id), rn.predNode.Bind}, nil
+}
+
+func (rn *RemoteNode) GetSuccNode() (*NodeRef, error) {
+	return &NodeRef{ChordID(rn.succNode.Id), rn.succNode.Bind}, nil
 }
 
 func (rn *RemoteNode) FindPredecessor(id ChordID) (*RemoteNode, error) {
@@ -63,16 +72,24 @@ func (rn *RemoteNode) ClosestPrecedingFinger(id ChordID) (*RemoteNode, error) {
 	return newRemoteNodeFromPB(resp.Node)
 }
 
-func newRemoteNode(node Node) (*RemoteNode, error) {
+func newRemoteNode(id ChordID, bind string) (*RemoteNode, error) {
 	rn := &RemoteNode{
-		Node: node,
+		id: id,
+		bind: bind,
 	}
 
-	conn, err := grpc.Dial(node.bind, grpc.WithInsecure())
+	conn, err := grpc.Dial(rn.bind, grpc.WithInsecure())
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to initiate grpc client for node: %v", node)
+		return nil, errors.Wrapf(err, "unable to initiate grpc client for node: %v", rn)
 	}
 
 	rn.client = pb.NewChordClient(conn)
+	resp, err :=rn.client.GetNodeInfo(context.Background(), &pb.GetNodeInfoRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	rn.predNode = resp.Node.GetPred()
+	rn.succNode = resp.Node.GetSucc()
 	return rn, nil
 }

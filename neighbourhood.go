@@ -9,7 +9,7 @@ var (
 	errNodeIDConflict = errors.New("conflict node id")
 )
 
-type nodeList []Node
+type nodeList []*NodeRef
 
 func (n nodeList) Len() int {
 	return len(n)
@@ -29,7 +29,7 @@ type Neighbourhood struct {
 	idMap map[ChordID]interface{}
 }
 
-func (n *Neighbourhood) Add(node Node) error {
+func (n *Neighbourhood) Add(node *NodeRef) error {
 	_, ok := n.idMap[node.id]
 	if ok {
 		return errNodeIDConflict
@@ -41,36 +41,38 @@ func (n *Neighbourhood) Add(node Node) error {
 	return nil
 }
 
-func (n *Neighbourhood) Get(id ChordID) (Node, bool) {
+func (n *Neighbourhood) Get(id ChordID) (node NodeRef, predID ChordID, succID ChordID, ok bool) {
 	idx := sort.Search(len(n.nodes), func(i int) bool {
 		return n.nodes[i].id >= id
 	})
 	if idx == -1 {
-		return Node{}, false
+		return
 	}
 	if idx >= len(n.nodes) || n.nodes[idx].id != id {
-		return Node{}, false
+		return
 	}
-	node := Node{
+
+	ok = true
+	node = NodeRef{
 		id: n.nodes[idx].id,
 		bind: n.nodes[idx].bind,
 	}
 	if idx == 0 {
-		node.pred = n.nodes[len(n.nodes)-1].id
+		predID = n.nodes[len(n.nodes)-1].id
 	} else {
-		node.pred = n.nodes[idx-1].id
+		predID = n.nodes[idx-1].id
 	}
 	if idx == len(n.nodes) - 1 {
-		node.succ = n.nodes[0].id
+		succID = n.nodes[0].id
 	} else {
-		node.succ = n.nodes[idx+1].id
+		succID = n.nodes[idx+1].id
 	}
-	return node, true
+	return
 }
 
 func newNeighbourhood(m Rank) *Neighbourhood {
 	return &Neighbourhood{
-		nodes: make([]Node, 0, int(m)),
+		nodes: make([]*NodeRef, 0, int(m)),
 		idMap: make(map[ChordID]interface{}),
 	}
 }
