@@ -14,11 +14,14 @@ func newStatusCommand() *cobra.Command {
 		Aliases: []string{"st"},
 		Short:   "status of the chord server",
 		Run: func(cmd *cobra.Command, args []string) {
-			resp, err := chordClient.GetID(context.Background(), &pb.GetIDRequest{})
+			resp, err := chordClient.GetNodeInfo(context.Background(), &pb.GetNodeInfoRequest{})
 			if err != nil {
 				logrus.Fatal(err)
 			}
-			fmt.Println("NodeID:", resp.Id)
+			fmt.Println("NodeID:", resp.Node.GetId())
+			fmt.Println("Addr:", resp.Node.GetBind())
+			fmt.Println("Pred:", resp.Node.GetPred())
+			fmt.Println("Succ:", resp.Node.GetSucc())
 		},
 	}
 	return cmd

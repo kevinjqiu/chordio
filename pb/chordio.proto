@@ -71,9 +71,18 @@ message FindSuccessorResponse {
     Node node = 2;
 }
 
+message GetNodeInfoRequest {
+}
+
+message GetNodeInfoResponse {
+    Node node = 1;
+}
+
 service Chord {
     rpc GetID (GetIDRequest) returns (GetIDResponse) {
     }
+
+    rpc GetNodeInfo (GetNodeInfoRequest) returns (GetNodeInfoResponse) {}
 
 //    rpc FindClosestFinger (FindClosestFingerRequest) returns (FindClosestFingerResponse) {
 //    }

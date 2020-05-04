@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -36,6 +37,7 @@ func (rn *RemoteNode) FindPredecessor(id ChordID) (*RemoteNode, error) {
 }
 
 func (rn *RemoteNode) FindSuccessor(id ChordID) (*RemoteNode, error) {
+	logrus.Info("RemoteNode.FindSuccessor: ", id)
 	req := pb.FindSuccessorRequest{
 		KeyID: uint64(id),  // TODO: rename to ID
 	}

@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"fmt"
+	"github.com/sirupsen/logrus"
 )
 
 type INode interface {
@@ -66,10 +67,12 @@ func (n *LocalNode) getSuccNode() (INode, error) {
 }
 
 func (n *LocalNode) closestPrecedingFinger(id ChordID) (LocalNode, error) {
+	logrus.Info("LocalNode.closestPrecedingFinger: id=", id)
 	for i := n.m - 1; i >= 0; i-- {
 		if n.ft.entries[i].node.In(n.id, id, n.m) {
 			nodeID := n.ft.entries[i].node
 			resultNode, ok := n.neighbourhood.Get(nodeID)
+			logrus.Info("found result node: ", resultNode)
 			if !ok {
 				return LocalNode{}, fmt.Errorf("node not found: %d", nodeID)
 			}
@@ -85,6 +88,7 @@ func (n *LocalNode) closestPrecedingFinger(id ChordID) (LocalNode, error) {
 }
 
 func (n *LocalNode) initFinger(remote *RemoteNode) error {
+	logrus.Info("LocalNode.initFinger: using remote node ", remote)
 	local := n
 	succ, err := remote.FindSuccessor(n.ft.entries[0].start)
 	if err != nil {
@@ -106,13 +110,8 @@ func (n *LocalNode) initFinger(remote *RemoteNode) error {
 	return nil
 }
 
-func (n *LocalNode) join(introducerNode Node) error {
-	rn, err := newRemoteNode(introducerNode)
-	if err != nil {
-		return err
-	}
-
-	if err := n.initFinger(rn); err != nil {
+func (n *LocalNode) join(introducerNode *RemoteNode) error {
+	if err := n.initFinger(introducerNode); err != nil {
 		return err
 	}
 
