@@ -3,9 +3,9 @@ services:
   n1:
     image: ubuntu:20.04
     volumes:
-      - "./dist/chordio_linux_amd64/:/opt/chordio/"
+      - "./dist/chordio_linux_amd64/chordio:/usr/local/bin/chordio"
     command:
-      - /opt/chordio/chordio
+      - /usr/local/bin/chordio
       - server
       - -b
       - ":1234"
@@ -18,9 +18,9 @@ services:
   n2:
     image: ubuntu:20.04
     volumes:
-      - "./dist/chordio_linux_amd64/:/opt/chordio/"
+      - "./dist/chordio_linux_amd64/chordio:/usr/local/bin/chordio"
     command:
-      - /opt/chordio/chordio
+      - /usr/local/bin/chordio
       - server
       - -b
       - ":2345"
@@ -33,7 +33,7 @@ services:
   control:
     image: ubuntu:20.04
     volumes:
-      - "./dist/chordio_linux_amd64/:/opt/chordio/"
+      - "./dist/chordio_linux_amd64/chordio:/usr/local/bin/chordio"
     command:
       - bash
     networks:

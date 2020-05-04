@@ -62,7 +62,7 @@ func (rn *RemoteNode) FindPredecessor(id ChordID) (*RemoteNode, error) {
 		return nil, err
 	}
 
-	return newRemoteNodeFromPB(resp.Node)
+	return newRemoteNode(resp.Node.Bind)
 }
 
 func (rn *RemoteNode) FindSuccessor(id ChordID) (*RemoteNode, error) {
@@ -76,7 +76,7 @@ func (rn *RemoteNode) FindSuccessor(id ChordID) (*RemoteNode, error) {
 		return nil, err
 	}
 
-	return newRemoteNodeFromPB(resp.Node)
+	return newRemoteNode(resp.Node.Bind)
 }
 
 func (rn *RemoteNode) ClosestPrecedingFinger(id ChordID) (*RemoteNode, error) {
@@ -90,7 +90,34 @@ func (rn *RemoteNode) ClosestPrecedingFinger(id ChordID) (*RemoteNode, error) {
 		return nil, err
 	}
 
-	return newRemoteNodeFromPB(resp.Node)
+	return newRemoteNode(resp.Node.Bind)
+}
+
+func (rn *RemoteNode) AsProtobufNode() *pb.Node {
+	pbn := &pb.Node{
+		Id:   uint64(rn.GetID()),
+		Bind: rn.GetBind(),
+		Pred: nil,
+		Succ: nil,
+	}
+
+	pred, err := rn.GetPredNode()
+	if err != nil {
+		pbn.Pred = &pb.Node{
+			Id:   uint64(pred.id),
+			Bind: pred.bind,
+		}
+	}
+
+	succ, err := rn.GetSuccNode()
+	if err != nil {
+		pbn.Succ = &pb.Node{
+			Id:   uint64(succ.id),
+			Bind: succ.bind,
+		}
+	}
+
+	return pbn
 }
 
 func newRemoteNode(bind string) (*RemoteNode, error) {

@@ -3,6 +3,7 @@ package chordio
 import (
 	"crypto/sha1"
 	"encoding/binary"
+	"github.com/kevinjqiu/chordio/pb"
 )
 
 type Node interface {
@@ -10,6 +11,7 @@ type Node interface {
 	GetBind() string
 	GetPredNode() (*NodeRef, error)
 	GetSuccNode() (*NodeRef, error)
+	AsProtobufNode() *pb.Node
 }
 
 type NodeRef struct {

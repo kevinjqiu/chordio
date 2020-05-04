@@ -2,6 +2,7 @@ package chordio
 
 import (
 	"fmt"
+	"github.com/kevinjqiu/chordio/pb"
 	"github.com/sirupsen/logrus"
 )
 
@@ -50,6 +51,32 @@ func (n *LocalNode) GetID() ChordID {
 
 func (n *LocalNode) GetBind() string {
 	return n.bind
+}
+
+func (n *LocalNode) AsProtobufNode() *pb.Node {
+	pbn := &pb.Node{
+		Id:   uint64(n.GetID()),
+		Bind: n.GetBind(),
+		Pred: nil,
+		Succ: nil,
+	}
+
+	predNode, err := n.GetPredNode()
+	if err == nil {
+		pbn.Pred = &pb.Node{
+			Id:   uint64(predNode.id),
+			Bind: predNode.bind,
+		}
+	}
+
+	succNode, err := n.GetSuccNode()
+	if err == nil {
+		pbn.Succ = &pb.Node{
+			Id:   uint64(succNode.id),
+			Bind: succNode.bind,
+		}
+	}
+	return pbn
 }
 
 func (n *LocalNode) GetPredNode() (*NodeRef, error) {
