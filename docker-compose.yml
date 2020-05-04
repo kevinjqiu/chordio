@@ -11,6 +11,8 @@ services:
       - ":1234"
       - -m
       - "5"
+      - -l
+      - debug
     networks:
       - chordio
   n2:
@@ -24,6 +26,8 @@ services:
       - ":2345"
       - -m
       - "5"
+      - -l
+      - debug
     networks:
       - chordio
   control:
@@ -31,8 +35,7 @@ services:
     volumes:
       - "./dist/chordio_linux_amd64/:/opt/chordio/"
     command:
-      - sleep
-      - 1d
+      - bash
     networks:
       - chordio
 networks:

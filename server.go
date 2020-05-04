@@ -76,7 +76,7 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 
 func (n *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
 	resp, err := n.FindPredecessor(ctx, &pb.FindPredecessorRequest{
-		Id: request.KeyID,
+		Id: request.Id,
 	})
 	if err != nil {
 		return nil, err

@@ -64,7 +64,7 @@ message FindPredecessorResponse {
 }
 
 message FindSuccessorRequest {
-    uint64 keyID = 1;
+    uint64 id = 1;
 }
 
 message FindSuccessorResponse {

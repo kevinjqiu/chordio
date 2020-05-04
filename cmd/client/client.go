@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/kevinjqiu/chordio"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -8,7 +9,10 @@ import (
 	"os"
 )
 
-var chordClient pb.ChordClient
+var (
+	chordClient pb.ChordClient
+	loglevel string
+)
 
 func NewClientCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -24,9 +28,11 @@ func NewClientCommand() *cobra.Command {
 				logrus.Fatal(err)
 			}
 			chordClient = pb.NewChordClient(conn)
+			chordio.SetLogLevel(loglevel)
 		},
 	}
 
+	cmd.PersistentFlags().StringVarP(&loglevel, "loglevel", "l", "info", "log level")
 	cmd.AddCommand(newStatusCommand())
 	cmd.AddCommand(newJoinCommand())
 	return cmd

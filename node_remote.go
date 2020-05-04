@@ -48,7 +48,7 @@ func (rn *RemoteNode) FindPredecessor(id ChordID) (*RemoteNode, error) {
 func (rn *RemoteNode) FindSuccessor(id ChordID) (*RemoteNode, error) {
 	logrus.Info("RemoteNode.FindSuccessor: ", id)
 	req := pb.FindSuccessorRequest{
-		KeyID: uint64(id), // TODO: rename to ID
+		Id: uint64(id),
 	}
 
 	resp, err := rn.client.FindSuccessor(context.Background(), &req)

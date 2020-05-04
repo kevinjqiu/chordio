@@ -36,6 +36,7 @@ func (n *Neighbourhood) Add(node *NodeRef) error {
 	return nil
 }
 
+// Get the NodeRef for the node given the ID, as well as the ID for the preceding and succeeding nodes
 func (n *Neighbourhood) Get(id ChordID) (node NodeRef, predID ChordID, succID ChordID, ok bool) {
 	idx := sort.Search(len(n.nodes), func(i int) bool {
 		return n.nodes[i].id >= id

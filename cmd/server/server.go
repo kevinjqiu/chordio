@@ -8,8 +8,9 @@ import (
 )
 
 type runFlags struct {
-	m uint32
-	bind string
+	m        uint32
+	bind     string
+	loglevel string
 }
 
 func NewServerCommand() *cobra.Command {
@@ -21,9 +22,11 @@ func NewServerCommand() *cobra.Command {
 				return errors.New("Chord ring rank (m) must be specified")
 			}
 
+			chordio.SetLogLevel(flags.loglevel)
+
 			config := chordio.Config{
-				M:    chordio.Rank(flags.m),
-				Bind: flags.bind,
+				M:        chordio.Rank(flags.m),
+				Bind:     flags.bind,
 			}
 
 			server, err := chordio.NewServer(config)
@@ -39,6 +42,6 @@ func NewServerCommand() *cobra.Command {
 
 	cmd.Flags().Uint32VarP(&flags.m, "rank", "m", 0, "the rank of the ring")
 	cmd.Flags().StringVarP(&flags.bind, "bind", "b", "localhost:2000", "bind address")
+	cmd.Flags().StringVarP(&flags.loglevel, "loglevel", "l", "info", "log level")
 	return cmd
 }
-

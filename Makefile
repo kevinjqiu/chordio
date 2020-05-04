@@ -9,7 +9,10 @@ gen:
 
 run:
 	docker-compose up -d
-	docker-compose exec control bash
+	docker-compose run control bash
+
+shell:
+	docker-compose run control bash
 
 test:
 	go test -v ./...
