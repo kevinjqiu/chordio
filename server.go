@@ -17,7 +17,8 @@ type Server struct {
 }
 
 func (n *Server) GetNodeInfo(_ context.Context, _ *pb.GetNodeInfoRequest) (*pb.GetNodeInfoResponse, error) {
-	logrus.Debug("[Server] GetNodeInfo")
+	logger := logrus.WithField("method", "Server.GetNodeInfo")
+	logger.Debug("[Server] GetNodeInfo")
 	return &pb.GetNodeInfoResponse{
 		Node: n.LocalNode.AsProtobufNode(),
 	}, nil
@@ -67,7 +68,8 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 }
 
 func (n *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
-	logrus.Debug("[Server] FindSuccessor: id=", request.Id)
+	logger := logrus.WithField("method", "Server.FindSuccessor")
+	logger.Debugf("id=%d", request.Id)
 	resp, err := n.FindPredecessor(ctx, &pb.FindPredecessorRequest{
 		Id: request.Id,
 	})
@@ -80,7 +82,8 @@ func (n *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorReq
 }
 
 func (n *Server) ClosestPrecedingFinger(_ context.Context, request *pb.ClosestPrecedingFingerRequest) (*pb.ClosestPrecedingFingerResponse, error) {
-	logrus.Debug("[Server] ClosestPrecedingFinger: id=", request.Id)
+	logger := logrus.WithField("method", "Server.ClosestPrecedingFinger")
+	logger.Debugf("id=%d", request.Id)
 	node, err := n.closestPrecedingFinger(ChordID(request.Id))
 	if err != nil {
 		return nil, err
@@ -91,7 +94,8 @@ func (n *Server) ClosestPrecedingFinger(_ context.Context, request *pb.ClosestPr
 }
 
 func (n *Server) JoinRing(_ context.Context, request *pb.JoinRingRequest) (*pb.JoinRingResponse, error) {
-	logrus.Debug("[Server] JoinRing: introducer=", request.Introducer)
+	logger := logrus.WithField("method", "Server.JoinRing")
+	logger.Debugf("introducer=%v", request.Introducer)
 	introNode, err := newRemoteNode(request.Introducer.Bind)
 	if err != nil {
 		return nil, err
