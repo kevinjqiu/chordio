@@ -3,7 +3,6 @@ package client
 import (
 	"github.com/kevinjqiu/chordio"
 	"github.com/kevinjqiu/chordio/pb"
-	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel/api/global"
@@ -28,12 +27,6 @@ func NewClientCommand() *cobra.Command {
 			if chordioURL == "" {
 				logrus.Fatal("CHORDIO_URL environment variable must be set")
 			}
-
-			flushFunc, err := telemetry.Init(telemetry.Config{})
-			if err != nil {
-				logrus.Fatal(err)
-			}
-			defer flushFunc()
 
 			conn, err := grpc.Dial(
 				chordioURL,

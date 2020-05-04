@@ -19,7 +19,7 @@ type NodeRef struct {
 	bind string
 }
 
-func assignID(key []byte, m Rank) ChordID {
+func AssignID(key []byte, m Rank) ChordID {
 	hasher := sha1.New()
 	hasher.Write(key)
 	b := hasher.Sum(nil)

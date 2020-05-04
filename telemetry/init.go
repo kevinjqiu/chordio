@@ -10,7 +10,7 @@ import (
 
 type FlushFunc func()
 
-func Init(config Config) (FlushFunc, error) {
+func Init(serviceName string, config Config) (FlushFunc, error) {
 	//exporter, err := stdout.NewExporter(stdout.Options{PrettyPrint: true})
 	//if err != nil {
 	//	return err
@@ -26,12 +26,12 @@ func Init(config Config) (FlushFunc, error) {
 	tp, flush, err := jaeger.NewExportPipeline(
 		jaeger.WithCollectorEndpoint("http://localhost:14268/api/traces"),
 		jaeger.WithProcess(jaeger.Process{
-			ServiceName: "chordio",
+			ServiceName: serviceName,
 			Tags: []core.KeyValue{
 				key.String("exporter", "jaeger"),
 			},
 		}),
-		jaeger.RegisterAsGlobal(),
+		//jaeger.RegisterAsGlobal(),
 		jaeger.WithSDK(&sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
 	)
 
