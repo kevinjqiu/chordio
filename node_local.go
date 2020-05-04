@@ -10,9 +10,21 @@ type LocalNode struct {
 	bind          string
 	pred          ChordID
 	succ          ChordID
+	predNode      *NodeRef
+	succNode      *NodeRef
 	m             Rank
 	ft            *FingerTable
 	neighbourhood *Neighbourhood
+}
+
+func (n *LocalNode) SetPredNode(pn *NodeRef) {
+	n.predNode = pn
+	n.pred = pn.id
+}
+
+func (n *LocalNode) SetSuccNode(sn *NodeRef) {
+	n.succNode = sn
+	n.succ = sn.id
 }
 
 func (n *LocalNode) GetID() ChordID {
@@ -24,6 +36,9 @@ func (n *LocalNode) GetBind() string {
 }
 
 func (n *LocalNode) GetPredNode() (*NodeRef, error) {
+	if n.predNode != nil && n.predNode.id != n.pred {
+		return n.predNode, nil
+	}
 	node, _, _, ok := n.neighbourhood.Get(n.pred)
 	if !ok {
 		return nil, fmt.Errorf("predecessor node %v not found in neighbourhood", n.pred)
@@ -32,6 +47,9 @@ func (n *LocalNode) GetPredNode() (*NodeRef, error) {
 }
 
 func (n *LocalNode) GetSuccNode() (*NodeRef, error) {
+	if n.succNode != nil && n.succNode.id != n.succ {
+		return n.succNode, nil
+	}
 	node, _, _, ok := n.neighbourhood.Get(n.succ)
 	if !ok {
 		return nil, fmt.Errorf("successor node %v not found in neighbourhood", n.pred)
@@ -70,7 +88,12 @@ func (n *LocalNode) initFinger(remote *RemoteNode) error {
 	if err != nil {
 		return err
 	}
-	local.pred = succ.pred
+
+	succNode, err := succ.GetSuccNode()
+	if err != nil {
+		return err
+	}
+	local.SetPredNode(succNode)
 
 	for i := 0; i < int(n.m)-1; i++ {
 		if n.ft.entries[i+1].start.In(local.id, n.ft.entries[i].node, n.m) {
@@ -99,6 +122,7 @@ func newLocalNode(bind string, m Rank) *LocalNode {
 	id := assignID([]byte(bind), m)
 	localNode := &LocalNode{
 		id:   id,
+		bind: bind,
 		pred: id,
 		succ: id,
 		ft:   nil,

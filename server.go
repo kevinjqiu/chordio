@@ -34,13 +34,13 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 		return nil, err
 	}
 
-	remoteNode, err := newRemoteNode(n_.Node)
+	remoteNode, err := newRemoteNode(n_.GetBind())
 	if err != nil {
 		return nil, err
 	}
 
 	for {
-		if !id.In(n_.GetID(), n_.GetSucc(), n.m) { // FIXME: not in (a, b]
+		if !id.In(n_.GetID(), n_.succ, n.m) { // FIXME: not in (a, b]
 			remoteNode, err = remoteNode.ClosestPrecedingFinger(id)
 			if err != nil {
 				return nil, err
@@ -93,15 +93,9 @@ func (n *Server) ClosestPrecedingFinger(_ context.Context, request *pb.ClosestPr
 	}, nil
 }
 
-func (n *Server) GetID(_ context.Context, _ *pb.GetIDRequest) (*pb.GetIDResponse, error) {
-	return &pb.GetIDResponse{
-		Id: uint64(n.id),
-	}, nil
-}
-
 func (n *Server) JoinRing(_ context.Context, request *pb.JoinRingRequest) (*pb.JoinRingResponse, error) {
 	logrus.Info("JoinRing: introducer=", request.Introducer)
-	introNode, err := newRemoteNode(newNode(request.Introducer.Bind, n.m))
+	introNode, err := newRemoteNode(request.Introducer.Bind)
 	if err != nil {
 		return nil, err
 	}

@@ -8,8 +8,6 @@ import (
 type INode interface {
 	GetID() ChordID
 	GetBind() string
-	//GetPred() ChordID
-	//GetSucc() ChordID
 	GetPredNode() (*NodeRef, error)
 	GetSuccNode() (*NodeRef, error)
 }
