@@ -17,6 +17,23 @@ type LocalNode struct {
 	neighbourhood *Neighbourhood
 }
 
+func (n *LocalNode) String() string {
+	var pred, succ string
+
+	if n.predNode == nil {
+		pred = "<nil>"
+	} else {
+		pred = fmt.Sprintf("%d@%s", n.predNode.id, n.predNode.bind)
+	}
+
+	if n.succNode == nil {
+		succ = "<nil>"
+	} else {
+		succ = fmt.Sprintf("%d@%s", n.succNode.id, n.succNode.bind)
+	}
+	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
+}
+
 func (n *LocalNode) SetPredNode(pn *NodeRef) {
 	n.predNode = pn
 	n.pred = pn.id
@@ -58,7 +75,7 @@ func (n *LocalNode) GetSuccNode() (*NodeRef, error) {
 }
 
 func (n *LocalNode) closestPrecedingFinger(id ChordID) (LocalNode, error) {
-	logrus.Info("LocalNode.closestPrecedingFinger: id=", id)
+	logrus.Debug("[LocalNode] closestPrecedingFinger: id=", id)
 	for i := n.m - 1; i >= 0; i-- {
 		if n.ft.entries[i].node.In(n.id, id, n.m) {
 			nodeID := n.ft.entries[i].node
@@ -82,6 +99,7 @@ func (n *LocalNode) closestPrecedingFinger(id ChordID) (LocalNode, error) {
 }
 
 func (n *LocalNode) initFinger(remote *RemoteNode) error {
+	logrus.Debug("[LocalNode] initFinger: id=", remote)
 	logrus.Info("LocalNode.initFinger: using remote node ", remote)
 	local := n
 	succ, err := remote.FindSuccessor(n.ft.entries[0].start)
@@ -118,7 +136,7 @@ func (n *LocalNode) join(introducerNode *RemoteNode) error {
 	return nil
 }
 
-func newLocalNode(bind string, m Rank) *LocalNode {
+func newLocalNode(bind string, m Rank) (*LocalNode, error) {
 	id := assignID([]byte(bind), m)
 	localNode := &LocalNode{
 		id:   id,
@@ -131,7 +149,9 @@ func newLocalNode(bind string, m Rank) *LocalNode {
 	ft := newFingerTable(localNode, m)
 	localNode.ft = &ft
 	neighbourhood := newNeighbourhood(m)
-	neighbourhood.Add(&NodeRef{id: id, bind: bind}) // TODO: handle conflict
+	if err := neighbourhood.Add(&NodeRef{id: id, bind: bind}); err != nil {
+		return nil, err
+	}
 	localNode.neighbourhood = neighbourhood
-	return localNode
+	return localNode, nil
 }

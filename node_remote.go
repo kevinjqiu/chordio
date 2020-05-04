@@ -2,6 +2,7 @@ package chordio
 
 import (
 	"context"
+	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -14,6 +15,24 @@ type RemoteNode struct {
 	predNode *pb.Node
 	succNode *pb.Node
 	client   pb.ChordClient
+}
+
+func (rn *RemoteNode) String() string {
+	var pred, succ string
+
+	if rn.predNode == nil {
+		pred = "<nil>"
+	} else {
+		pred = fmt.Sprintf("%d@%s", rn.predNode.GetId(), rn.predNode.GetBind())
+	}
+
+	if rn.succNode == nil {
+		succ = "<nil>"
+	} else {
+		succ = fmt.Sprintf("%d@%s", rn.succNode.GetId(), rn.succNode.GetBind())
+	}
+
+	return fmt.Sprintf("<R: %d@%s, p=%s, s=%s>", rn.id, rn.bind, pred, succ)
 }
 
 func (rn *RemoteNode) GetID() ChordID {
@@ -33,6 +52,7 @@ func (rn *RemoteNode) GetSuccNode() (*NodeRef, error) {
 }
 
 func (rn *RemoteNode) FindPredecessor(id ChordID) (*RemoteNode, error) {
+	logrus.Debug("[RemoteNode] FindPredecessor: ", id)
 	req := pb.FindPredecessorRequest{
 		Id: uint64(id),
 	}
@@ -46,7 +66,7 @@ func (rn *RemoteNode) FindPredecessor(id ChordID) (*RemoteNode, error) {
 }
 
 func (rn *RemoteNode) FindSuccessor(id ChordID) (*RemoteNode, error) {
-	logrus.Info("RemoteNode.FindSuccessor: ", id)
+	logrus.Debug("[RemoteNode] FindSuccessor: ", id)
 	req := pb.FindSuccessorRequest{
 		Id: uint64(id),
 	}
@@ -60,6 +80,7 @@ func (rn *RemoteNode) FindSuccessor(id ChordID) (*RemoteNode, error) {
 }
 
 func (rn *RemoteNode) ClosestPrecedingFinger(id ChordID) (*RemoteNode, error) {
+	logrus.Debug("[RemoteNode] ClosestPrecedingFinger: ", id)
 	req := pb.ClosestPrecedingFingerRequest{
 		Id: uint64(id),
 	}

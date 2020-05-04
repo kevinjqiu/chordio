@@ -141,7 +141,10 @@ func NewServer(config Config) (*Server, error) {
 	}
 	bind := fmt.Sprintf("%s:%s", ip, parts[1])
 
-	localNode := newLocalNode(bind, config.M)
+	localNode, err := newLocalNode(bind, config.M)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to initiate local node")
+	}
 
 	grpcServer := grpc.NewServer()
 
