@@ -8,7 +8,7 @@ gen:
 	protoc -I pb pb/chordio.proto --go_out=plugins=grpc:pb
 
 run:
-	docker-compose up -d
+	docker-compose up -d --service-ports
 
 shell:
 	docker-compose run control bash
@@ -30,3 +30,6 @@ vendor:
 	mkdir vendor/
 	git clone git@github.com:kevinjqiu/opentelemetry-go.git vendor/
 	cd vendor/opentelemetry-go && git checkout fix-grpc-method-name-regexp
+
+jaeger:
+	docker-compose run --service-ports jaeger

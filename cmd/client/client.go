@@ -14,12 +14,12 @@ import (
 
 var (
 	chordClient pb.ChordClient
-	loglevel string
+	loglevel    string
 )
 
 func NewClientCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "client",
+		Use:   "client",
 		Short: "chord client commands",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			chordio.SetLogLevel(loglevel)
@@ -29,9 +29,11 @@ func NewClientCommand() *cobra.Command {
 				logrus.Fatal("CHORDIO_URL environment variable must be set")
 			}
 
-			if err := telemetry.Init(telemetry.Config{}); err != nil {
+			flushFunc, err := telemetry.Init(telemetry.Config{})
+			if err != nil {
 				logrus.Fatal(err)
 			}
+			defer flushFunc()
 
 			conn, err := grpc.Dial(
 				chordioURL,

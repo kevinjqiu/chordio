@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/kevinjqiu/chordio"
+	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -24,9 +25,12 @@ func NewServerCommand() *cobra.Command {
 
 			chordio.SetLogLevel(flags.loglevel)
 
+			flushFunc, err := telemetry.Init(telemetry.Config{})
+			defer flushFunc()
+
 			config := chordio.Config{
-				M:        chordio.Rank(flags.m),
-				Bind:     flags.bind,
+				M:    chordio.Rank(flags.m),
+				Bind: flags.bind,
 			}
 
 			server, err := chordio.NewServer(config)
