@@ -6,6 +6,8 @@ import (
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
 )
 
@@ -121,7 +123,11 @@ func (rn *RemoteNode) AsProtobufNode() *pb.Node {
 }
 
 func newRemoteNode(bind string) (*RemoteNode, error) {
-	conn, err := grpc.Dial(bind, grpc.WithInsecure())
+	conn, err := grpc.Dial(bind,
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetryServiceName))),
+		grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(global.Tracer(telemetryServiceName))),
+	)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to initiate grpc client for node: %v", bind)
 	}

@@ -3,8 +3,11 @@ package client
 import (
 	"github.com/kevinjqiu/chordio"
 	"github.com/kevinjqiu/chordio/pb"
+	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
 	"os"
 )
@@ -19,16 +22,27 @@ func NewClientCommand() *cobra.Command {
 		Use: "client",
 		Short: "chord client commands",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			chordio.SetLogLevel(loglevel)
+
 			chordioURL := os.Getenv("CHORDIO_URL")
 			if chordioURL == "" {
 				logrus.Fatal("CHORDIO_URL environment variable must be set")
 			}
-			conn, err := grpc.Dial(chordioURL, grpc.WithInsecure())
+
+			if err := telemetry.Init(telemetry.Config{}); err != nil {
+				logrus.Fatal(err)
+			}
+
+			conn, err := grpc.Dial(
+				chordioURL,
+				grpc.WithInsecure(),
+				grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer("chordio/client"))),
+				grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(global.Tracer("chordio/client"))),
+			)
 			if err != nil {
 				logrus.Fatal(err)
 			}
 			chordClient = pb.NewChordClient(conn)
-			chordio.SetLogLevel(loglevel)
 		},
 	}
 

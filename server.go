@@ -14,6 +14,10 @@ import (
 	"strings"
 )
 
+var (
+	telemetryServiceName = ""
+)
+
 type Server struct {
 	*LocalNode
 	grpcServer *grpc.Server
@@ -151,10 +155,10 @@ func NewServer(config Config) (*Server, error) {
 		return nil, errors.Wrap(err, "unable to initiate local node")
 	}
 
-	serviceName := fmt.Sprintf("chordio/id=%d", localNode.id)
+	telemetryServiceName = fmt.Sprintf("chordio/id=%d", localNode.id)
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(grpctrace.UnaryServerInterceptor(global.Tracer(serviceName))),
-		grpc.StreamInterceptor(grpctrace.StreamServerInterceptor(global.Tracer(serviceName))),
+		grpc.UnaryInterceptor(grpctrace.UnaryServerInterceptor(global.Tracer(telemetryServiceName))),
+		grpc.StreamInterceptor(grpctrace.StreamServerInterceptor(global.Tracer(telemetryServiceName))),
 	)
 
 	s := Server{

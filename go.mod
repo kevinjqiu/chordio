@@ -13,3 +13,5 @@ require (
 	go.opentelemetry.io/otel v0.4.3
 	google.golang.org/grpc v1.27.1
 )
+
+replace go.opentelemetry.io/otel => ./vendor/opentelemetry-go/
