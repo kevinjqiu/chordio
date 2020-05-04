@@ -143,7 +143,7 @@ func (n *LocalNode) initFinger(remote *RemoteNode) error {
 		return err
 	}
 	local.SetPredNode(predNode)
-	logger.Debugf("Local node's predecessor set to %s", predNode)
+	logger.Debugf("Local node's predecessor set to %v", predNode)
 
 	logger.Debug("recalc finger table")
 	for i := 0; i < int(n.m)-1; i++ {
@@ -168,7 +168,7 @@ func (n *LocalNode) initFinger(remote *RemoteNode) error {
 
 func (n *LocalNode) join(introducerNode *RemoteNode) error {
 	logger := logrus.WithField("method", "LocalNode.join")
-	logger.Debug("introducerNode: %s", introducerNode)
+	logger.Debugf("introducerNode: %s", introducerNode)
 
 	if err := n.initFinger(introducerNode); err != nil {
 		return err

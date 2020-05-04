@@ -30,7 +30,7 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 	id := ChordID(request.Id)
 
 	if !id.In(n.id, n.succ, n.m) {
-		logger.Debug("id is within %s, the predecessor is the local node", n.LocalNode)
+		logger.Debugf("id is within %v, the predecessor is the local node", n.LocalNode)
 		return &pb.FindPredecessorResponse{
 			Node: n.LocalNode.AsProtobufNode(),
 		}, nil
@@ -41,7 +41,7 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 		return nil, err
 	}
 
-	logger.Debugf("the closest preceding node is %s", n_)
+	logger.Debugf("the closest preceding node is %v", n_)
 	remoteNode, err := newRemoteNode(n_.GetBind())
 	if err != nil {
 		return nil, err
@@ -49,14 +49,14 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 
 	for {
 		if !id.In(n_.GetID(), n_.succ, n.m) { // FIXME: not in (a, b]
-			logger.Debugf("id is not in %s's range", n_)
+			logger.Debugf("id is not in %v's range", n_)
 			remoteNode, err = remoteNode.ClosestPrecedingFinger(id)
 			if err != nil {
 				return nil, err
 			}
 			logger.Debugf("the closest preceding node in %s's finger table is: ", remoteNode)
 		} else {
-			logger.Debug("id is in %s's range", n_)
+			logger.Debugf("id is in %v's range", n_)
 			break
 		}
 	}
