@@ -31,7 +31,6 @@ func Init(serviceName string, config Config) (FlushFunc, error) {
 				key.String("exporter", "jaeger"),
 			},
 		}),
-		//jaeger.RegisterAsGlobal(),
 		jaeger.WithSDK(&sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
 	)
 
