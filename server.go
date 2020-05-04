@@ -53,20 +53,20 @@ func (n *Server) FindPredecessor(_ context.Context, request *pb.FindPredecessorR
 	// TODO: newPBNodeFromRemoteNode?
 	// how does the remote node know its pred/succ?
 	// answer: through GetNodeInfo
-	pred, err := remoteNode.getPredNode()
-	if err != nil {
-		return nil, err
-	}
-	succ, err := remoteNode.getSuccNode()
-	if err != nil {
-		return nil, err
-	}
+	//pred, err := remoteNode.getPredNode()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//succ, err := remoteNode.getSuccNode()
+	//if err != nil {
+	//	return nil, err
+	//}
 	return &pb.FindPredecessorResponse{
 		Node: &pb.Node{
 			Id:   uint64(remoteNode.id),
 			Bind: remoteNode.bind,
-			Pred: newPBNodeFromLocalNode(pred),
-			Succ: newPBNodeFromLocalNode(succ),
+			//Pred: newPBNodeFromLocalNode(pred),
+			//Succ: newPBNodeFromLocalNode(succ),
 		},
 	}, nil
 }

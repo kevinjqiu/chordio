@@ -2,15 +2,15 @@ package chordio
 
 import "github.com/kevinjqiu/chordio/pb"
 
-func newPBNodeFromRemoteNode(n RemoteNode) *pb.Node {
-	// can't simply have ID
-	pbn:= &pb.Node{
-		Id:   uint64(n.id),
-		Bind: n.bind,
-		Pred: newPBNodeFromLocalNode(pred),
-		Succ: newPBNodeFromLocalNode(succ),
-	}
-}
+//func newPBNodeFromRemoteNode(n RemoteNode) *pb.Node {
+//	// can't simply have ID
+//	pbn:= &pb.Node{
+//		Id:   uint64(n.id),
+//		Bind: n.bind,
+//		Pred: newPBNodeFromLocalNode(pred),
+//		Succ: newPBNodeFromLocalNode(succ),
+//	}
+//}
 
 func newPBNodeFromLocalNode(n LocalNode) *pb.Node {
 	pbn := &pb.Node{
