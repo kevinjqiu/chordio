@@ -3,6 +3,7 @@ package client
 import (
 	"github.com/kevinjqiu/chordio"
 	"github.com/kevinjqiu/chordio/pb"
+	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel/api/global"
@@ -14,6 +15,7 @@ import (
 var (
 	chordClient pb.ChordClient
 	loglevel    string
+	flushFunc   telemetry.FlushFunc
 )
 
 func NewClientCommand() *cobra.Command {
@@ -21,7 +23,13 @@ func NewClientCommand() *cobra.Command {
 		Use:   "client",
 		Short: "chord client commands",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			var err error
 			chordio.SetLogLevel(loglevel)
+
+			flushFunc, err = telemetry.Init("chordio/client", telemetry.Config{})
+			if err != nil {
+				logrus.Fatal(err)
+			}
 
 			chordioURL := os.Getenv("CHORDIO_URL")
 			if chordioURL == "" {
@@ -38,6 +46,9 @@ func NewClientCommand() *cobra.Command {
 				logrus.Fatal(err)
 			}
 			chordClient = pb.NewChordClient(conn)
+		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			flushFunc()
 		},
 	}
 

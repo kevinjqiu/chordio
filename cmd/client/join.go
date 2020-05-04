@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
-	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -25,12 +24,6 @@ func newJoinCommand() *cobra.Command {
 			if flags.introducerURL == "" {
 				return errors.New("--introducer-url must be set")
 			}
-
-			flushFunc, err := telemetry.Init("chordio/client", telemetry.Config{})
-			if err != nil {
-				logrus.Fatal(err)
-			}
-			defer flushFunc()
 
 			joinReq := pb.JoinRingRequest{
 				Introducer: &pb.Node{
