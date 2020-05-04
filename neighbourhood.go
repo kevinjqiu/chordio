@@ -1,12 +1,7 @@
 package chordio
 
 import (
-	"errors"
 	"sort"
-)
-
-var (
-	errNodeIDConflict = errors.New("conflict node id")
 )
 
 type nodeList []*NodeRef

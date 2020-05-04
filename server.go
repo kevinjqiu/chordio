@@ -2,10 +2,13 @@ package chordio
 
 import (
 	"context"
+	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"
+	"strings"
 )
 
 type Server struct {
@@ -118,7 +121,27 @@ func (n *Server) Serve() error {
 }
 
 func NewServer(config Config) (*Server, error) {
-	localNode := newLocalNode(config.Bind, config.M)
+	var err error
+
+	parts := strings.Split(config.Bind, ":")
+	if len(parts) != 2 {
+		return nil, errInvalidBindFormat
+	}
+
+	ip := parts[0]
+	if ip == "" {
+		ip, err = getFirstAvailableBindIP()
+		if err != nil  {
+			return nil, errors.Wrap(errUnableToGetBindIP, err.Error())
+		}
+	} else {
+		if !canBindIP(ip) {
+			return nil, errors.Wrap(errInvalidBindIP, ip)
+		}
+	}
+	bind := fmt.Sprintf("%s:%s", ip, parts[1])
+
+	localNode := newLocalNode(bind, config.M)
 
 	grpcServer := grpc.NewServer()
 

@@ -8,7 +8,7 @@ services:
       - /opt/chordio/chordio
       - server
       - -b
-      - "0.0.0.0:1234"
+      - ":1234"
       - -m
       - "5"
     networks:
@@ -21,7 +21,7 @@ services:
       - /opt/chordio/chordio
       - server
       - -b
-      - "0.0.0.0:2345"
+      - ":2345"
       - -m
       - "5"
     networks:
