@@ -33,3 +33,12 @@ vendor:
 
 jaeger:
 	docker-compose run --service-ports jaeger
+
+n1:
+	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server --id 1 -b 127.0.0.1:1234 -l debug -m 5
+
+n2:
+	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server --id 32 -b 127.0.0.1:2345 -l debug -m 5
+
+n3:
+	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server --id 71 -b 127.0.0.1:3456 -l debug -m 5

@@ -110,7 +110,10 @@ func (n *LocalNode) closestPrecedingFinger(ctx context.Context, id ChordID) (Loc
 	err := n.WithSpan(ctx, "LocalNode.closestPrecedingFinger", func(ctx context.Context) error {
 		logger := logrus.WithField("method", "LocalNode.closestPrecedingFinger")
 		logger.Debugf("id=%d", id)
-		for i := n.m - 1; i >= 0; i-- {
+		// nb: int cast here is IMPORTANT!
+		// because n.m is of type uint32
+		// i >= 0 is always going to be true
+		for i := int(n.m) - 1; i >= 0; i-- {
 			if n.ft.entries[i].node.In(n.id, id, n.m) {
 				nodeID := n.ft.entries[i].node
 				resultNode, predID, succID, ok := n.neighbourhood.Get(nodeID)
