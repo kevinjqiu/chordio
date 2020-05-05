@@ -7,10 +7,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"strconv"
 	"strings"
 )
 
 type runFlags struct {
+	id       string
 	m        uint32
 	bind     string
 	loglevel string
@@ -51,7 +53,16 @@ func NewServerCommand() *cobra.Command {
 
 			bind := mustBind(flags.bind)
 
-			id := chordio.AssignID([]byte(bind), chordio.Rank(flags.m))
+			var id chordio.ChordID
+			if flags.id == "" {
+				id = chordio.AssignID([]byte(bind), chordio.Rank(flags.m))
+			} else {
+				uintID, err := strconv.ParseUint(flags.id, 10, 64)
+				if err != nil {
+					logrus.Fatal("cannot parse id: ", err.Error())
+				}
+				id = chordio.ChordID(uintID)
+			}
 
 			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/nodeid=%d", id), telemetry.Config{})
 			defer flushFunc()
@@ -73,6 +84,7 @@ func NewServerCommand() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVarP(&flags.id, "id", "i", "", "assign an ID to the node")
 	cmd.Flags().Uint32VarP(&flags.m, "rank", "m", 0, "the rank of the ring")
 	cmd.Flags().StringVarP(&flags.bind, "bind", "b", "localhost:2000", "bind address")
 	cmd.Flags().StringVarP(&flags.loglevel, "loglevel", "l", "info", "log level")
