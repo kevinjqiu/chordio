@@ -535,9 +535,6 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ChordClient interface {
-	//    rpc GetID (GetIDRequest) returns (GetIDResponse) {
-	//    }
-	//
 	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...grpc.CallOption) (*GetNodeInfoResponse, error)
 	//    rpc FindClosestFinger (FindClosestFingerRequest) returns (FindClosestFingerResponse) {
 	//    }
@@ -606,9 +603,6 @@ func (c *chordClient) ClosestPrecedingFinger(ctx context.Context, in *ClosestPre
 
 // ChordServer is the server API for Chord service.
 type ChordServer interface {
-	//    rpc GetID (GetIDRequest) returns (GetIDResponse) {
-	//    }
-	//
 	GetNodeInfo(context.Context, *GetNodeInfoRequest) (*GetNodeInfoResponse, error)
 	//    rpc FindClosestFinger (FindClosestFingerRequest) returns (FindClosestFingerResponse) {
 	//    }

@@ -2,18 +2,14 @@ package chordio
 
 import (
 	"context"
-	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
+	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
 	"net"
-)
-
-var (
-	telemetryServiceName = ""
 )
 
 type Server struct {
@@ -30,64 +26,32 @@ func (n *Server) GetNodeInfo(_ context.Context, _ *pb.GetNodeInfoRequest) (*pb.G
 }
 
 func (n *Server) FindPredecessor(ctx context.Context, request *pb.FindPredecessorRequest) (*pb.FindPredecessorResponse, error) {
-	logger := logrus.WithField("method", "server.FindPredecessor")
+	logger := logrus.WithField("method", "server.findPredecessor")
 	logger.Debug("id=", request.Id)
-	var err error
-	id := ChordID(request.Id)
 
-	if !id.In(n.id, n.succ, n.m) {
-		logger.Debugf("id is within %v, the predecessor is the local node", n.LocalNode)
-		return &pb.FindPredecessorResponse{
-			Node: n.LocalNode.AsProtobufNode(),
-		}, nil
-	}
-
-	n_, err := n.closestPrecedingFinger(ctx, id)
+	node, err := n.findPredecessor(ctx, ChordID(request.Id))
 	if err != nil {
 		return nil, err
 	}
-
-	logger.Debugf("the closest preceding node is %v", n_)
-	remoteNode, err := newRemoteNode(ctx, n_.GetBind())
-	if err != nil {
-		return nil, err
-	}
-
-	for {
-		if !id.In(n_.GetID(), n_.succ, n.m) { // FIXME: not in (a, b]
-			logger.Debugf("id is not in %v's range", n_)
-			remoteNode, err = remoteNode.ClosestPrecedingFinger(ctx, id)
-			if err != nil {
-				return nil, err
-			}
-			logger.Debugf("the closest preceding node in %s's finger table is: ", remoteNode)
-		} else {
-			logger.Debugf("id is in %v's range", n_)
-			break
-		}
-	}
-
 	return &pb.FindPredecessorResponse{
-		Node: remoteNode.AsProtobufNode(),
+		Node: node.AsProtobufNode(),
 	}, nil
 }
 
 func (n *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
-	logger := logrus.WithField("method", "Server.FindSuccessor")
+	logger := logrus.WithField("method", "Server.findSuccessor")
 	logger.Debugf("id=%d", request.Id)
-	resp, err := n.FindPredecessor(ctx, &pb.FindPredecessorRequest{
-		Id: request.Id,
-	})
+	node, err := n.findSuccessor(ctx, ChordID(request.Id))
 	if err != nil {
 		return nil, err
 	}
 	return &pb.FindSuccessorResponse{
-		Node: resp.Node,
+		Node: node.AsProtobufNode(),
 	}, nil
 }
 
 func (n *Server) ClosestPrecedingFinger(ctx context.Context, request *pb.ClosestPrecedingFingerRequest) (*pb.ClosestPrecedingFingerResponse, error) {
-	logger := logrus.WithField("method", "Server.ClosestPrecedingFinger")
+	logger := logrus.WithField("method", "Server.closestPrecedingFinger")
 	logger.Debugf("id=%d", request.Id)
 	node, err := n.closestPrecedingFinger(ctx, ChordID(request.Id))
 	if err != nil {
@@ -131,10 +95,9 @@ func NewServer(config Config) (*Server, error) {
 		return nil, errors.Wrap(err, "unable to initiate local node")
 	}
 
-	telemetryServiceName = fmt.Sprintf("chordio/id=%d", localNode.id)
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(grpctrace.UnaryServerInterceptor(global.Tracer(telemetryServiceName))),
-		grpc.StreamInterceptor(grpctrace.StreamServerInterceptor(global.Tracer(telemetryServiceName))),
+		grpc.UnaryInterceptor(grpctrace.UnaryServerInterceptor(global.Tracer(telemetry.GetServiceName()))),
+		grpc.StreamInterceptor(grpctrace.StreamServerInterceptor(global.Tracer(telemetry.GetServiceName()))),
 	)
 
 	s := Server{

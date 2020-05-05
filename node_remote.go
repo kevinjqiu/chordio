@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
+	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/api/global"
@@ -55,10 +56,10 @@ func (rn *RemoteNode) GetSuccNode() (*NodeRef, error) {
 	return &NodeRef{ChordID(rn.succNode.Id), rn.succNode.Bind}, nil
 }
 
-func (rn *RemoteNode) FindPredecessor(ctx context.Context, id ChordID) (*RemoteNode, error) {
+func (rn *RemoteNode) findPredecessor(ctx context.Context, id ChordID) (Node, error) {
 	var n *RemoteNode
-	err := rn.WithSpan(ctx, "RemoteNode.FindPredecessor", func(ctx context.Context) error {
-		logrus.Debug("[RemoteNode] FindPredecessor: ", id)
+	err := rn.WithSpan(ctx, "RemoteNode.findPredecessor", func(ctx context.Context) error {
+		logrus.Debug("[RemoteNode] findPredecessor: ", id)
 		req := pb.FindPredecessorRequest{
 			Id: uint64(id),
 		}
@@ -74,10 +75,10 @@ func (rn *RemoteNode) FindPredecessor(ctx context.Context, id ChordID) (*RemoteN
 	return rn, err
 }
 
-func (rn *RemoteNode) FindSuccessor(ctx context.Context, id ChordID) (*RemoteNode, error) {
+func (rn *RemoteNode) findSuccessor(ctx context.Context, id ChordID) (Node, error) {
 	var n *RemoteNode
-	err := rn.WithSpan(ctx, "RemoteNode.FindSuccessor", func(ctx context.Context) error {
-		logrus.Debug("[RemoteNode] FindSuccessor: ", id)
+	err := rn.WithSpan(ctx, "RemoteNode.findSuccessor", func(ctx context.Context) error {
+		logrus.Debug("[RemoteNode] findSuccessor: ", id)
 		req := pb.FindSuccessorRequest{
 			Id: uint64(id),
 		}
@@ -94,11 +95,11 @@ func (rn *RemoteNode) FindSuccessor(ctx context.Context, id ChordID) (*RemoteNod
 	return n, err
 }
 
-func (rn *RemoteNode) ClosestPrecedingFinger(ctx context.Context, id ChordID) (*RemoteNode, error) {
+func (rn *RemoteNode) closestPrecedingFinger(ctx context.Context, id ChordID) (Node, error) {
 	var n *RemoteNode
 
-	err := rn.WithSpan(ctx, "RemoteNode.ClosestPrecedingFinger", func(ctx context.Context) error {
-		logrus.Debug("[RemoteNode] ClosestPrecedingFinger: ", id)
+	err := rn.WithSpan(ctx, "RemoteNode.closestPrecedingFinger", func(ctx context.Context) error {
+		logrus.Debug("[RemoteNode] closestPrecedingFinger: ", id)
 		req := pb.ClosestPrecedingFingerRequest{
 			Id: uint64(id),
 		}
@@ -145,8 +146,8 @@ func (rn *RemoteNode) AsProtobufNode() *pb.Node {
 func newRemoteNode(ctx context.Context, bind string) (*RemoteNode, error) {
 	conn, err := grpc.Dial(bind,
 		grpc.WithInsecure(),
-		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetryServiceName))),
-		grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(global.Tracer(telemetryServiceName))),
+		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
+		grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
 	)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to initiate grpc client for node: %v", bind)

@@ -9,6 +9,18 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
+var (
+	telemetryServiceName = ""
+)
+
+func SetServiceName(name string) {
+	telemetryServiceName = name
+}
+
+func GetServiceName() string {
+	return telemetryServiceName
+}
+
 type FlushFunc func()
 
 const jaegerCollectorEndpoint = "http://localhost:14268/api/traces"
@@ -19,6 +31,9 @@ func Init(serviceName string, config Config) (FlushFunc, error) {
 		flush FlushFunc
 		err   error
 	)
+
+	SetServiceName(serviceName)
+
 	if config.Enabled {
 		tp = trace.NoopProvider{}
 	} else {

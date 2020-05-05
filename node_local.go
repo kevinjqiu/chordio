@@ -106,8 +106,74 @@ func (n *LocalNode) GetSuccNode() (*NodeRef, error) {
 	return &NodeRef{bind: node.bind, id: node.id}, nil
 }
 
-func (n *LocalNode) closestPrecedingFinger(ctx context.Context, id ChordID) (LocalNode, error) {
-	var ln LocalNode
+func (n *LocalNode) findPredecessor(ctx context.Context, id ChordID) (Node, error){
+	logger := logrus.WithField("method", "LocalNode.findPredecessor")
+	var (
+		node Node
+		remoteNode Node
+	)
+
+	err := n.WithSpan(ctx, "LocalNode.findPredecessor", func(ctx context.Context) error {
+		var err error
+
+		if !id.In(n.id, n.succ, n.m) {
+			logger.Debugf("id is within %v, the predecessor is the local node", n)
+			node = n
+			return nil
+		}
+
+		n_, err := n.closestPrecedingFinger(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		logger.Debugf("the closest preceding node is %v", n_)
+		remoteNode, err = newRemoteNode(ctx, n_.GetBind())
+		if err != nil {
+			return err
+		}
+
+		for {
+			succNode, err := n_.GetSuccNode()
+			if err != nil {
+				return err
+			}
+			if !id.In(n_.GetID(), succNode.id, n.m) { // FIXME: not in (a, b]
+				logger.Debugf("id is not in %v's range", n_)
+				remoteNode, err = remoteNode.closestPrecedingFinger(ctx, id)
+				if err != nil {
+					return err
+				}
+				logger.Debugf("the closest preceding node in %s's finger table is: ", remoteNode)
+			} else {
+				logger.Debugf("id is in %v's range", n_)
+				break
+			}
+		}
+
+		node = remoteNode
+		return nil
+	})
+
+	return node, err
+}
+
+func (n *LocalNode) findSuccessor(ctx context.Context, id ChordID) (Node, error) {
+	predNode, err := n.findPredecessor(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	succNode, err := predNode.GetSuccNode()
+	if err != nil {
+		return nil, err
+	}
+
+	return newRemoteNode(ctx, succNode.bind)
+}
+
+func (n *LocalNode) closestPrecedingFinger(ctx context.Context, id ChordID) (Node, error) {
+	var ln *LocalNode
 	err := n.WithSpan(ctx, "LocalNode.closestPrecedingFinger", func(ctx context.Context) error {
 		logger := logrus.WithField("method", "LocalNode.closestPrecedingFinger")
 		logger.Debugf("id=%d", id)
@@ -122,7 +188,7 @@ func (n *LocalNode) closestPrecedingFinger(ctx context.Context, id ChordID) (Loc
 				if !ok {
 					return fmt.Errorf("node not found: %d", nodeID)
 				}
-				ln = LocalNode{
+				ln = &LocalNode{
 					id:            resultNode.id,
 					pred:          predID,
 					succ:          succID,
@@ -134,7 +200,7 @@ func (n *LocalNode) closestPrecedingFinger(ctx context.Context, id ChordID) (Loc
 				return nil
 			}
 		}
-		ln = *n
+		ln = n
 		return nil
 	})
 	return ln, err
@@ -146,13 +212,13 @@ func (n *LocalNode) initFinger(ctx context.Context, remote *RemoteNode) error {
 		logger.Infof("using remote node %s", remote)
 		local := n
 		logger.Debugf("Try to find success for %d on %s", n.ft.entries[0].start, remote)
-		succ, err := remote.FindSuccessor(ctx, n.ft.entries[0].start)
+		succ, err := remote.findSuccessor(ctx, n.ft.entries[0].start)
 		if err != nil {
 			return err
 		}
 
 		logger.Debugf("Successor node for %d is %s", n.ft.entries[0].start, succ)
-		n.ft.entries[0].node = succ.id
+		n.ft.entries[0].node = succ.GetID()
 		predNode, err := succ.GetPredNode()
 		if err != nil {
 			return err
@@ -170,12 +236,12 @@ func (n *LocalNode) initFinger(ctx context.Context, remote *RemoteNode) error {
 				logger.Debugf("interval=[%d, %d)", local.id, n.ft.entries[i].node)
 				n.ft.entries[i+1].node = n.ft.entries[i].node
 			} else {
-				newSucc, err := remote.FindSuccessor(ctx, n.ft.entries[i+1].start)
+				newSucc, err := remote.findSuccessor(ctx, n.ft.entries[i+1].start)
 				logger.Debugf("new successor for %d is %v", n.ft.entries[i+1].start, newSucc)
 				if err != nil {
 					return err
 				}
-				n.ft.entries[i+1].node = newSucc.id
+				n.ft.entries[i+1].node = newSucc.GetID()
 			}
 		}
 		return nil
@@ -191,7 +257,7 @@ func (n *LocalNode) join(ctx context.Context, introducerNode *RemoteNode) error 
 			return errors.Wrap(err, "error while init'ing fingertable")
 		}
 		n.ft.Print(nil)
-		if err := n.updateOthers(ctx) err != nil {
+		if err := n.updateOthers(ctx); err != nil {
 			return errors.Wrap(err, "error while updating other node's fingertables")
 		}
 		return nil

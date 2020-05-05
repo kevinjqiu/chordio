@@ -18,12 +18,6 @@ message Node {
 //    Node successor = 3;
 //}
 //
-//message GetIDRequest {
-//}
-//
-//message GetIDResponse {
-//    uint64 id = 1;
-//}
 
 message ClosestPrecedingFingerRequest {
     uint64 id = 1;
@@ -79,9 +73,6 @@ message GetNodeInfoResponse {
 }
 
 service Chord {
-//    rpc GetID (GetIDRequest) returns (GetIDResponse) {
-//    }
-//
     rpc GetNodeInfo (GetNodeInfoRequest) returns (GetNodeInfoResponse) {}
 
 //    rpc FindClosestFinger (FindClosestFingerRequest) returns (FindClosestFingerResponse) {

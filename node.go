@@ -1,6 +1,7 @@
 package chordio
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/binary"
 	"github.com/kevinjqiu/chordio/pb"
@@ -12,6 +13,13 @@ type Node interface {
 	GetPredNode() (*NodeRef, error)
 	GetSuccNode() (*NodeRef, error)
 	AsProtobufNode() *pb.Node
+
+	// findPredecessor for the given id
+	findPredecessor(context.Context, ChordID) (Node, error)
+	// findSuccessor for the given id
+	findSuccessor(context.Context, ChordID) (Node, error)
+	// find the closest finger entry that's preceding the id
+	closestPrecedingFinger(context.Context, ChordID) (Node, error)
 }
 
 type NodeRef struct {
