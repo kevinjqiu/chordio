@@ -28,7 +28,7 @@ run-local:
 vendor:
 	# needed temporarily before https://github.com/open-telemetry/opentelemetry-go/issues/682 is fixed
 	mkdir vendor/
-	git clone git@github.com:kevinjqiu/opentelemetry-go.git vendor/
+	git clone git@github.com:kevinjqiu/opentelemetry-go.git vendor/opentelemetry-go
 	cd vendor/opentelemetry-go && git checkout fix-grpc-method-name-regexp
 
 jaeger:
