@@ -68,7 +68,7 @@ func NewServerCommand() *cobra.Command {
 				id = chordio.ChordID(uintID)
 			}
 
-			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/nodeid=%d", id), telemetry.Config{})
+			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/#%d", id), telemetry.Config{})
 			defer flushFunc()
 
 			config := chordio.Config{

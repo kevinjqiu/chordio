@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
@@ -187,11 +188,22 @@ func (n *LocalNode) join(ctx context.Context, introducerNode *RemoteNode) error 
 		logger.Debugf("introducerNode: %s", introducerNode)
 
 		if err := n.initFinger(ctx, introducerNode); err != nil {
-			return err
+			return errors.Wrap(err, "error while init'ing fingertable")
 		}
 		n.ft.Print(nil)
+		if err := n.updateOthers(ctx) err != nil {
+			return errors.Wrap(err, "error while updating other node's fingertables")
+		}
+		return nil
+	})
+}
 
-		// updateOthers()
+func (n *LocalNode) updateOthers(ctx context.Context) error {
+	return n.WithSpan(ctx, "LocalNode.updateOthers", func(ctx context.Context) error {
+		//logger := logrus.WithField("method", "LocalNode.join")
+		for i := 0; i < int(n.m); i++ {
+
+		}
 		return nil
 	})
 }
