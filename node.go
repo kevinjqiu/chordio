@@ -20,6 +20,8 @@ type Node interface {
 	findSuccessor(context.Context, ChordID) (Node, error)
 	// find the closest finger entry that's preceding the id
 	closestPrecedingFinger(context.Context, ChordID) (Node, error)
+	// update the finger table entry at index i to node s
+	updateFingerTable(_ context.Context, s Node, i int) error
 }
 
 type NodeRef struct {

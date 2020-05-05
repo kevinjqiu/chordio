@@ -106,6 +106,7 @@ func (n *LocalNode) GetSuccNode() (*NodeRef, error) {
 	return &NodeRef{bind: node.bind, id: node.id}, nil
 }
 
+// TODO: if the node is itself, do not return a RemoteNode version of it
 func (n *LocalNode) findPredecessor(ctx context.Context, id ChordID) (Node, error){
 	logger := logrus.WithField("method", "LocalNode.findPredecessor")
 	var (
@@ -266,12 +267,36 @@ func (n *LocalNode) join(ctx context.Context, introducerNode *RemoteNode) error 
 
 func (n *LocalNode) updateOthers(ctx context.Context) error {
 	return n.WithSpan(ctx, "LocalNode.updateOthers", func(ctx context.Context) error {
-		//logger := logrus.WithField("method", "LocalNode.join")
 		for i := 0; i < int(n.m); i++ {
-
+			p, err := n.findPredecessor(ctx, n.id - ChordID(pow2(uint32(i))))
+			if err != nil {
+				return err
+			}
+			if err := p.updateFingerTable(ctx, n, i); err != nil {
+				return err
+			}
 		}
 		return nil
 	})
+}
+
+func (n *LocalNode) updateFingerTable(_ context.Context, s Node, i int) error {
+	oldNodeID := n.ft.entries[i].node
+	n.ft.entries[i].node = s.GetID()
+	// update neighbourhood - remove the node at fte[i] if it's no longer in the FT
+	if !n.ft.HasNode(oldNodeID) {
+		// if the node being swapped out of the finger table entry at i
+		// is no longer in the finger table, we should remove it from the
+		// neighbourhood
+		n.neighbourhood.Remove(oldNodeID)
+	}
+	// update neighbourhood - add the new node
+	_ = n.neighbourhood.Add(&NodeRef{
+		id: s.GetID(),
+		bind: s.GetBind(),
+	})
+
+	return nil
 }
 
 func newLocalNode(id ChordID, bind string, m Rank) (*LocalNode, error) {

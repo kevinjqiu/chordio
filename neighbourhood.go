@@ -36,15 +36,27 @@ func (n *Neighbourhood) Add(node *NodeRef) error {
 	return nil
 }
 
+func (n *Neighbourhood) Remove(nodeID ChordID) {
+	idx := sort.Search(len(n.nodes), func(i int) bool {
+		return n.nodes[i].id >= nodeID
+	})
+
+	if idx == -1 || idx >= len(n.nodes) || n.nodes[idx].id != nodeID {
+		return
+	}
+
+	lastIdx := len(n.nodes) - 1
+	n.nodes[idx], n.nodes[lastIdx] = n.nodes[lastIdx], n.nodes[idx]
+	n.nodes = n.nodes[:lastIdx]
+	sort.Sort(n.nodes)
+}
+
 // Get the NodeRef for the node given the ID, as well as the ID for the preceding and succeeding nodes
 func (n *Neighbourhood) Get(id ChordID) (node NodeRef, predID ChordID, succID ChordID, ok bool) {
 	idx := sort.Search(len(n.nodes), func(i int) bool {
 		return n.nodes[i].id >= id
 	})
-	if idx == -1 {
-		return
-	}
-	if idx >= len(n.nodes) || n.nodes[idx].id != id {
+	if idx == -1 || idx >= len(n.nodes) || n.nodes[idx].id != id {
 		return
 	}
 

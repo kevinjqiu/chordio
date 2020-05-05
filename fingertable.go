@@ -35,6 +35,15 @@ func (ft FingerTable) Print(w io.Writer) {
 	writer.Render()
 }
 
+func (ft FingerTable) HasNode(id ChordID) bool {
+	for _, fte := range ft.entries {
+		if fte.node == id {
+			return true
+		}
+	}
+	return false
+}
+
 func newFingerTable(initNode Node, m Rank) FingerTable {
 	ft := FingerTable{m: m}
 	ft.entries = make([]FingerTableEntry, 0, m)

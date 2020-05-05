@@ -8,17 +8,6 @@ message Node {
     Node succ = 4;
 }
 
-//message FingerTable {
-//    repeated FingerTableEntry entries = 1;
-//}
-//
-//message FingerTableEntry {
-//    uint32 start = 1;
-//    uint32 end = 2;
-//    Node successor = 3;
-//}
-//
-
 message ClosestPrecedingFingerRequest {
     uint64 id = 1;
 }
@@ -26,22 +15,7 @@ message ClosestPrecedingFingerRequest {
 message ClosestPrecedingFingerResponse {
     Node node = 1;
 }
-//
-//message FindClosestFingerRequest {
-//    uint32 keyID = 1;
-//}
-//
-//message FindClosestFingerResponse {
-//    Node node = 1;
-//}
-//
-//message GetFingerTableRequest {
-//}
-//
-//message GetFingerTableResponse {
-//    FingerTable fingertable = 1;
-//}
-//
+
 message JoinRingRequest {
     Node introducer = 1;
 }
@@ -72,15 +46,17 @@ message GetNodeInfoResponse {
     Node node = 1;
 }
 
+message UpdateFingerTableRequest {
+    Node node = 1;
+    int64 i = 2;
+}
+
+message UpdateFingerTableResponse {
+}
+
 service Chord {
     rpc GetNodeInfo (GetNodeInfoRequest) returns (GetNodeInfoResponse) {}
 
-//    rpc FindClosestFinger (FindClosestFingerRequest) returns (FindClosestFingerResponse) {
-//    }
-//
-//    rpc GetFingerTable (GetFingerTableRequest) returns (GetFingerTableResponse) {
-//    }
-//
     rpc JoinRing (JoinRingRequest) returns (JoinRingResponse) {
     }
 
@@ -91,5 +67,8 @@ service Chord {
     }
 
     rpc ClosestPrecedingFinger (ClosestPrecedingFingerRequest) returns (ClosestPrecedingFingerResponse) {
+    }
+
+    rpc UpdateFingerTable(UpdateFingerTableRequest) returns (UpdateFingerTableResponse) {
     }
 }

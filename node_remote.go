@@ -143,6 +143,22 @@ func (rn *RemoteNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
+func (rn *RemoteNode) updateFingerTable(ctx context.Context, s Node, i int) error {
+	return rn.WithSpan(ctx, "RemoteNode.updateFingerTable", func(ctx context.Context) error {
+		logrus.Debugf("[RemoteNode] updateFingerTable: id=%d, i=%d", s.GetID(), i)
+		req := pb.UpdateFingerTableRequest{
+			Node: s.AsProtobufNode(),
+			I:    int64(i),
+		}
+
+		_, err := rn.client.UpdateFingerTable(ctx, &req)
+		if err != nil {
+			return err
+		}
+		return err
+	})
+}
+
 func newRemoteNode(ctx context.Context, bind string) (*RemoteNode, error) {
 	conn, err := grpc.Dial(bind,
 		grpc.WithInsecure(),
