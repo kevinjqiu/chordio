@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/trace"
 )
 
 type LocalNode struct {
+	trace.Tracer
 	id            ChordID
 	bind          string
 	pred          ChordID
@@ -102,87 +105,97 @@ func (n *LocalNode) GetSuccNode() (*NodeRef, error) {
 	return &NodeRef{bind: node.bind, id: node.id}, nil
 }
 
-func (n *LocalNode) closestPrecedingFinger(id ChordID) (LocalNode, error) {
-	logger := logrus.WithField("method", "LocalNode.closestPrecedingFinger")
-	logger.Debugf("id=%d", id)
-	for i := n.m - 1; i >= 0; i-- {
-		if n.ft.entries[i].node.In(n.id, id, n.m) {
-			nodeID := n.ft.entries[i].node
-			resultNode, predID, succID, ok := n.neighbourhood.Get(nodeID)
-			logrus.Info("found result node: ", resultNode)
-			if !ok {
-				return LocalNode{}, fmt.Errorf("node not found: %d", nodeID)
+func (n *LocalNode) closestPrecedingFinger(ctx context.Context, id ChordID) (LocalNode, error) {
+	var ln LocalNode
+	err := n.WithSpan(ctx, "LocalNode.closestPrecedingFinger", func(ctx context.Context) error {
+		logger := logrus.WithField("method", "LocalNode.closestPrecedingFinger")
+		logger.Debugf("id=%d", id)
+		for i := n.m - 1; i >= 0; i-- {
+			if n.ft.entries[i].node.In(n.id, id, n.m) {
+				nodeID := n.ft.entries[i].node
+				resultNode, predID, succID, ok := n.neighbourhood.Get(nodeID)
+				logrus.Info("found result node: ", resultNode)
+				if !ok {
+					return fmt.Errorf("node not found: %d", nodeID)
+				}
+				ln = LocalNode{
+					id:            resultNode.id,
+					pred:          predID,
+					succ:          succID,
+					bind:          resultNode.bind,
+					m:             n.m,
+					ft:            n.ft,
+					neighbourhood: n.neighbourhood,
+				}
+				return nil
 			}
-			return LocalNode{
-				id:            resultNode.id,
-				pred:          predID,
-				succ:          succID,
-				bind:          resultNode.bind,
-				m:             n.m,
-				ft:            n.ft,
-				neighbourhood: n.neighbourhood,
-			}, nil
 		}
-	}
-	return *n, nil
+		ln = *n
+		return nil
+	})
+	return ln, err
 }
 
 func (n *LocalNode) initFinger(ctx context.Context, remote *RemoteNode) error {
-	logger := logrus.WithField("method", "LocalNode.initFinger")
-	logger.Infof("using remote node %s", remote)
-	local := n
-	logger.Debugf("Try to find success for %d on %s", n.ft.entries[0].start, remote)
-	succ, err := remote.FindSuccessor(ctx, n.ft.entries[0].start)
-	if err != nil {
-		return err
-	}
-
-	logger.Debugf("Successor node for %d is %s", n.ft.entries[0].start, succ)
-	n.ft.entries[0].node = succ.id
-	predNode, err := succ.GetPredNode()
-	if err != nil {
-		return err
-	}
-	local.SetPredNode(predNode)
-	logger.Debugf("Local node's predecessor set to %v", predNode)
-
-	logger.Debug("recalc finger table")
-	for i := 0; i < int(n.m)-1; i++ {
-		logger.Debugf("i=%d", i)
-		logger.Debugf("finger[i+1].start=%d", n.ft.entries[i+1].start)
-		logger.Debugf("interval=[%d, %d)", local.id, n.ft.entries[i].node)
-
-		if n.ft.entries[i+1].start.In(local.id, n.ft.entries[i].node, n.m) {
-			logger.Debugf("interval=[%d, %d)", local.id, n.ft.entries[i].node)
-			n.ft.entries[i+1].node = n.ft.entries[i].node
-		} else {
-			newSucc, err := remote.FindSuccessor(ctx, n.ft.entries[i+1].start)
-			logger.Debugf("new successor for %d is %v", n.ft.entries[i+1].start, newSucc)
-			if err != nil {
-				return err
-			}
-			n.ft.entries[i+1].node = newSucc.id
+	return n.WithSpan(ctx, "LocalNode.initFinger", func(ctx context.Context) error {
+		logger := logrus.WithField("method", "LocalNode.initFinger")
+		logger.Infof("using remote node %s", remote)
+		local := n
+		logger.Debugf("Try to find success for %d on %s", n.ft.entries[0].start, remote)
+		succ, err := remote.FindSuccessor(ctx, n.ft.entries[0].start)
+		if err != nil {
+			return err
 		}
-	}
-	return nil
+
+		logger.Debugf("Successor node for %d is %s", n.ft.entries[0].start, succ)
+		n.ft.entries[0].node = succ.id
+		predNode, err := succ.GetPredNode()
+		if err != nil {
+			return err
+		}
+		local.SetPredNode(predNode)
+		logger.Debugf("Local node's predecessor set to %v", predNode)
+
+		logger.Debug("recalc finger table")
+		for i := 0; i < int(n.m)-1; i++ {
+			logger.Debugf("i=%d", i)
+			logger.Debugf("finger[i+1].start=%d", n.ft.entries[i+1].start)
+			logger.Debugf("interval=[%d, %d)", local.id, n.ft.entries[i].node)
+
+			if n.ft.entries[i+1].start.In(local.id, n.ft.entries[i].node, n.m) {
+				logger.Debugf("interval=[%d, %d)", local.id, n.ft.entries[i].node)
+				n.ft.entries[i+1].node = n.ft.entries[i].node
+			} else {
+				newSucc, err := remote.FindSuccessor(ctx, n.ft.entries[i+1].start)
+				logger.Debugf("new successor for %d is %v", n.ft.entries[i+1].start, newSucc)
+				if err != nil {
+					return err
+				}
+				n.ft.entries[i+1].node = newSucc.id
+			}
+		}
+		return nil
+	})
 }
 
 func (n *LocalNode) join(ctx context.Context, introducerNode *RemoteNode) error {
-	logger := logrus.WithField("method", "LocalNode.join")
-	logger.Debugf("introducerNode: %s", introducerNode)
+	return n.WithSpan(ctx, "LocalNode.join", func(ctx context.Context) error {
+		logger := logrus.WithField("method", "LocalNode.join")
+		logger.Debugf("introducerNode: %s", introducerNode)
 
-	if err := n.initFinger(ctx, introducerNode); err != nil {
-		return err
-	}
-	n.ft.Print(nil)
+		if err := n.initFinger(ctx, introducerNode); err != nil {
+			return err
+		}
+		n.ft.Print(nil)
 
-	// updateOthers()
-	return nil
+		// updateOthers()
+		return nil
+	})
 }
 
 func newLocalNode(id ChordID, bind string, m Rank) (*LocalNode, error) {
-	//id := AssignID([]byte(bind), m)
 	localNode := &LocalNode{
+		Tracer: global.Tracer(""),
 		id:   id,
 		bind: bind,
 		pred: id,

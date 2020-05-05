@@ -42,7 +42,7 @@ func (n *Server) FindPredecessor(ctx context.Context, request *pb.FindPredecesso
 		}, nil
 	}
 
-	n_, err := n.closestPrecedingFinger(id)
+	n_, err := n.closestPrecedingFinger(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -86,10 +86,10 @@ func (n *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorReq
 	}, nil
 }
 
-func (n *Server) ClosestPrecedingFinger(_ context.Context, request *pb.ClosestPrecedingFingerRequest) (*pb.ClosestPrecedingFingerResponse, error) {
+func (n *Server) ClosestPrecedingFinger(ctx context.Context, request *pb.ClosestPrecedingFingerRequest) (*pb.ClosestPrecedingFingerResponse, error) {
 	logger := logrus.WithField("method", "Server.ClosestPrecedingFinger")
 	logger.Debugf("id=%d", request.Id)
-	node, err := n.closestPrecedingFinger(ChordID(request.Id))
+	node, err := n.closestPrecedingFinger(ctx, ChordID(request.Id))
 	if err != nil {
 		return nil, err
 	}
