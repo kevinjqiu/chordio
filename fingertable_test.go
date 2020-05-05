@@ -7,7 +7,7 @@ import (
 
 func TestNewFingerTable(t *testing.T) {
 	m := Rank(5)
-	node, _ := newLocalNode("localhost:1234", m)
+	node, _ := newLocalNode(15, "localhost:1234", m)
 	assert.Equal(t, ChordID(15), node.id)
 
 	ft := newFingerTable(node, m)

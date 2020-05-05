@@ -1,6 +1,7 @@
-package chordio
+package server
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"net"
 	"strconv"
@@ -61,5 +62,5 @@ func getFirstAvailableBindIP() (string, error) {
 		}
 	}
 
-	return "", errUnableToGetBindIP
+	return "", fmt.Errorf("unable to get available IP")
 }

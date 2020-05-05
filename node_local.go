@@ -180,8 +180,8 @@ func (n *LocalNode) join(ctx context.Context, introducerNode *RemoteNode) error 
 	return nil
 }
 
-func newLocalNode(bind string, m Rank) (*LocalNode, error) {
-	id := AssignID([]byte(bind), m)
+func newLocalNode(id ChordID, bind string, m Rank) (*LocalNode, error) {
+	//id := AssignID([]byte(bind), m)
 	localNode := &LocalNode{
 		id:   id,
 		bind: bind,

@@ -7,12 +7,36 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 type runFlags struct {
 	m        uint32
 	bind     string
 	loglevel string
+}
+
+func mustBind(bind string) string {
+	var err error
+
+	parts := strings.Split(bind, ":")
+	if len(parts) != 2 {
+		logrus.Fatal("Invalid bind format")
+	}
+
+	ip := parts[0]
+	if ip == "" {
+		ip, err = getFirstAvailableBindIP()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+	} else {
+		if !canBindIP(ip) {
+			logrus.Fatalf("cannot bind to IP %s: %s", ip, err)
+		}
+	}
+
+	return fmt.Sprintf("%s:%s", ip, parts[1])
 }
 
 func NewServerCommand() *cobra.Command {
@@ -25,12 +49,15 @@ func NewServerCommand() *cobra.Command {
 			}
 			chordio.SetLogLevel(flags.loglevel)
 
-			// TODO: calculate the bind address here instead of inside Server
-			// this way, we can initiate the tracer with its chordID
-			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/bind=%s", flags.bind), telemetry.Config{})
+			bind := mustBind(flags.bind)
+
+			id := chordio.AssignID([]byte(bind), chordio.Rank(flags.m))
+
+			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/nodeid=%d", id), telemetry.Config{})
 			defer flushFunc()
 
 			config := chordio.Config{
+				ID:   id,
 				M:    chordio.Rank(flags.m),
 				Bind: flags.bind,
 			}

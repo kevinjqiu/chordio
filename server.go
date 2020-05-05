@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
 	"net"
-	"strings"
 )
 
 var (
@@ -127,25 +126,7 @@ func (n *Server) Serve() error {
 func NewServer(config Config) (*Server, error) {
 	var err error
 
-	parts := strings.Split(config.Bind, ":")
-	if len(parts) != 2 {
-		return nil, errInvalidBindFormat
-	}
-
-	ip := parts[0]
-	if ip == "" {
-		ip, err = getFirstAvailableBindIP()
-		if err != nil  {
-			return nil, errors.Wrap(errUnableToGetBindIP, err.Error())
-		}
-	} else {
-		if !canBindIP(ip) {
-			return nil, errors.Wrap(errInvalidBindIP, ip)
-		}
-	}
-	bind := fmt.Sprintf("%s:%s", ip, parts[1])
-
-	localNode, err := newLocalNode(bind, config.M)
+	localNode, err := newLocalNode(config.ID, config.Bind, config.M)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to initiate local node")
 	}
