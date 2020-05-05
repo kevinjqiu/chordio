@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -60,6 +61,9 @@ func NewServerCommand() *cobra.Command {
 				uintID, err := strconv.ParseUint(flags.id, 10, 64)
 				if err != nil {
 					logrus.Fatal("cannot parse id: ", err.Error())
+				}
+				if float64(id) >= math.Pow(2.0, float64(flags.m)) {
+					logrus.Fatal("invalid id: id must between 0 and 2**m")
 				}
 				id = chordio.ChordID(uintID)
 			}
