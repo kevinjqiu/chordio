@@ -72,7 +72,7 @@ func (rn *RemoteNode) findPredecessor(ctx context.Context, id ChordID) (Node, er
 		n, err = newRemoteNode(ctx, resp.Node.Bind)
 		return err
 	})
-	return rn, err
+	return n, err
 }
 
 func (rn *RemoteNode) findSuccessor(ctx context.Context, id ChordID) (Node, error) {
