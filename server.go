@@ -17,11 +17,17 @@ type Server struct {
 	grpcServer *grpc.Server
 }
 
-func (n *Server) GetNodeInfo(_ context.Context, _ *pb.GetNodeInfoRequest) (*pb.GetNodeInfoResponse, error) {
+func (n *Server) GetNodeInfo(_ context.Context, req *pb.GetNodeInfoRequest) (*pb.GetNodeInfoResponse, error) {
 	logger := logrus.WithField("method", "Server.GetNodeInfo")
 	logger.Debug("[Server] GetNodeInfo")
+
+	var ft *pb.FingerTable
+	if req.IncludeFingerTable {
+		ft = n.ft.AsProtobufFT()
+	}
 	return &pb.GetNodeInfoResponse{
 		Node: n.LocalNode.AsProtobufNode(),
+		Ft: ft,
 	}, nil
 }
 

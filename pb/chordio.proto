@@ -8,6 +8,16 @@ message Node {
     Node succ = 4;
 }
 
+message FingerTableEntry {
+    uint64 start = 1;
+    uint64 end = 2;
+    uint64 nodeID = 3;
+}
+
+message FingerTable {
+    repeated FingerTableEntry entries = 1;
+}
+
 message ClosestPrecedingFingerRequest {
     uint64 id = 1;
 }
@@ -40,10 +50,12 @@ message FindSuccessorResponse {
 }
 
 message GetNodeInfoRequest {
+    bool includeFingerTable = 1;
 }
 
 message GetNodeInfoResponse {
     Node node = 1;
+    FingerTable ft = 2;
 }
 
 message UpdateFingerTableRequest {

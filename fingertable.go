@@ -2,6 +2,7 @@ package chordio
 
 import (
 	"fmt"
+	"github.com/kevinjqiu/chordio/pb"
 	"github.com/olekukonko/tablewriter"
 	"io"
 	"os"
@@ -42,6 +43,20 @@ func (ft FingerTable) HasNode(id ChordID) bool {
 		}
 	}
 	return false
+}
+
+func (ft FingerTable) AsProtobufFT() *pb.FingerTable {
+	pbft := pb.FingerTable{}
+	entries := make([]*pb.FingerTableEntry, 0, len(ft.entries))
+	for _, fte := range ft.entries {
+		entries = append(entries, &pb.FingerTableEntry{
+			Start:  uint64(fte.start),
+			End:    uint64(fte.interval.end),
+			NodeID: uint64(fte.node),
+		})
+	}
+	pbft.Entries = entries
+	return &pbft
 }
 
 func newFingerTable(initNode Node, m Rank) FingerTable {
