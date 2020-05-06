@@ -207,12 +207,14 @@ func (n *LocalNode) closestPrecedingFinger(ctx context.Context, id ChordID) (Nod
 	return ln, err
 }
 
+// initialize finger table of the local node
+// n' is an arbitrary node already in the network
 func (n *LocalNode) initFinger(ctx context.Context, remote *RemoteNode) error {
 	return n.WithSpan(ctx, "LocalNode.initFinger", func(ctx context.Context) error {
 		logger := logrus.WithField("method", "LocalNode.initFinger")
 		logger.Infof("using remote node %s", remote)
 		local := n
-		logger.Debugf("Try to find success for %d on %s", n.ft.entries[0].start, remote)
+		logger.Debugf("Try to find successor for %d on %s", n.ft.entries[0].start, remote)
 		succ, err := remote.findSuccessor(ctx, n.ft.entries[0].start)
 		if err != nil {
 			return err
