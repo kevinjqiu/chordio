@@ -222,6 +222,9 @@ func (n *LocalNode) initFinger(ctx context.Context, remote *RemoteNode) error {
 
 		logger.Debugf("Successor node for %d is %s", n.ft.entries[0].start, succ)
 		n.ft.entries[0].node = succ.GetID()
+		// add the node to the neighbourhood
+		_ = n.neighbourhood.Add(&NodeRef{bind: succ.GetBind(), id: succ.GetID()})
+
 		predNode, err := succ.GetPredNode()
 		if err != nil {
 			return err

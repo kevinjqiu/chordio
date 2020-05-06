@@ -60,10 +60,10 @@ func NewServerCommand() *cobra.Command {
 			} else {
 				uintID, err := strconv.ParseUint(flags.id, 10, 64)
 				if err != nil {
-					logrus.Fatal("cannot parse id: ", err.Error())
+					return errors.Wrap(err, "cannot parse id")
 				}
 				if float64(id) >= math.Pow(2.0, float64(flags.m)) {
-					logrus.Fatal("invalid id: id must between 0 and 2**m")
+					return errors.New("invalid id: id must between 0 and 2**m")
 				}
 				id = chordio.ChordID(uintID)
 			}
@@ -79,10 +79,10 @@ func NewServerCommand() *cobra.Command {
 
 			server, err := chordio.NewServer(config)
 			if err != nil {
-				logrus.Fatal(err)
+				return err
 			}
 			if err := server.Serve(); err != nil {
-				logrus.Fatal(err)
+				return err
 			}
 			return nil
 		},
