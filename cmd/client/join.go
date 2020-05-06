@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc/metadata"
 	"time"
@@ -20,7 +19,10 @@ func newJoinCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "join",
 		Short: "join node with another",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			defer flushFunc()
+
 			if flags.introducerURL == "" {
 				return errors.New("--introducer-url must be set")
 			}
@@ -39,7 +41,7 @@ func newJoinCommand() *cobra.Command {
 
 			resp, err := chordClient.JoinRing(ctx, &joinReq)
 			if err != nil {
-				logrus.Fatal(err)
+				return err
 			}
 
 			fmt.Println(resp)

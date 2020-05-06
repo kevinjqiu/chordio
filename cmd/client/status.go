@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/olekukonko/tablewriter"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc/metadata"
 	"io"
@@ -35,7 +34,9 @@ func newStatusCommand() *cobra.Command {
 		Use:     "status",
 		Aliases: []string{"st"},
 		Short:   "status of the chord server",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			defer flushFunc()
+
 			md := metadata.Pairs(
 				"timestamp", time.Now().Format(time.StampNano),
 				"operation", "status",
@@ -46,13 +47,14 @@ func newStatusCommand() *cobra.Command {
 				IncludeFingerTable: true,
 			})
 			if err != nil {
-				logrus.Fatal(err)
+				return err
 			}
 			fmt.Println("NodeID:", resp.Node.GetId())
 			fmt.Println("Addr:", resp.Node.GetBind())
 			fmt.Println("Pred:", resp.Node.GetPred())
 			fmt.Println("Succ:", resp.Node.GetSucc())
 			printFT(resp.Ft, nil)
+			return nil
 		},
 	}
 	return cmd

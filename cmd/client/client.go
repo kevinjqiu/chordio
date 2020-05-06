@@ -47,9 +47,6 @@ func NewClientCommand() *cobra.Command {
 			}
 			chordClient = pb.NewChordClient(conn)
 		},
-		PersistentPostRun: func(cmd *cobra.Command, args []string) {
-			flushFunc()
-		},
 	}
 
 	cmd.PersistentFlags().StringVarP(&loglevel, "loglevel", "l", "info", "log level")
