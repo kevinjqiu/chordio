@@ -26,7 +26,7 @@ func (n *LocalNode) GetFingerTable() *FingerTable {
 	return n.ft
 }
 
-func (n *LocalNode) GetM() Rank {
+func (n *LocalNode) GetRank() Rank {
 	return n.m
 }
 

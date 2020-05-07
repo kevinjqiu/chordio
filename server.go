@@ -85,7 +85,7 @@ func (n *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb
 func (n *Server) UpdateFingerTable(ctx context.Context, request *pb.UpdateFingerTableRequest) (*pb.UpdateFingerTableResponse, error) {
 	logger := logrus.WithField("method", "Server.UpdateFingerTable")
 	logger.Debugf("node=%v, i=%d", request.Node, request.I)
-	node, err := chord.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, n.localNode.GetM())
+	node, err := chord.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, n.localNode.GetRank())
 	if err != nil {
 		return nil, err
 	}
