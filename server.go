@@ -2,6 +2,7 @@ package chordio
 
 import (
 	"context"
+	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
@@ -13,7 +14,7 @@ import (
 )
 
 type Server struct {
-	*LocalNode
+	localNode  *chord.LocalNode
 	grpcServer *grpc.Server
 }
 
@@ -23,10 +24,10 @@ func (n *Server) GetNodeInfo(_ context.Context, req *pb.GetNodeInfoRequest) (*pb
 
 	var ft *pb.FingerTable
 	if req.IncludeFingerTable {
-		ft = n.ft.AsProtobufFT()
+		ft = n.localNode.GetFingerTable().AsProtobufFT()
 	}
 	return &pb.GetNodeInfoResponse{
-		Node: n.LocalNode.AsProtobufNode(),
+		Node: n.localNode.AsProtobufNode(),
 		Ft:   ft,
 	}, nil
 }
@@ -35,7 +36,7 @@ func (n *Server) FindPredecessor(ctx context.Context, request *pb.FindPredecesso
 	logger := logrus.WithField("method", "server.findPredecessor")
 	logger.Debug("id=", request.Id)
 
-	node, err := n.findPredecessor(ctx, ChordID(request.Id))
+	node, err := n.localNode.FindPredecessor(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +48,7 @@ func (n *Server) FindPredecessor(ctx context.Context, request *pb.FindPredecesso
 func (n *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
 	logger := logrus.WithField("method", "Server.findSuccessor")
 	logger.Debugf("id=%d", request.Id)
-	node, err := n.findSuccessor(ctx, ChordID(request.Id))
+	node, err := n.localNode.FindSuccessor(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +60,7 @@ func (n *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorReq
 func (n *Server) ClosestPrecedingFinger(ctx context.Context, request *pb.ClosestPrecedingFingerRequest) (*pb.ClosestPrecedingFingerResponse, error) {
 	logger := logrus.WithField("method", "Server.closestPrecedingFinger")
 	logger.Debugf("id=%d", request.Id)
-	node, err := n.closestPrecedingFinger(ctx, ChordID(request.Id))
+	node, err := n.localNode.ClosestPrecedingFinger(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -71,11 +72,11 @@ func (n *Server) ClosestPrecedingFinger(ctx context.Context, request *pb.Closest
 func (n *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb.JoinRingResponse, error) {
 	logger := logrus.WithField("method", "Server.JoinRing")
 	logger.Debugf("introducer=%v", request.Introducer)
-	introNode, err := newRemoteNode(ctx, request.Introducer.Bind)
+	introNode, err := chord.NewRemote(ctx, request.Introducer.Bind)
 	if err != nil {
 		return nil, err
 	}
-	if err := n.join(ctx, introNode); err != nil {
+	if err := n.localNode.Join(ctx, introNode); err != nil {
 		return nil, err
 	}
 	return &pb.JoinRingResponse{}, nil
@@ -84,11 +85,11 @@ func (n *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb
 func (n *Server) UpdateFingerTable(ctx context.Context, request *pb.UpdateFingerTableRequest) (*pb.UpdateFingerTableResponse, error) {
 	logger := logrus.WithField("method", "Server.UpdateFingerTable")
 	logger.Debugf("node=%v, i=%d", request.Node, request.I)
-	node, err := newLocalNode(ChordID(request.Node.Id), request.Node.Bind, n.m)
+	node, err := chord.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, n.localNode.GetRank())
 	if err != nil {
 		return nil, err
 	}
-	if err := n.updateFingerTable(ctx, node, int(request.I)); err != nil {
+	if err := n.localNode.UpdateFingerTableEntry(ctx, node, int(request.I)); err != nil {
 		return nil, err
 	}
 
@@ -96,21 +97,21 @@ func (n *Server) UpdateFingerTable(ctx context.Context, request *pb.UpdateFinger
 }
 
 func (n *Server) Serve() error {
-	lis, err := net.Listen("tcp", n.bind)
+	lis, err := net.Listen("tcp", n.localNode.GetBind())
 	if err != nil {
 		return err
 	}
 
 	pb.RegisterChordServer(n.grpcServer, n)
-	logrus.Info("serving chord grpc server at: ", n.bind)
-	logrus.Infof("m: %d, nodeID: %d", n.m, n.id)
+	logrus.Info("serving chord grpc server at: ", n.localNode.GetBind())
+	logrus.Infof("nodeID: %d", n.localNode.GetID())
 	return n.grpcServer.Serve(lis)
 }
 
 func NewServer(config Config) (*Server, error) {
 	var err error
 
-	localNode, err := newLocalNode(config.ID, config.Bind, config.M)
+	localNode, err := chord.NewLocal(config.ID, config.Bind, config.M)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to initiate local node")
 	}
@@ -121,7 +122,7 @@ func NewServer(config Config) (*Server, error) {
 	)
 
 	s := Server{
-		LocalNode:  localNode,
+		localNode:  localNode,
 		grpcServer: grpcServer,
 	}
 	return &s, nil

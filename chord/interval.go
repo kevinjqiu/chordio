@@ -1,4 +1,4 @@
-package chordio
+package chord
 
 import (
 	"math"
@@ -11,10 +11,9 @@ const (
 	intervalOptionClosed
 )
 
-// An interval between [Start, End)
 type Interval struct {
 	m           Rank
-	start, end  ChordID
+	Start, End  ID
 	leftOption  int
 	rightOption int
 }
@@ -35,33 +34,33 @@ func WithRightClosed(i *Interval) {
 	i.rightOption = intervalOptionClosed
 }
 
-func (i Interval) Has(id ChordID) bool {
+func (i Interval) Has(id ID) bool {
 	var leftClause, rightClause bool
 
 	if i.leftOption == intervalOptionOpen {
-		leftClause = i.start < id
+		leftClause = i.Start < id
 	} else {
-		leftClause = i.start <= id
+		leftClause = i.Start <= id
 	}
 
 	if i.rightOption == intervalOptionOpen {
-		rightClause = id < i.end
+		rightClause = id < i.End
 	} else {
-		rightClause = id <= i.end
+		rightClause = id <= i.End
 	}
 
-	if i.start < i.end {
+	if i.Start < i.End {
 		return leftClause && rightClause
 	}
-	max := ChordID(pow2(uint32(i.m)))
+	max := ID(pow2(uint32(i.m)))
 	return leftClause && id < max || 0 <= id && rightClause
 }
 
-func NewInterval(m Rank, start, end ChordID, options ...IntervalOption) Interval {
+func NewInterval(m Rank, start, end ID, options ...IntervalOption) Interval {
 	i := Interval{
 		m:           m,
-		start:       start,
-		end:         end,
+		Start:       start,
+		End:         end,
 		leftOption:  intervalOptionClosed,
 		rightOption: intervalOptionOpen,
 	}
