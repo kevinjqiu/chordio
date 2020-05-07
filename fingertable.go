@@ -119,11 +119,10 @@ func newFingerTable(initNode Node, m Rank) FingerTable {
 	}
 
 	ft.entries = make([]FingerTableEntry, 0, m)
-	maxKey := pow2(uint32(m))
 
 	for k := 0; k < int(m); k++ {
-		start := ChordID((uint64(initNode.GetID()) + pow2(uint32(k))) % maxKey)
-		end := ChordID((uint64(initNode.GetID()) + pow2(uint32(k+1))) % maxKey)
+		start := initNode.GetID().Add(ChordID(pow2(uint32(k))), m)
+		end := initNode.GetID().Add(ChordID(pow2(uint32(k+1))), m)
 		ft.entries = append(ft.entries, FingerTableEntry{
 			start: start,
 			interval: Interval{
