@@ -264,10 +264,10 @@ func (n *LocalNode) join(ctx context.Context, introducerNode *RemoteNode) error 
 }
 
 func (n *LocalNode) updateOthers(ctx context.Context) error {
-	logger := logrus.WithField("method", "LocalNode.updateOthers")
 	newCtx, span := n.Start(ctx, "LocalNode.updateOthers")
 	defer span.End()
 
+	logger := logrus.WithField("method", "LocalNode.updateOthers")
 	for i := 0; i < int(n.m); i++ {
 		logger.Debugf("iteration: %d", i)
 		newID := n.id.Sub(ChordID(pow2(uint32(i))), n.m)

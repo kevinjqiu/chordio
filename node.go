@@ -4,10 +4,13 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/binary"
+	"fmt"
 	"github.com/kevinjqiu/chordio/pb"
 )
 
 type Node interface {
+	fmt.Stringer
+
 	GetID() ChordID
 	GetBind() string
 	GetPredNode() (*NodeRef, error)

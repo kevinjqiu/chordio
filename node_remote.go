@@ -7,6 +7,7 @@ import (
 	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/api/core"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/plugin/grpctrace"
@@ -144,19 +145,18 @@ func (rn *RemoteNode) AsProtobufNode() *pb.Node {
 }
 
 func (rn *RemoteNode) updateFingerTable(ctx context.Context, s Node, i int) error {
-	return rn.WithSpan(ctx, "RemoteNode.updateFingerTable", func(ctx context.Context) error {
-		logrus.Debugf("[RemoteNode] updateFingerTable: id=%d, i=%d", s.GetID(), i)
-		req := pb.UpdateFingerTableRequest{
-			Node: s.AsProtobufNode(),
-			I:    int64(i),
-		}
+	ctx, span := rn.Start(ctx, "RemoteNode.updateFingerTable",
+		trace.WithAttributes(core.Key("s").String(s.String())))
+	defer span.End()
 
-		_, err := rn.client.UpdateFingerTable(ctx, &req)
-		if err != nil {
-			return err
-		}
-		return err
-	})
+	logrus.Debugf("[RemoteNode] updateFingerTable: id=%d, i=%d", s.GetID(), i)
+	req := pb.UpdateFingerTableRequest{
+		Node: s.AsProtobufNode(),
+		I:    int64(i),
+	}
+
+	_, err := rn.client.UpdateFingerTable(ctx, &req)
+	return err
 }
 
 func newRemoteNode(ctx context.Context, bind string) (*RemoteNode, error) {
