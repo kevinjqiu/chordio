@@ -16,8 +16,10 @@ type FingerTableEntry struct {
 }
 
 type FingerTable struct {
-	m       Rank
-	entries []FingerTableEntry
+	ownerID       ChordID
+	m             Rank
+	entries       []FingerTableEntry
+	neighbourhood *Neighbourhood
 }
 
 func (ft FingerTable) Print(w io.Writer) {
@@ -34,6 +36,50 @@ func (ft FingerTable) Print(w io.Writer) {
 		})
 	}
 	writer.Render()
+}
+
+// Set the i'th finger table entry's node to id
+// The node represented by the id must already exist
+// in the neighbourhood
+func (ft FingerTable) SetID(i int, id ChordID) error {
+	oldNodeID := ft.entries[i].node
+	if oldNodeID == id {
+		return nil
+	}
+
+	_, _, _, ok := ft.neighbourhood.Get(id)
+	if !ok {
+		return fmt.Errorf("cannot set %dth fingertable entry to %d: node %d not found in the neighbourhood", i, id, id)
+	}
+
+	ft.entries[i].node = id
+
+	if oldNodeID != ft.ownerID && !ft.HasNode(oldNodeID) {
+		ft.neighbourhood.Remove(oldNodeID)
+	}
+	return nil
+}
+
+// Set the i'th finger table entry's node to n
+func (ft FingerTable) Set(i int, n Node) {
+	oldNodeID := ft.entries[i].node
+	if oldNodeID == n.GetID() {
+		return
+	}
+
+	ft.entries[i].node = n.GetID()
+	_ = ft.neighbourhood.Add(&NodeRef{
+		id: n.GetID(),
+		bind: n.GetBind(),
+	})
+
+	if oldNodeID != ft.ownerID && !ft.HasNode(oldNodeID) {
+		ft.neighbourhood.Remove(oldNodeID)
+	}
+}
+
+func (ft FingerTable) Get(i int) FingerTableEntry {
+	return ft.entries[i]
 }
 
 func (ft FingerTable) HasNode(id ChordID) bool {
@@ -60,9 +106,13 @@ func (ft FingerTable) AsProtobufFT() *pb.FingerTable {
 }
 
 func newFingerTable(initNode Node, m Rank) FingerTable {
-	ft := FingerTable{m: m}
-	ft.entries = make([]FingerTableEntry, 0, m)
+	ft := FingerTable{
+		m: m,
+		ownerID: initNode.GetID(),
+		neighbourhood: newNeighbourhood(m),
+	}
 
+	ft.entries = make([]FingerTableEntry, 0, m)
 	maxKey := pow2(uint32(m))
 
 	for k := 0; k < int(m); k++ {
@@ -77,6 +127,11 @@ func newFingerTable(initNode Node, m Rank) FingerTable {
 			node: initNode.GetID(),
 		})
 	}
+
+	_ = ft.neighbourhood.Add(&NodeRef{
+		id:   initNode.GetID(),
+		bind: initNode.GetBind(),
+	})
 
 	return ft
 }
