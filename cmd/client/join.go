@@ -17,8 +17,8 @@ type joinFlags struct {
 func newJoinCommand() *cobra.Command {
 	var flags joinFlags
 	cmd := &cobra.Command{
-		Use:   "join",
-		Short: "join node with another",
+		Use:          "join",
+		Short:        "join node with another",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			defer flushFunc()

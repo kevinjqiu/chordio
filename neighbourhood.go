@@ -62,7 +62,7 @@ func (n *Neighbourhood) Get(id ChordID) (node NodeRef, predID ChordID, succID Ch
 
 	ok = true
 	node = NodeRef{
-		id: n.nodes[idx].id,
+		id:   n.nodes[idx].id,
 		bind: n.nodes[idx].bind,
 	}
 	if idx == 0 {
@@ -70,7 +70,7 @@ func (n *Neighbourhood) Get(id ChordID) (node NodeRef, predID ChordID, succID Ch
 	} else {
 		predID = n.nodes[idx-1].id
 	}
-	if idx == len(n.nodes) - 1 {
+	if idx == len(n.nodes)-1 {
 		succID = n.nodes[0].id
 	} else {
 		succID = n.nodes[idx+1].id

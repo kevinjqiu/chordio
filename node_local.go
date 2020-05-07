@@ -113,7 +113,7 @@ func (n *LocalNode) findPredecessor(ctx context.Context, id ChordID) (Node, erro
 	logger := logrus.WithField("method", "LocalNode.findPredecessor")
 	var (
 		remoteNode Node
-		err error
+		err        error
 	)
 
 	if !id.In(n.id, n.succ, n.m) {

@@ -10,7 +10,7 @@ import (
 
 func getAvailableInterfaces() []net.Interface {
 	var ai = make([]net.Interface, 0, 0)
-	interfaces, _:= net.Interfaces()
+	interfaces, _ := net.Interfaces()
 	for _, inf := range interfaces {
 		isBroadcast := (inf.Flags & net.FlagBroadcast) == net.FlagBroadcast
 		isUp := (inf.Flags & net.FlagUp) == net.FlagUp

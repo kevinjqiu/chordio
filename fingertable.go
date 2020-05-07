@@ -69,7 +69,7 @@ func (ft FingerTable) SetEntry(i int, n Node) {
 
 	ft.entries[i].node = n.GetID()
 	_ = ft.neighbourhood.Add(&NodeRef{
-		id: n.GetID(),
+		id:   n.GetID(),
 		bind: n.GetBind(),
 	})
 
@@ -113,8 +113,8 @@ func (ft FingerTable) AsProtobufFT() *pb.FingerTable {
 
 func newFingerTable(initNode Node, m Rank) FingerTable {
 	ft := FingerTable{
-		m: m,
-		ownerID: initNode.GetID(),
+		m:             m,
+		ownerID:       initNode.GetID(),
 		neighbourhood: newNeighbourhood(m),
 	}
 

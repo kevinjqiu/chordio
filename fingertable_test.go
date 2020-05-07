@@ -12,7 +12,7 @@ func TestNewFingerTable(t *testing.T) {
 
 	ft := newFingerTable(node, m)
 	for i, e := range ft.entries {
-		assert.Equal(t, node.id + ChordID(pow2(uint32(i))), e.start)
+		assert.Equal(t, node.id+ChordID(pow2(uint32(i))), e.start)
 	}
 	ft.Print(nil)
 }

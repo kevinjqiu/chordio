@@ -2,7 +2,6 @@ package telemetry
 
 type JaegerExporterConfig struct {
 	CollectorEndpoint string `mapstructure:"collectorEndpoint"`
-
 }
 
 type ExporterConfig struct {

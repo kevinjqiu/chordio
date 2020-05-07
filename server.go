@@ -27,7 +27,7 @@ func (n *Server) GetNodeInfo(_ context.Context, req *pb.GetNodeInfoRequest) (*pb
 	}
 	return &pb.GetNodeInfoResponse{
 		Node: n.LocalNode.AsProtobufNode(),
-		Ft: ft,
+		Ft:   ft,
 	}, nil
 }
 

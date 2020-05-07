@@ -20,7 +20,7 @@ func (c ChordID) Sub(other ChordID, m Rank) ChordID {
 
 func (c ChordID) Add(other ChordID, m Rank) ChordID {
 	max := pow2(uint32(m))
-	return ChordID(uint64(c + other) % max)
+	return ChordID(uint64(c+other) % max)
 }
 
 func (c ChordID) In(start, end ChordID, m Rank) bool {
