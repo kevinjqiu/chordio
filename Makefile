@@ -4,6 +4,9 @@ dev:
 build: gen
 	cd cmd && go build -o ../bin/chordio .
 
+fmt:
+	go fmt ./...
+
 gen:
 	protoc -I pb pb/chordio.proto --go_out=plugins=grpc:pb
 
