@@ -1,4 +1,4 @@
-package chordio
+package chord
 
 import (
 	"math"
@@ -11,7 +11,6 @@ const (
 	intervalOptionClosed
 )
 
-// An interval between [Start, End)
 type Interval struct {
 	m           Rank
 	start, end  ChordID

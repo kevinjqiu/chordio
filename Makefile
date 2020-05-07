@@ -23,7 +23,7 @@ join:
 	docker-compose run -e CHORDIO_URL=n1:1234 control chordio client join -i n2:2345
 
 test:
-	go test -v -cover ./...
+	go test -cover ./...
 
 run-local:
 	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server -b 127.0.0.1:$(port) -l debug -m 5

@@ -3,6 +3,7 @@ package chordio
 import (
 	"context"
 	"fmt"
+	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
@@ -16,7 +17,7 @@ import (
 
 type RemoteNode struct {
 	trace.Tracer
-	id       ChordID
+	id       chord.ChordID
 	bind     string
 	predNode *pb.Node
 	succNode *pb.Node
@@ -41,7 +42,7 @@ func (rn *RemoteNode) String() string {
 	return fmt.Sprintf("<R: %d@%s, p=%s, s=%s>", rn.id, rn.bind, pred, succ)
 }
 
-func (rn *RemoteNode) GetID() ChordID {
+func (rn *RemoteNode) GetID() chord.ChordID {
 	return rn.id
 }
 
@@ -50,14 +51,14 @@ func (rn *RemoteNode) GetBind() string {
 }
 
 func (rn *RemoteNode) GetPredNode() (*NodeRef, error) {
-	return &NodeRef{ChordID(rn.predNode.Id), rn.predNode.Bind}, nil
+	return &NodeRef{chord.ChordID(rn.predNode.Id), rn.predNode.Bind}, nil
 }
 
 func (rn *RemoteNode) GetSuccNode() (*NodeRef, error) {
-	return &NodeRef{ChordID(rn.succNode.Id), rn.succNode.Bind}, nil
+	return &NodeRef{chord.ChordID(rn.succNode.Id), rn.succNode.Bind}, nil
 }
 
-func (rn *RemoteNode) findPredecessor(ctx context.Context, id ChordID) (Node, error) {
+func (rn *RemoteNode) findPredecessor(ctx context.Context, id chord.ChordID) (Node, error) {
 	var n *RemoteNode
 	err := rn.WithSpan(ctx, "RemoteNode.findPredecessor", func(ctx context.Context) error {
 		logrus.Debug("[RemoteNode] findPredecessor: ", id)
@@ -76,7 +77,7 @@ func (rn *RemoteNode) findPredecessor(ctx context.Context, id ChordID) (Node, er
 	return n, err
 }
 
-func (rn *RemoteNode) findSuccessor(ctx context.Context, id ChordID) (Node, error) {
+func (rn *RemoteNode) findSuccessor(ctx context.Context, id chord.ChordID) (Node, error) {
 	var n *RemoteNode
 	err := rn.WithSpan(ctx, "RemoteNode.findSuccessor", func(ctx context.Context) error {
 		logrus.Debug("[RemoteNode] findSuccessor: ", id)
@@ -96,7 +97,7 @@ func (rn *RemoteNode) findSuccessor(ctx context.Context, id ChordID) (Node, erro
 	return n, err
 }
 
-func (rn *RemoteNode) closestPrecedingFinger(ctx context.Context, id ChordID) (Node, error) {
+func (rn *RemoteNode) closestPrecedingFinger(ctx context.Context, id chord.ChordID) (Node, error) {
 	var n *RemoteNode
 
 	err := rn.WithSpan(ctx, "RemoteNode.closestPrecedingFinger", func(ctx context.Context) error {
@@ -177,7 +178,7 @@ func newRemoteNode(ctx context.Context, bind string) (*RemoteNode, error) {
 
 	rn := &RemoteNode{
 		Tracer:   global.Tracer(""),
-		id:       ChordID(resp.Node.GetId()),
+		id:       chord.ChordID(resp.Node.GetId()),
 		bind:     bind,
 		predNode: resp.Node.GetPred(),
 		succNode: resp.Node.GetSucc(),

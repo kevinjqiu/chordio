@@ -1,9 +1,6 @@
-package chordio
+package chord
 
-type (
-	ChordID uint64
-	Rank    uint32 // otherwise known as the m value
-)
+type ChordID uint64
 
 func (c ChordID) Sub(other ChordID, m Rank) ChordID {
 	var newID int = int(c - other)

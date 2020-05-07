@@ -1,7 +1,9 @@
 package chordio
 
+import "github.com/kevinjqiu/chordio/chord"
+
 type Config struct {
-	ID   ChordID
-	M    Rank
+	ID   chord.ChordID
+	M    chord.Rank
 	Bind string
 }

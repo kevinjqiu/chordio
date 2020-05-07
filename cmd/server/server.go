@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"github.com/kevinjqiu/chordio"
+	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -54,9 +55,9 @@ func NewServerCommand() *cobra.Command {
 
 			bind := mustBind(flags.bind)
 
-			var id chordio.ChordID
+			var id chord.ChordID
 			if flags.id == "" {
-				id = chordio.AssignID([]byte(bind), chordio.Rank(flags.m))
+				id = chordio.AssignID([]byte(bind), chord.Rank(flags.m))
 			} else {
 				uintID, err := strconv.ParseUint(flags.id, 10, 64)
 				if err != nil {
@@ -65,7 +66,7 @@ func NewServerCommand() *cobra.Command {
 				if float64(id) >= math.Pow(2.0, float64(flags.m)) {
 					return errors.New("invalid id: id must between 0 and 2**m")
 				}
-				id = chordio.ChordID(uintID)
+				id = chord.ChordID(uintID)
 			}
 
 			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/#%d", id), telemetry.Config{})
@@ -73,7 +74,7 @@ func NewServerCommand() *cobra.Command {
 
 			config := chordio.Config{
 				ID:   id,
-				M:    chordio.Rank(flags.m),
+				M:    chord.Rank(flags.m),
 				Bind: flags.bind,
 			}
 

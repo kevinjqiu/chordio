@@ -2,6 +2,7 @@ package chordio
 
 import (
 	"fmt"
+	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/olekukonko/tablewriter"
 	"io"
@@ -10,14 +11,14 @@ import (
 )
 
 type FingerTableEntry struct {
-	start    ChordID
-	interval Interval
-	node     ChordID
+	start    chord.ChordID
+	interval chord.Interval
+	node     chord.ChordID
 }
 
 type FingerTable struct {
-	ownerID       ChordID
-	m             Rank
+	ownerID       chord.ChordID
+	m             chord.Rank
 	entries       []FingerTableEntry
 	neighbourhood *Neighbourhood
 }
@@ -41,7 +42,7 @@ func (ft FingerTable) Print(w io.Writer) {
 // SetEntry the i'th finger table entry's node to id
 // The node represented by the id must already exist
 // in the neighbourhood
-func (ft FingerTable) SetID(i int, id ChordID) error {
+func (ft FingerTable) SetID(i int, id chord.ChordID) error {
 	oldNodeID := ft.entries[i].node
 	if oldNodeID == id {
 		return nil
@@ -83,12 +84,12 @@ func (ft FingerTable) GetEntry(i int) FingerTableEntry {
 }
 
 // Get the node, pred, succ at fingertable entry index i
-func (ft FingerTable) GetNode(i int) (NodeRef, ChordID, ChordID, bool) {
+func (ft FingerTable) GetNode(i int) (NodeRef, chord.ChordID, chord.ChordID, bool) {
 	nodeID := ft.entries[i].node
 	return ft.neighbourhood.Get(nodeID)
 }
 
-func (ft FingerTable) HasNode(id ChordID) bool {
+func (ft FingerTable) HasNode(id chord.ChordID) bool {
 	for _, fte := range ft.entries {
 		if fte.node == id {
 			return true
@@ -111,7 +112,7 @@ func (ft FingerTable) AsProtobufFT() *pb.FingerTable {
 	return &pbft
 }
 
-func newFingerTable(initNode Node, m Rank) FingerTable {
+func newFingerTable(initNode Node, m chord.Rank) FingerTable {
 	ft := FingerTable{
 		m:             m,
 		ownerID:       initNode.GetID(),
@@ -121,11 +122,11 @@ func newFingerTable(initNode Node, m Rank) FingerTable {
 	ft.entries = make([]FingerTableEntry, 0, m)
 
 	for k := 0; k < int(m); k++ {
-		start := initNode.GetID().Add(ChordID(pow2(uint32(k))), m)
-		end := initNode.GetID().Add(ChordID(pow2(uint32(k+1))), m)
+		start := initNode.GetID().Add(chord.ChordID(chord.pow2(uint32(k))), m)
+		end := initNode.GetID().Add(chord.ChordID(chord.pow2(uint32(k+1))), m)
 		ft.entries = append(ft.entries, FingerTableEntry{
 			start: start,
-			interval: Interval{
+			interval: chord.Interval{
 				start: start,
 				end:   end,
 			},
