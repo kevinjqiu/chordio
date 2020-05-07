@@ -59,3 +59,7 @@ func TestChordID_Add(t *testing.T) {
 		assert.Equal(t, ID(3), c)
 	})
 }
+
+func TestChordID_Pow(t *testing.T) {
+	assert.Equal(t, ID(8), ID(2).Pow(3))
+}

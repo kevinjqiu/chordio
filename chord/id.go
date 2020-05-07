@@ -23,8 +23,7 @@ func (c ID) Add(other ID, m Rank) ID {
 }
 
 func (c ID) Pow(m int) ID {
-	max := pow2(uint32(m))
-	id := uint64(math.Pow(2, float64(m))) % max
+	id := uint64(math.Pow(2, float64(m)))
 	return ID(id)
 }
 
