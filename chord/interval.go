@@ -13,7 +13,7 @@ const (
 
 type Interval struct {
 	m           Rank
-	start, end  ChordID
+	Start, End  ChordID
 	leftOption  int
 	rightOption int
 }
@@ -38,18 +38,18 @@ func (i Interval) Has(id ChordID) bool {
 	var leftClause, rightClause bool
 
 	if i.leftOption == intervalOptionOpen {
-		leftClause = i.start < id
+		leftClause = i.Start < id
 	} else {
-		leftClause = i.start <= id
+		leftClause = i.Start <= id
 	}
 
 	if i.rightOption == intervalOptionOpen {
-		rightClause = id < i.end
+		rightClause = id < i.End
 	} else {
-		rightClause = id <= i.end
+		rightClause = id <= i.End
 	}
 
-	if i.start < i.end {
+	if i.Start < i.End {
 		return leftClause && rightClause
 	}
 	max := ChordID(pow2(uint32(i.m)))
@@ -59,8 +59,8 @@ func (i Interval) Has(id ChordID) bool {
 func NewInterval(m Rank, start, end ChordID, options ...IntervalOption) Interval {
 	i := Interval{
 		m:           m,
-		start:       start,
-		end:         end,
+		Start:       start,
+		End:         end,
 		leftOption:  intervalOptionClosed,
 		rightOption: intervalOptionOpen,
 	}

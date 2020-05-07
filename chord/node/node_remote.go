@@ -1,4 +1,4 @@
-package chordio
+package node
 
 import (
 	"context"
@@ -58,10 +58,10 @@ func (rn *RemoteNode) GetSuccNode() (*NodeRef, error) {
 	return &NodeRef{chord.ChordID(rn.succNode.Id), rn.succNode.Bind}, nil
 }
 
-func (rn *RemoteNode) findPredecessor(ctx context.Context, id chord.ChordID) (Node, error) {
+func (rn *RemoteNode) FindPredecessor(ctx context.Context, id chord.ChordID) (Node, error) {
 	var n *RemoteNode
-	err := rn.WithSpan(ctx, "RemoteNode.findPredecessor", func(ctx context.Context) error {
-		logrus.Debug("[RemoteNode] findPredecessor: ", id)
+	err := rn.WithSpan(ctx, "RemoteNode.FindPredecessor", func(ctx context.Context) error {
+		logrus.Debug("[RemoteNode] FindPredecessor: ", id)
 		req := pb.FindPredecessorRequest{
 			Id: uint64(id),
 		}
@@ -77,10 +77,10 @@ func (rn *RemoteNode) findPredecessor(ctx context.Context, id chord.ChordID) (No
 	return n, err
 }
 
-func (rn *RemoteNode) findSuccessor(ctx context.Context, id chord.ChordID) (Node, error) {
+func (rn *RemoteNode) FindSuccessor(ctx context.Context, id chord.ChordID) (Node, error) {
 	var n *RemoteNode
-	err := rn.WithSpan(ctx, "RemoteNode.findSuccessor", func(ctx context.Context) error {
-		logrus.Debug("[RemoteNode] findSuccessor: ", id)
+	err := rn.WithSpan(ctx, "RemoteNode.FindSuccessor", func(ctx context.Context) error {
+		logrus.Debug("[RemoteNode] FindSuccessor: ", id)
 		req := pb.FindSuccessorRequest{
 			Id: uint64(id),
 		}
@@ -97,11 +97,11 @@ func (rn *RemoteNode) findSuccessor(ctx context.Context, id chord.ChordID) (Node
 	return n, err
 }
 
-func (rn *RemoteNode) closestPrecedingFinger(ctx context.Context, id chord.ChordID) (Node, error) {
+func (rn *RemoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ChordID) (Node, error) {
 	var n *RemoteNode
 
-	err := rn.WithSpan(ctx, "RemoteNode.closestPrecedingFinger", func(ctx context.Context) error {
-		logrus.Debug("[RemoteNode] closestPrecedingFinger: ", id)
+	err := rn.WithSpan(ctx, "RemoteNode.ClosestPrecedingFinger", func(ctx context.Context) error {
+		logrus.Debug("[RemoteNode] ClosestPrecedingFinger: ", id)
 		req := pb.ClosestPrecedingFingerRequest{
 			Id: uint64(id),
 		}
@@ -129,28 +129,28 @@ func (rn *RemoteNode) AsProtobufNode() *pb.Node {
 	pred, err := rn.GetPredNode()
 	if err != nil {
 		pbn.Pred = &pb.Node{
-			Id:   uint64(pred.id),
-			Bind: pred.bind,
+			Id:   uint64(pred.ID),
+			Bind: pred.Bind,
 		}
 	}
 
 	succ, err := rn.GetSuccNode()
 	if err != nil {
 		pbn.Succ = &pb.Node{
-			Id:   uint64(succ.id),
-			Bind: succ.bind,
+			Id:   uint64(succ.ID),
+			Bind: succ.Bind,
 		}
 	}
 
 	return pbn
 }
 
-func (rn *RemoteNode) updateFingerTable(ctx context.Context, s Node, i int) error {
-	ctx, span := rn.Start(ctx, "RemoteNode.updateFingerTable",
+func (rn *RemoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) error {
+	ctx, span := rn.Start(ctx, "RemoteNode.UpdateFingerTableEntry",
 		trace.WithAttributes(core.Key("s").String(s.String())))
 	defer span.End()
 
-	logrus.Debugf("[RemoteNode] updateFingerTable: id=%d, i=%d", s.GetID(), i)
+	logrus.Debugf("[RemoteNode] UpdateFingerTableEntry: ID=%d, i=%d", s.GetID(), i)
 	req := pb.UpdateFingerTableRequest{
 		Node: s.AsProtobufNode(),
 		I:    int64(i),

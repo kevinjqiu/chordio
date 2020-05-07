@@ -1,5 +1,7 @@
 package chord
 
+import "math"
+
 type ChordID uint64
 
 func (c ChordID) Sub(other ChordID, m Rank) ChordID {
@@ -20,7 +22,21 @@ func (c ChordID) Add(other ChordID, m Rank) ChordID {
 	return ChordID(uint64(c+other) % max)
 }
 
+func (c ChordID) Pow(m int) ChordID {
+	max := pow2(uint32(m))
+	id := uint64(math.Pow(2, float64(m))) % max
+	return ChordID(id)
+}
+
 func (c ChordID) In(start, end ChordID, m Rank) bool {
 	int := NewInterval(m, start, end)
 	return int.Has(c)
+}
+
+func (c ChordID) AsU64() uint64 {
+	return uint64(c)
+}
+
+func (c ChordID) AsInt() int {
+	return int(c)
 }

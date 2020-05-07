@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/kevinjqiu/chordio"
 	"github.com/kevinjqiu/chordio/chord"
+	"github.com/kevinjqiu/chordio/chord/node"
 	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -57,7 +58,7 @@ func NewServerCommand() *cobra.Command {
 
 			var id chord.ChordID
 			if flags.id == "" {
-				id = chordio.AssignID([]byte(bind), chord.Rank(flags.m))
+				id = node.AssignID([]byte(bind), chord.Rank(flags.m))
 			} else {
 				uintID, err := strconv.ParseUint(flags.id, 10, 64)
 				if err != nil {
