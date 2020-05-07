@@ -12,14 +12,14 @@ import (
 
 type LocalNode struct {
 	trace.Tracer
-	id            ChordID
-	bind          string
-	pred          ChordID
-	succ          ChordID
-	predNode      *NodeRef
-	succNode      *NodeRef
-	m             Rank
-	ft            *FingerTable
+	id       ChordID
+	bind     string
+	pred     ChordID
+	succ     ChordID
+	predNode *NodeRef
+	succNode *NodeRef
+	m        Rank
+	ft       *FingerTable
 }
 
 func (n *LocalNode) String() string {
@@ -138,7 +138,8 @@ func (n *LocalNode) findPredecessor(ctx context.Context, id ChordID) (Node, erro
 			if err != nil {
 				return err
 			}
-			if !id.In(n_.GetID(), succNode.id, n.m) { // FIXME: not in (a, b]
+			interval := NewInterval(n.m, n_.GetID(), succNode.id, WithLeftOpen, WithRightClosed)
+			if !interval.Has(id) {
 				logger.Debugf("id is not in %v's range", n_)
 				remoteNode, err = remoteNode.closestPrecedingFinger(ctx, id)
 				if err != nil {
@@ -173,37 +174,31 @@ func (n *LocalNode) findSuccessor(ctx context.Context, id ChordID) (Node, error)
 }
 
 func (n *LocalNode) closestPrecedingFinger(ctx context.Context, id ChordID) (Node, error) {
-	var ln *LocalNode
-	err := n.WithSpan(ctx, "LocalNode.closestPrecedingFinger", func(ctx context.Context) error {
-		logger := logrus.WithField("method", "LocalNode.closestPrecedingFinger")
-		logger.Debugf("id=%d", id)
-		// nb: int cast here is IMPORTANT!
-		// because n.m is of type uint32
-		// i >= 0 is always going to be true
-		for i := int(n.m) - 1; i >= 0; i-- {
-			fte := n.ft.GetEntry(i)
-			if fte.node.In(n.id, id, n.m) {
-				nodeID := fte.node
-				resultNode, predID, succID, ok := n.ft.neighbourhood.Get(nodeID)
-				logger.Info("found result node: ", resultNode)
-				if !ok {
-					return fmt.Errorf("node not found for id: %d", nodeID)
-				}
-				ln = &LocalNode{
-					id:            resultNode.id,
-					pred:          predID,
-					succ:          succID,
-					bind:          resultNode.bind,
-					m:             n.m,
-					ft:            n.ft,
-				}
-				return nil
+	ctx, span := n.Start(ctx, "LocalNode.closestPrecedingFinger")
+	defer span.End()
+
+	logger := logrus.WithField("method", "LocalNode.closestPrecedingFinger")
+	logger.Debugf("id=%d", id)
+	// nb: int cast here is IMPORTANT!
+	// because n.m is of type uint32
+	// i >= 0 is always going to be true
+	for i := int(n.m) - 1; i >= 0; i-- {
+		fte := n.ft.GetEntry(i)
+		interval := NewInterval(n.m, n.id, id, WithLeftOpen, WithRightOpen)
+		if interval.Has(fte.node) {
+			node, _, _, ok := n.ft.neighbourhood.Get(fte.node)
+			if !ok {
+				return nil, fmt.Errorf("node %d at fte[%d] not found", fte.node, i)
+			}
+
+			if node.id == n.id {
+				return newLocalNode(node.id, node.bind, n.m)
+			} else {
+				return newRemoteNode(ctx, node.bind)
 			}
 		}
-		ln = n
-		return nil
-	})
-	return ln, err
+	}
+	return n, nil
 }
 
 // initialize finger table of the local node
