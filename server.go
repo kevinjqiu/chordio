@@ -72,7 +72,7 @@ func (n *Server) ClosestPrecedingFinger(ctx context.Context, request *pb.Closest
 func (n *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb.JoinRingResponse, error) {
 	logger := logrus.WithField("method", "Server.JoinRing")
 	logger.Debugf("introducer=%v", request.Introducer)
-	introNode, err := newRemoteNode(ctx, request.Introducer.Bind)
+	introNode, err := NewRemote(ctx, request.Introducer.Bind)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (n *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb
 func (n *Server) UpdateFingerTable(ctx context.Context, request *pb.UpdateFingerTableRequest) (*pb.UpdateFingerTableResponse, error) {
 	logger := logrus.WithField("method", "Server.UpdateFingerTable")
 	logger.Debugf("node=%v, i=%d", request.Node, request.I)
-	node, err := newLocalNode(chord.ChordID(request.Node.Id), request.Node.Bind, n.m)
+	node, err := NewLocal(chord.ChordID(request.Node.Id), request.Node.Bind, n.m)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (n *Server) Serve() error {
 func NewServer(config Config) (*Server, error) {
 	var err error
 
-	localNode, err := newLocalNode(config.ID, config.Bind, config.M)
+	localNode, err := NewLocal(config.ID, config.Bind, config.M)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to initiate local node")
 	}

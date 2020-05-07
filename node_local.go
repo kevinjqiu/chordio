@@ -128,7 +128,7 @@ func (n *LocalNode) findPredecessor(ctx context.Context, id chord.ChordID) (Node
 	}
 
 	logger.Debugf("the closest preceding node is %v", n_)
-	remoteNode, err = newRemoteNode(ctx, n_.GetBind())
+	remoteNode, err = NewRemote(ctx, n_.GetBind())
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (n *LocalNode) findSuccessor(ctx context.Context, id chord.ChordID) (Node, 
 		return nil, err
 	}
 
-	return newRemoteNode(ctx, succNode.bind)
+	return NewRemote(ctx, succNode.bind)
 }
 
 func (n *LocalNode) closestPrecedingFinger(ctx context.Context, id chord.ChordID) (Node, error) {
@@ -192,9 +192,9 @@ func (n *LocalNode) closestPrecedingFinger(ctx context.Context, id chord.ChordID
 			}
 
 			if node.id == n.id {
-				return newLocalNode(node.id, node.bind, n.m)
+				return NewLocal(node.id, node.bind, n.m)
 			} else {
-				return newRemoteNode(ctx, node.bind)
+				return NewRemote(ctx, node.bind)
 			}
 		}
 	}
@@ -295,7 +295,7 @@ func (n *LocalNode) updateFingerTable(_ context.Context, s Node, i int) error {
 	return nil
 }
 
-func newLocalNode(id chord.ChordID, bind string, m chord.Rank) (*LocalNode, error) {
+func NewLocal(id chord.ChordID, bind string, m chord.Rank) (*LocalNode, error) {
 	localNode := &LocalNode{
 		Tracer: global.Tracer(""),
 		id:     id,

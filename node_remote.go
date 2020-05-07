@@ -71,7 +71,7 @@ func (rn *RemoteNode) findPredecessor(ctx context.Context, id chord.ChordID) (No
 			return err
 		}
 
-		n, err = newRemoteNode(ctx, resp.Node.Bind)
+		n, err = NewRemote(ctx, resp.Node.Bind)
 		return err
 	})
 	return n, err
@@ -90,7 +90,7 @@ func (rn *RemoteNode) findSuccessor(ctx context.Context, id chord.ChordID) (Node
 			return err
 		}
 
-		n, err = newRemoteNode(ctx, resp.Node.Bind)
+		n, err = NewRemote(ctx, resp.Node.Bind)
 		return err
 	})
 
@@ -111,7 +111,7 @@ func (rn *RemoteNode) closestPrecedingFinger(ctx context.Context, id chord.Chord
 			return err
 		}
 
-		n, err = newRemoteNode(ctx, resp.Node.Bind)
+		n, err = NewRemote(ctx, resp.Node.Bind)
 		return err
 	})
 
@@ -160,7 +160,7 @@ func (rn *RemoteNode) updateFingerTable(ctx context.Context, s Node, i int) erro
 	return err
 }
 
-func newRemoteNode(ctx context.Context, bind string) (*RemoteNode, error) {
+func NewRemote(ctx context.Context, bind string) (*RemoteNode, error) {
 	conn, err := grpc.Dial(bind,
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
