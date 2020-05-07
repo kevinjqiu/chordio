@@ -3,7 +3,6 @@ package chordio
 import (
 	"context"
 	"github.com/kevinjqiu/chordio/chord"
-	"github.com/kevinjqiu/chordio/chord/node"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
@@ -15,7 +14,7 @@ import (
 )
 
 type Server struct {
-	localNode  *node.LocalNode
+	localNode  *chord.LocalNode
 	grpcServer *grpc.Server
 }
 
@@ -73,7 +72,7 @@ func (n *Server) ClosestPrecedingFinger(ctx context.Context, request *pb.Closest
 func (n *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb.JoinRingResponse, error) {
 	logger := logrus.WithField("method", "Server.JoinRing")
 	logger.Debugf("introducer=%v", request.Introducer)
-	introNode, err := node.NewRemote(ctx, request.Introducer.Bind)
+	introNode, err := chord.NewRemote(ctx, request.Introducer.Bind)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +85,7 @@ func (n *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb
 func (n *Server) UpdateFingerTable(ctx context.Context, request *pb.UpdateFingerTableRequest) (*pb.UpdateFingerTableResponse, error) {
 	logger := logrus.WithField("method", "Server.UpdateFingerTable")
 	logger.Debugf("node=%v, i=%d", request.Node, request.I)
-	node, err := node.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, n.localNode.GetM())
+	node, err := chord.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, n.localNode.GetM())
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +111,7 @@ func (n *Server) Serve() error {
 func NewServer(config Config) (*Server, error) {
 	var err error
 
-	localNode, err := node.NewLocal(config.ID, config.Bind, config.M)
+	localNode, err := chord.NewLocal(config.ID, config.Bind, config.M)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to initiate local node")
 	}

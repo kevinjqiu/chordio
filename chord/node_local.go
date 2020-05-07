@@ -1,10 +1,8 @@
-package node
+package chord
 
 import (
 	"context"
 	"fmt"
-	"github.com/kevinjqiu/chordio/chord"
-	ft2 "github.com/kevinjqiu/chordio/chord/ft"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -14,21 +12,21 @@ import (
 
 type LocalNode struct {
 	trace.Tracer
-	id       chord.ID
+	id       ID
 	bind     string
-	pred     chord.ID
-	succ     chord.ID
-	predNode *chord.NodeRef
-	succNode *chord.NodeRef
-	m        chord.Rank
-	ft       *ft2.FingerTable
+	pred     ID
+	succ     ID
+	predNode *NodeRef
+	succNode *NodeRef
+	m        Rank
+	ft       *FingerTable
 }
 
-func (n *LocalNode) GetFingerTable() *ft2.FingerTable {
+func (n *LocalNode) GetFingerTable() *FingerTable {
 	return n.ft
 }
 
-func (n *LocalNode) GetM() chord.Rank {
+func (n *LocalNode) GetM() Rank {
 	return n.m
 }
 
@@ -49,17 +47,17 @@ func (n *LocalNode) String() string {
 	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
 }
 
-func (n *LocalNode) SetPredNode(pn *chord.NodeRef) {
+func (n *LocalNode) SetPredNode(pn *NodeRef) {
 	n.predNode = pn
 	n.pred = pn.ID
 }
 
-func (n *LocalNode) SetSuccNode(sn *chord.NodeRef) {
+func (n *LocalNode) SetSuccNode(sn *NodeRef) {
 	n.succNode = sn
 	n.succ = sn.ID
 }
 
-func (n *LocalNode) GetID() chord.ID {
+func (n *LocalNode) GetID() ID {
 	return n.id
 }
 
@@ -93,7 +91,7 @@ func (n *LocalNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
-func (n *LocalNode) GetPredNode() (*chord.NodeRef, error) {
+func (n *LocalNode) GetPredNode() (*NodeRef, error) {
 	if n.predNode != nil && n.predNode.ID != n.pred {
 		return n.predNode, nil
 	}
@@ -101,10 +99,10 @@ func (n *LocalNode) GetPredNode() (*chord.NodeRef, error) {
 	if !ok {
 		return nil, fmt.Errorf("predecessor node %v not found in neighbourhood", n.pred)
 	}
-	return &chord.NodeRef{Bind: node.Bind, ID: node.ID}, nil
+	return &NodeRef{Bind: node.Bind, ID: node.ID}, nil
 }
 
-func (n *LocalNode) GetSuccNode() (*chord.NodeRef, error) {
+func (n *LocalNode) GetSuccNode() (*NodeRef, error) {
 	if n.succNode != nil && n.succNode.ID != n.succ {
 		return n.succNode, nil
 	}
@@ -112,17 +110,17 @@ func (n *LocalNode) GetSuccNode() (*chord.NodeRef, error) {
 	if !ok {
 		return nil, fmt.Errorf("successor node %v not found in neighbourhood", n.pred)
 	}
-	return &chord.NodeRef{Bind: node.Bind, ID: node.ID}, nil
+	return &NodeRef{Bind: node.Bind, ID: node.ID}, nil
 }
 
 // TODO: if the node is itself, do not return a RemoteNode version of it
-func (n *LocalNode) FindPredecessor(ctx context.Context, id chord.ID) (chord.Node, error) {
+func (n *LocalNode) FindPredecessor(ctx context.Context, id ID) (Node, error) {
 	ctx, span := n.Start(ctx, "LocalNode.FindPredecessor")
 	defer span.End()
 
 	logger := logrus.WithField("method", "LocalNode.FindPredecessor")
 	var (
-		remoteNode chord.Node
+		remoteNode Node
 		err        error
 	)
 
@@ -147,7 +145,7 @@ func (n *LocalNode) FindPredecessor(ctx context.Context, id chord.ID) (chord.Nod
 		if err != nil {
 			return nil, err
 		}
-		interval := chord.NewInterval(n.m, n_.GetID(), succNode.ID, chord.WithLeftOpen, chord.WithRightClosed)
+		interval := NewInterval(n.m, n_.GetID(), succNode.ID, WithLeftOpen, WithRightClosed)
 		if !interval.Has(id) {
 			logger.Debugf("ID is not in %v's range", n_)
 			remoteNode, err = remoteNode.ClosestPrecedingFinger(ctx, id)
@@ -165,7 +163,7 @@ func (n *LocalNode) FindPredecessor(ctx context.Context, id chord.ID) (chord.Nod
 
 }
 
-func (n *LocalNode) FindSuccessor(ctx context.Context, id chord.ID) (chord.Node, error) {
+func (n *LocalNode) FindSuccessor(ctx context.Context, id ID) (Node, error) {
 	ctx, span := n.Start(ctx, "LocalNode.FindSuccessor")
 	defer span.End()
 
@@ -182,7 +180,7 @@ func (n *LocalNode) FindSuccessor(ctx context.Context, id chord.ID) (chord.Node,
 	return NewRemote(ctx, succNode.Bind)
 }
 
-func (n *LocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (chord.Node, error) {
+func (n *LocalNode) ClosestPrecedingFinger(ctx context.Context, id ID) (Node, error) {
 	ctx, span := n.Start(ctx, "LocalNode.ClosestPrecedingFinger")
 	defer span.End()
 
@@ -193,7 +191,7 @@ func (n *LocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (ch
 	// i >= 0 is always going to be true
 	for i := int(n.m) - 1; i >= 0; i-- {
 		fte := n.ft.GetEntry(i)
-		interval := chord.NewInterval(n.m, n.id, id, chord.WithLeftOpen, chord.WithRightOpen)
+		interval := NewInterval(n.m, n.id, id, WithLeftOpen, WithRightOpen)
 		if interval.Has(fte.NodeID) {
 			node, _, _, ok := n.ft.GetNodeByID(fte.NodeID)
 			if !ok {
@@ -281,7 +279,7 @@ func (n *LocalNode) updateOthers(ctx context.Context) error {
 	for i := 0; i < int(n.m); i++ {
 		logger.Debugf("iteration: %d", i)
 		//newID := n.ID.Sub(chord.ID(chord.pow2(uint32(i))), n.m)
-		newID := n.id.Sub(chord.ID(chord.ID(2).Pow(i)), n.m)
+		newID := n.id.Sub(ID(ID(2).Pow(i)), n.m)
 		logger.Debugf(fmt.Sprintf("FindPredecessor for ft[%d]=%d", i, newID))
 		span.AddEvent(newCtx, fmt.Sprintf("FindPredecessor for ft[%d]=%d", i, newID))
 		p, err := n.FindPredecessor(newCtx, newID)
@@ -300,12 +298,12 @@ func (n *LocalNode) updateOthers(ctx context.Context) error {
 	return nil
 }
 
-func (n *LocalNode) UpdateFingerTableEntry(_ context.Context, s chord.Node, i int) error {
+func (n *LocalNode) UpdateFingerTableEntry(_ context.Context, s Node, i int) error {
 	n.ft.SetEntry(i, s)
 	return nil
 }
 
-func NewLocal(id chord.ID, bind string, m chord.Rank) (*LocalNode, error) {
+func NewLocal(id ID, bind string, m Rank) (*LocalNode, error) {
 	localNode := &LocalNode{
 		Tracer: global.Tracer(""),
 		id:     id,
@@ -315,7 +313,7 @@ func NewLocal(id chord.ID, bind string, m chord.Rank) (*LocalNode, error) {
 		ft:     nil,
 		m:      m,
 	}
-	ft := ft2.New(localNode, m)
+	ft := newFingerTable(localNode, m)
 	localNode.ft = &ft
 	return localNode, nil
 }

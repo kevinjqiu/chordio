@@ -1,4 +1,4 @@
-package ft
+package chord
 
 import "github.com/pkg/errors"
 
