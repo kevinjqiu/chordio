@@ -2,11 +2,10 @@ package ft
 
 import (
 	"github.com/kevinjqiu/chordio/chord"
-	"github.com/kevinjqiu/chordio/chord/node"
 	"sort"
 )
 
-type nodeList []*node.NodeRef
+type nodeList []*chord.NodeRef
 
 func (n nodeList) Len() int {
 	return len(n)
@@ -26,7 +25,7 @@ type Neighbourhood struct {
 	idMap map[chord.ID]interface{}
 }
 
-func (neigh *Neighbourhood) Add(node *node.NodeRef) error {
+func (neigh *Neighbourhood) Add(node *chord.NodeRef) error {
 	_, ok := neigh.idMap[node.ID]
 	if ok {
 		return errNodeIDConflict
@@ -54,7 +53,7 @@ func (neigh *Neighbourhood) Remove(nodeID chord.ID) {
 }
 
 // GetEntry the NodeRef for the NodeID given the ID, as well as the ID for the preceding and succeeding nodes
-func (neigh *Neighbourhood) Get(id chord.ID) (n node.NodeRef, predID chord.ID, succID chord.ID, ok bool) {
+func (neigh *Neighbourhood) Get(id chord.ID) (n chord.NodeRef, predID chord.ID, succID chord.ID, ok bool) {
 	idx := sort.Search(len(neigh.nodes), func(i int) bool {
 		return neigh.nodes[i].ID >= id
 	})
@@ -63,7 +62,7 @@ func (neigh *Neighbourhood) Get(id chord.ID) (n node.NodeRef, predID chord.ID, s
 	}
 
 	ok = true
-	n = node.NodeRef{
+	n = chord.NodeRef{
 		ID:   neigh.nodes[idx].ID,
 		Bind: neigh.nodes[idx].Bind,
 	}
@@ -82,7 +81,7 @@ func (neigh *Neighbourhood) Get(id chord.ID) (n node.NodeRef, predID chord.ID, s
 
 func newNeighbourhood(m chord.Rank) *Neighbourhood {
 	return &Neighbourhood{
-		nodes: make([]*node.NodeRef, 0, int(m)),
+		nodes: make([]*chord.NodeRef, 0, int(m)),
 		idMap: make(map[chord.ID]interface{}),
 	}
 }

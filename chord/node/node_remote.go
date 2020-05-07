@@ -50,15 +50,15 @@ func (rn *RemoteNode) GetBind() string {
 	return rn.bind
 }
 
-func (rn *RemoteNode) GetPredNode() (*NodeRef, error) {
-	return &NodeRef{chord.ID(rn.predNode.Id), rn.predNode.Bind}, nil
+func (rn *RemoteNode) GetPredNode() (*chord.NodeRef, error) {
+	return &chord.NodeRef{chord.ID(rn.predNode.Id), rn.predNode.Bind}, nil
 }
 
-func (rn *RemoteNode) GetSuccNode() (*NodeRef, error) {
-	return &NodeRef{chord.ID(rn.succNode.Id), rn.succNode.Bind}, nil
+func (rn *RemoteNode) GetSuccNode() (*chord.NodeRef, error) {
+	return &chord.NodeRef{chord.ID(rn.succNode.Id), rn.succNode.Bind}, nil
 }
 
-func (rn *RemoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
+func (rn *RemoteNode) FindPredecessor(ctx context.Context, id chord.ID) (chord.Node, error) {
 	var n *RemoteNode
 	err := rn.WithSpan(ctx, "RemoteNode.FindPredecessor", func(ctx context.Context) error {
 		logrus.Debug("[RemoteNode] FindPredecessor: ", id)
@@ -77,7 +77,7 @@ func (rn *RemoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, e
 	return n, err
 }
 
-func (rn *RemoteNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error) {
+func (rn *RemoteNode) FindSuccessor(ctx context.Context, id chord.ID) (chord.Node, error) {
 	var n *RemoteNode
 	err := rn.WithSpan(ctx, "RemoteNode.FindSuccessor", func(ctx context.Context) error {
 		logrus.Debug("[RemoteNode] FindSuccessor: ", id)
@@ -97,7 +97,7 @@ func (rn *RemoteNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, err
 	return n, err
 }
 
-func (rn *RemoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
+func (rn *RemoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (chord.Node, error) {
 	var n *RemoteNode
 
 	err := rn.WithSpan(ctx, "RemoteNode.ClosestPrecedingFinger", func(ctx context.Context) error {
@@ -145,7 +145,7 @@ func (rn *RemoteNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
-func (rn *RemoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) error {
+func (rn *RemoteNode) UpdateFingerTableEntry(ctx context.Context, s chord.Node, i int) error {
 	ctx, span := rn.Start(ctx, "RemoteNode.UpdateFingerTableEntry",
 		trace.WithAttributes(core.Key("s").String(s.String())))
 	defer span.End()

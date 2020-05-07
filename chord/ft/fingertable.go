@@ -3,7 +3,6 @@ package ft
 import (
 	"fmt"
 	"github.com/kevinjqiu/chordio/chord"
-	"github.com/kevinjqiu/chordio/chord/node"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/olekukonko/tablewriter"
 	"io"
@@ -63,14 +62,14 @@ func (ft FingerTable) SetID(i int, id chord.ID) error {
 }
 
 // SetEntry the i'th finger table entry's NodeID to n
-func (ft FingerTable) SetEntry(i int, n node.Node) {
+func (ft FingerTable) SetEntry(i int, n chord.Node) {
 	oldNodeID := ft.entries[i].NodeID
 	if oldNodeID == n.GetID() {
 		return
 	}
 
 	ft.entries[i].NodeID = n.GetID()
-	_ = ft.neighbourhood.Add(&node.NodeRef{
+	_ = ft.neighbourhood.Add(&chord.NodeRef{
 		Id:   n.GetID(),
 		Bind: n.GetBind(),
 	})
@@ -85,12 +84,12 @@ func (ft FingerTable) GetEntry(i int) FingerTableEntry {
 }
 
 // Get the NodeID, pred, succ at fingertable entry index i
-func (ft FingerTable) GetNodeByFingerIdx(i int) (node.NodeRef, chord.ID, chord.ID, bool) {
+func (ft FingerTable) GetNodeByFingerIdx(i int) (chord.NodeRef, chord.ID, chord.ID, bool) {
 	nodeID := ft.entries[i].NodeID
 	return ft.neighbourhood.Get(nodeID)
 }
 
-func (ft FingerTable) GetNodeByID(nodeID chord.ID) (node.NodeRef, chord.ID, chord.ID, bool) {
+func (ft FingerTable) GetNodeByID(nodeID chord.ID) (chord.NodeRef, chord.ID, chord.ID, bool) {
 	return ft.neighbourhood.Get(nodeID)
 }
 
@@ -117,7 +116,7 @@ func (ft FingerTable) AsProtobufFT() *pb.FingerTable {
 	return &pbft
 }
 
-func New(initNode node.Node, m chord.Rank) FingerTable {
+func New(initNode chord.Node, m chord.Rank) FingerTable {
 	ft := FingerTable{
 		m:             m,
 		ownerID:       initNode.GetID(),
@@ -127,8 +126,6 @@ func New(initNode node.Node, m chord.Rank) FingerTable {
 	ft.entries = make([]FingerTableEntry, 0, m)
 
 	for k := 0; k < int(m); k++ {
-		//start := initNode.GetID().Add(chord.ID(chord.pow2(uint32(k))), m)
-		//end := initNode.GetID().Add(chord.ID(chord.pow2(uint32(k+1))), m)
 		start := initNode.GetID().Add(chord.ID(2).Pow(k), m)
 		end := initNode.GetID().Add(chord.ID(2).Pow(k+1), m)
 		ft.entries = append(ft.entries, FingerTableEntry{
@@ -141,7 +138,7 @@ func New(initNode node.Node, m chord.Rank) FingerTable {
 		})
 	}
 
-	_ = ft.neighbourhood.Add(&node.NodeRef{
+	_ = ft.neighbourhood.Add(&chord.NodeRef{
 		ID:   initNode.GetID(),
 		Bind: initNode.GetBind(),
 	})
