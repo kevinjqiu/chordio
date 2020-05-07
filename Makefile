@@ -1,3 +1,5 @@
+.PHONY: vendor
+
 dev:
 	goreleaser release --skip-publish --rm-dist --snapshot
 
@@ -30,7 +32,7 @@ run-local:
 
 vendor:
 	# needed temporarily before https://github.com/open-telemetry/opentelemetry-go/issues/682 is fixed
-	mkdir vendor/
+	mkdir -p vendor/
 	git clone git@github.com:kevinjqiu/opentelemetry-go.git vendor/opentelemetry-go
 	cd vendor/opentelemetry-go && git checkout fix-grpc-method-name-regexp
 
