@@ -2,7 +2,6 @@ package chordio
 
 type (
 	ChordID uint64
-	Rank    uint32 // otherwise known as the m value
 )
 
 func (c ChordID) Sub(other ChordID, m Rank) ChordID {
