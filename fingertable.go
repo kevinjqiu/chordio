@@ -38,7 +38,7 @@ func (ft FingerTable) Print(w io.Writer) {
 	writer.Render()
 }
 
-// Set the i'th finger table entry's node to id
+// SetEntry the i'th finger table entry's node to id
 // The node represented by the id must already exist
 // in the neighbourhood
 func (ft FingerTable) SetID(i int, id ChordID) error {
@@ -60,8 +60,8 @@ func (ft FingerTable) SetID(i int, id ChordID) error {
 	return nil
 }
 
-// Set the i'th finger table entry's node to n
-func (ft FingerTable) Set(i int, n Node) {
+// SetEntry the i'th finger table entry's node to n
+func (ft FingerTable) SetEntry(i int, n Node) {
 	oldNodeID := ft.entries[i].node
 	if oldNodeID == n.GetID() {
 		return
@@ -78,8 +78,14 @@ func (ft FingerTable) Set(i int, n Node) {
 	}
 }
 
-func (ft FingerTable) Get(i int) FingerTableEntry {
+func (ft FingerTable) GetEntry(i int) FingerTableEntry {
 	return ft.entries[i]
+}
+
+// Get the node, pred, succ at fingertable entry index i
+func (ft FingerTable) GetNode(i int) (NodeRef, ChordID, ChordID, bool) {
+	nodeID := ft.entries[i].node
+	return ft.neighbourhood.Get(nodeID)
 }
 
 func (ft FingerTable) HasNode(id ChordID) bool {
