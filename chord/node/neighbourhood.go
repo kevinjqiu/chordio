@@ -1,6 +1,7 @@
-package chord
+package node
 
 import (
+	"github.com/kevinjqiu/chordio/chord"
 	"sort"
 )
 
@@ -21,13 +22,13 @@ func (n nodeList) Swap(i, j int) {
 // A neighbourhood is a group of nodes that a local NodeID knows about
 type Neighbourhood struct {
 	nodes nodeList
-	idMap map[ID]interface{}
+	idMap map[chord.ID]interface{}
 }
 
 func (neigh *Neighbourhood) Add(node *NodeRef) error {
 	_, ok := neigh.idMap[node.ID]
 	if ok {
-		return errNodeIDConflict
+		return chord.ErrNodeIDConflict
 	}
 
 	neigh.nodes = append(neigh.nodes, node)
@@ -36,7 +37,7 @@ func (neigh *Neighbourhood) Add(node *NodeRef) error {
 	return nil
 }
 
-func (neigh *Neighbourhood) Remove(nodeID ID) {
+func (neigh *Neighbourhood) Remove(nodeID chord.ID) {
 	idx := sort.Search(len(neigh.nodes), func(i int) bool {
 		return neigh.nodes[i].ID >= nodeID
 	})
@@ -52,7 +53,7 @@ func (neigh *Neighbourhood) Remove(nodeID ID) {
 }
 
 // GetEntry the NodeRef for the NodeID given the ID, as well as the ID for the preceding and succeeding nodes
-func (neigh *Neighbourhood) Get(id ID) (n NodeRef, predID ID, succID ID, ok bool) {
+func (neigh *Neighbourhood) Get(id chord.ID) (n NodeRef, predID chord.ID, succID chord.ID, ok bool) {
 	idx := sort.Search(len(neigh.nodes), func(i int) bool {
 		return neigh.nodes[i].ID >= id
 	})
@@ -78,9 +79,9 @@ func (neigh *Neighbourhood) Get(id ID) (n NodeRef, predID ID, succID ID, ok bool
 	return
 }
 
-func newNeighbourhood(m Rank) *Neighbourhood {
+func newNeighbourhood(m chord.Rank) *Neighbourhood {
 	return &Neighbourhood{
 		nodes: make([]*NodeRef, 0, int(m)),
-		idMap: make(map[ID]interface{}),
+		idMap: make(map[chord.ID]interface{}),
 	}
 }
