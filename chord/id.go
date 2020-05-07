@@ -2,41 +2,41 @@ package chord
 
 import "math"
 
-type ChordID uint64
+type ID uint64
 
-func (c ChordID) Sub(other ChordID, m Rank) ChordID {
+func (c ID) Sub(other ID, m Rank) ID {
 	var newID int = int(c - other)
 	if newID >= 0 {
-		return ChordID(newID)
+		return ID(newID)
 	}
 	max := pow2(uint32(m))
 	inRangeID := uint64(newID) % max
 	if inRangeID >= 0 {
-		return ChordID(inRangeID)
+		return ID(inRangeID)
 	}
-	return ChordID(inRangeID + max)
+	return ID(inRangeID + max)
 }
 
-func (c ChordID) Add(other ChordID, m Rank) ChordID {
+func (c ID) Add(other ID, m Rank) ID {
 	max := pow2(uint32(m))
-	return ChordID(uint64(c+other) % max)
+	return ID(uint64(c+other) % max)
 }
 
-func (c ChordID) Pow(m int) ChordID {
+func (c ID) Pow(m int) ID {
 	max := pow2(uint32(m))
 	id := uint64(math.Pow(2, float64(m))) % max
-	return ChordID(id)
+	return ID(id)
 }
 
-func (c ChordID) In(start, end ChordID, m Rank) bool {
+func (c ID) In(start, end ID, m Rank) bool {
 	int := NewInterval(m, start, end)
 	return int.Has(c)
 }
 
-func (c ChordID) AsU64() uint64 {
+func (c ID) AsU64() uint64 {
 	return uint64(c)
 }
 
-func (c ChordID) AsInt() int {
+func (c ID) AsInt() int {
 	return int(c)
 }

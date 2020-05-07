@@ -37,7 +37,7 @@ func (n *Server) FindPredecessor(ctx context.Context, request *pb.FindPredecesso
 	logger := logrus.WithField("method", "server.findPredecessor")
 	logger.Debug("id=", request.Id)
 
-	node, err := n.localNode.FindPredecessor(ctx, chord.ChordID(request.Id))
+	node, err := n.localNode.FindPredecessor(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (n *Server) FindPredecessor(ctx context.Context, request *pb.FindPredecesso
 func (n *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
 	logger := logrus.WithField("method", "Server.findSuccessor")
 	logger.Debugf("id=%d", request.Id)
-	node, err := n.localNode.FindSuccessor(ctx, chord.ChordID(request.Id))
+	node, err := n.localNode.FindSuccessor(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (n *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorReq
 func (n *Server) ClosestPrecedingFinger(ctx context.Context, request *pb.ClosestPrecedingFingerRequest) (*pb.ClosestPrecedingFingerResponse, error) {
 	logger := logrus.WithField("method", "Server.closestPrecedingFinger")
 	logger.Debugf("id=%d", request.Id)
-	node, err := n.localNode.ClosestPrecedingFinger(ctx, chord.ChordID(request.Id))
+	node, err := n.localNode.ClosestPrecedingFinger(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (n *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb
 func (n *Server) UpdateFingerTable(ctx context.Context, request *pb.UpdateFingerTableRequest) (*pb.UpdateFingerTableResponse, error) {
 	logger := logrus.WithField("method", "Server.UpdateFingerTable")
 	logger.Debugf("node=%v, i=%d", request.Node, request.I)
-	node, err := node.NewLocal(chord.ChordID(request.Node.Id), request.Node.Bind, n.localNode.GetM())
+	node, err := node.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, n.localNode.GetM())
 	if err != nil {
 		return nil, err
 	}

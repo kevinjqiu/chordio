@@ -12,30 +12,30 @@ import (
 type Node interface {
 	fmt.Stringer
 
-	GetID() chord.ChordID
+	GetID() chord.ID
 	GetBind() string
 	GetPredNode() (*NodeRef, error)
 	GetSuccNode() (*NodeRef, error)
 	AsProtobufNode() *pb.Node
 
 	// FindPredecessor for the given ID
-	FindPredecessor(context.Context, chord.ChordID) (Node, error)
+	FindPredecessor(context.Context, chord.ID) (Node, error)
 	// FindSuccessor for the given ID
-	FindSuccessor(context.Context, chord.ChordID) (Node, error)
+	FindSuccessor(context.Context, chord.ID) (Node, error)
 	// find the closest finger entry that's preceding the ID
-	ClosestPrecedingFinger(context.Context, chord.ChordID) (Node, error)
+	ClosestPrecedingFinger(context.Context, chord.ID) (Node, error)
 	// update the finger table entry at index i to node s
 	UpdateFingerTableEntry(_ context.Context, s Node, i int) error
 }
 
 type NodeRef struct {
-	ID   chord.ChordID
+	ID   chord.ID
 	Bind string
 }
 
-func AssignID(key []byte, m chord.Rank) chord.ChordID {
+func AssignID(key []byte, m chord.Rank) chord.ID {
 	hasher := sha1.New()
 	hasher.Write(key)
 	b := hasher.Sum(nil)
-	return chord.ChordID(binary.BigEndian.Uint64(b) % (chord.ChordID(2).Pow(m.AsInt())).AsU64())
+	return chord.ID(binary.BigEndian.Uint64(b) % (chord.ID(2).Pow(m.AsInt())).AsU64())
 }

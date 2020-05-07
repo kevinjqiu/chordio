@@ -56,7 +56,7 @@ func NewServerCommand() *cobra.Command {
 
 			bind := mustBind(flags.bind)
 
-			var id chord.ChordID
+			var id chord.ID
 			if flags.id == "" {
 				id = node.AssignID([]byte(bind), chord.Rank(flags.m))
 			} else {
@@ -67,7 +67,7 @@ func NewServerCommand() *cobra.Command {
 				if float64(id) >= math.Pow(2.0, float64(flags.m)) {
 					return errors.New("invalid id: id must between 0 and 2**m")
 				}
-				id = chord.ChordID(uintID)
+				id = chord.ID(uintID)
 			}
 
 			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/#%d", id), telemetry.Config{})
