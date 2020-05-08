@@ -82,7 +82,7 @@ func (rn *RemoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, e
 			return err
 		}
 
-		n, err = n.newRemoteNodeFn(ctx, resp.Node.Bind)
+		n, err = rn.newRemoteNodeFn(ctx, resp.Node.Bind)
 		return err
 	})
 	return n, err
@@ -101,7 +101,7 @@ func (rn *RemoteNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, err
 			return err
 		}
 
-		n, err = n.newRemoteNodeFn(ctx, resp.Node.Bind)
+		n, err = rn.newRemoteNodeFn(ctx, resp.Node.Bind)
 		return err
 	})
 
@@ -122,7 +122,7 @@ func (rn *RemoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (
 			return err
 		}
 
-		n, err = n.newRemoteNodeFn(ctx, resp.Node.Bind)
+		n, err = rn.newRemoteNodeFn(ctx, resp.Node.Bind)
 		return err
 	})
 

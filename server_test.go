@@ -114,7 +114,7 @@ func TestServer(t *testing.T) {
 	defer n1.stop()
 	defer n3.stop()
 
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 
 	t.Run("initially the finger tables contain their owner nodes", func(t *testing.T) {
 		n0.assertFingerTable(t, []string{
