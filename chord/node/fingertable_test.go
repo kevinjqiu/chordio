@@ -35,7 +35,7 @@ func TestNewFingerTable(t *testing.T) {
 func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 	t.Run("the replaced node is the owner node", func(t *testing.T) {
 		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
-			replacingNode := &NodeRef{
+			replacingNode := &nodeRef{
 				ID: 35,
 				Bind: "n35",
 			}
@@ -47,13 +47,13 @@ func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 		})
 
 		ft.ReplaceNodeAt(0, 1)
-		assert.True(t, ft.entries[0].Node.ID == 35)
+		assert.True(t, ft.entries[0].Node.GetID() == 35)
 		assert.True(t, ft.HasNode(chord.ID(15)))
 	})
 
 	t.Run("the replaced node is no longer in the finger table", func(t *testing.T) {
 		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
-			nodeToBeReplaced := &NodeRef{
+			nodeToBeReplaced := &nodeRef{
 				ID: 35,
 				Bind: "n35",
 			}
@@ -61,9 +61,9 @@ func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 			ft.neighbourhood[chord.ID(35)] = nodeToBeReplaced
 		})
 
-		assert.True(t, ft.entries[1].Node.ID == 35)
+		assert.True(t, ft.entries[1].Node.GetID() == 35)
 		ft.ReplaceNodeAt(1, 2)
-		assert.True(t, ft.entries[1].Node.ID == 15)
+		assert.True(t, ft.entries[1].Node.GetID() == 15)
 		assert.False(t, ft.HasNode(chord.ID(35)))
 	})
 
@@ -71,7 +71,7 @@ func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 		_, ft := setup(t)
 		ft.ReplaceNodeAt(0, 1)
 		for _, fte := range ft.entries {
-			assert.Equal(t, chord.ID(15), fte.Node.ID)
+			assert.Equal(t, chord.ID(15), fte.Node.GetID())
 		}
 	})
 }
@@ -79,7 +79,7 @@ func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 func TestFingerTable_SetEntryAt(t *testing.T) {
 	t.Run("the replaced node is the owner node", func(t *testing.T) {
 		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
-			replacingNode := &NodeRef{
+			replacingNode := &nodeRef{
 				ID: 35,
 				Bind: "n35",
 			}
@@ -92,13 +92,13 @@ func TestFingerTable_SetEntryAt(t *testing.T) {
 
 		newNode, _ := newMockNode(25, "N25")
 		ft.SetNodeAtEntry(0, newNode)
-		assert.True(t, ft.entries[0].Node.ID == newNode.GetID())
+		assert.True(t, ft.entries[0].Node.GetID() == newNode.GetID())
 		assert.True(t, ft.HasNode(chord.ID(15)))
 	})
 
 	t.Run("the replaced node is no longer in the finger table", func(t *testing.T) {
 		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
-			nodeToBeReplaced := &NodeRef{
+			nodeToBeReplaced := &nodeRef{
 				ID: 35,
 				Bind: "n35",
 			}
@@ -106,10 +106,10 @@ func TestFingerTable_SetEntryAt(t *testing.T) {
 			ft.neighbourhood[chord.ID(35)] = nodeToBeReplaced
 		})
 
-		assert.True(t, ft.entries[1].Node.ID == 35)
+		assert.True(t, ft.entries[1].Node.GetID() == 35)
 		newNode, _ := newMockNode(25, "N25")
 		ft.SetNodeAtEntry(1, newNode)
-		assert.True(t, ft.entries[1].Node.ID == newNode.GetID())
+		assert.True(t, ft.entries[1].Node.GetID() == newNode.GetID())
 		assert.False(t, ft.HasNode(chord.ID(35)))
 	})
 }

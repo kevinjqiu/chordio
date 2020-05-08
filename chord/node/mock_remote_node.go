@@ -131,15 +131,15 @@ func (_m *MockRemoteNode) GetID() chord.ID {
 }
 
 // GetPredNode provides a mock function with given fields:
-func (_m *MockRemoteNode) GetPredNode() (*NodeRef, error) {
+func (_m *MockRemoteNode) GetPredNode() (*nodeRef, error) {
 	ret := _m.Called()
 
-	var r0 *NodeRef
-	if rf, ok := ret.Get(0).(func() *NodeRef); ok {
+	var r0 *nodeRef
+	if rf, ok := ret.Get(0).(func() *nodeRef); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*NodeRef)
+			r0 = ret.Get(0).(*nodeRef)
 		}
 	}
 
@@ -154,15 +154,15 @@ func (_m *MockRemoteNode) GetPredNode() (*NodeRef, error) {
 }
 
 // GetSuccNode provides a mock function with given fields:
-func (_m *MockRemoteNode) GetSuccNode() (*NodeRef, error) {
+func (_m *MockRemoteNode) GetSuccNode() (*nodeRef, error) {
 	ret := _m.Called()
 
-	var r0 *NodeRef
-	if rf, ok := ret.Get(0).(func() *NodeRef); ok {
+	var r0 *nodeRef
+	if rf, ok := ret.Get(0).(func() *nodeRef); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*NodeRef)
+			r0 = ret.Get(0).(*nodeRef)
 		}
 	}
 

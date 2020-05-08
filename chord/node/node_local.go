@@ -19,8 +19,8 @@ type localNode struct {
 	bind     string
 	pred     chord.ID
 	succ     chord.ID
-	predNode *NodeRef
-	succNode *NodeRef
+	predNode *nodeRef
+	succNode *nodeRef
 	m        chord.Rank
 	ft       *FingerTable
 
@@ -52,12 +52,12 @@ func (n *localNode) String() string {
 	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
 }
 
-func (n *localNode) SetPredNode(pn *NodeRef) {
+func (n *localNode) SetPredNode(pn *nodeRef) {
 	n.predNode = pn
 	n.pred = pn.ID
 }
 
-func (n *localNode) SetSuccNode(sn *NodeRef) {
+func (n *localNode) SetSuccNode(sn *nodeRef) {
 	n.succNode = sn
 	n.succ = sn.ID
 }
@@ -96,7 +96,7 @@ func (n *localNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
-func (n *localNode) GetPredNode() (*NodeRef, error) {
+func (n *localNode) GetPredNode() (*nodeRef, error) {
 	if n.predNode != nil && n.predNode.ID != n.pred {
 		return n.predNode, nil
 	}
@@ -104,10 +104,10 @@ func (n *localNode) GetPredNode() (*NodeRef, error) {
 	if !ok {
 		return nil, fmt.Errorf("predecessor node %v not found in neighbourhood", n.pred)
 	}
-	return &NodeRef{Bind: node.Bind, ID: node.ID}, nil
+	return &nodeRef{Bind: node.GetBind(), ID: node.GetID()}, nil
 }
 
-func (n *localNode) GetSuccNode() (*NodeRef, error) {
+func (n *localNode) GetSuccNode() (*nodeRef, error) {
 	if n.succNode != nil && n.succNode.ID != n.succ {
 		return n.succNode, nil
 	}
@@ -115,7 +115,7 @@ func (n *localNode) GetSuccNode() (*NodeRef, error) {
 	if !ok {
 		return nil, fmt.Errorf("successor node %v not found in neighbourhood", n.pred)
 	}
-	return &NodeRef{Bind: node.Bind, ID: node.ID}, nil
+	return &nodeRef{Bind: node.GetBind(), ID: node.GetID()}, nil
 }
 
 // TODO: if the node is itself, do not return a remoteNode version of it
@@ -197,16 +197,16 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 	for i := int(n.m) - 1; i >= 0; i-- {
 		fte := n.ft.GetEntry(i)
 		interval := chord.NewInterval(n.m, n.id, id, chord.WithLeftOpen, chord.WithRightOpen)
-		if interval.Has(fte.Node.ID) {
-			node, ok := n.ft.GetNodeByID(fte.Node.ID)
+		if interval.Has(fte.Node.GetID()) {
+			node, ok := n.ft.GetNodeByID(fte.Node.GetID())
 			if !ok {
 				return nil, fmt.Errorf("node %s at fte[%d] not found", fte.Node, i)
 			}
 
-			if node.ID == n.id {
-				return n.factory.newLocalNode(node.ID, node.Bind, n.m)
+			if node.GetID() == n.id {
+				return n.factory.newLocalNode(node.GetID(), node.GetBind(), n.m)
 			} else {
-				return n.factory.newRemoteNode(ctx, node.Bind)
+				return n.factory.newRemoteNode(ctx, node.GetBind())
 			}
 		}
 	}
@@ -245,10 +245,10 @@ func (n *localNode) initFinger(ctx context.Context, remote RemoteNode) error {
 	for i := 0; i < int(n.m)-1; i++ {
 		logger.Debugf("i=%d", i)
 		logger.Debugf("finger[i+1].start=%d", n.ft.GetEntry(i+1).Start)
-		logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.ID)
+		logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.GetID())
 
-		if n.ft.GetEntry(i+1).Start.In(local.id, n.ft.GetEntry(i).Node.ID, n.m) {
-			logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.ID)
+		if n.ft.GetEntry(i+1).Start.In(local.id, n.ft.GetEntry(i).Node.GetID(), n.m) {
+			logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.GetID())
 			n.ft.ReplaceNodeAt(i+1, i)
 		} else {
 			newSucc, err := remote.FindSuccessor(ctx, n.ft.GetEntry(i+1).Start)

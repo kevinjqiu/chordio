@@ -13,14 +13,14 @@ import (
 type FingerTableEntry struct {
 	Start    chord.ID
 	Interval chord.Interval
-	Node     *NodeRef
+	Node     NodeRef
 }
 
 type FingerTable struct {
 	ownerID       chord.ID
 	m             chord.Rank
 	entries       []FingerTableEntry
-	neighbourhood map[chord.ID]*NodeRef
+	neighbourhood map[chord.ID]NodeRef
 }
 
 func (ft FingerTable) Print(w io.Writer) {
@@ -43,7 +43,7 @@ func (ft FingerTable) Print(w io.Writer) {
 func (ft FingerTable) ReplaceNodeAt(i, j int) {
 	newNodeRef := ft.entries[j].Node
 	oldNodeRef := ft.entries[i].Node
-	if oldNodeRef.ID == newNodeRef.ID {
+	if oldNodeRef.GetID() == newNodeRef.GetID() {
 		return
 	}
 
@@ -51,31 +51,31 @@ func (ft FingerTable) ReplaceNodeAt(i, j int) {
 
 	ft.entries[i].Node = newNodeRef
 
-	if oldNodeRef.ID == ft.ownerID {
+	if oldNodeRef.GetID() == ft.ownerID {
 		// Do not delete the node from the neighbourhood if it's the owner of the fingertable
 		return
 	}
 
 	for _, fte := range ft.entries {
-		if fte.Node.ID == oldNodeRef.ID {
+		if fte.Node.GetID() == oldNodeRef.GetID() {
 			// Old node still in the finger table
 			// Do not delete it from the neighbourhood
 			return
 		}
 	}
-	delete(ft.neighbourhood, oldNodeRef.ID)
+	delete(ft.neighbourhood, oldNodeRef.GetID())
 }
 
 // SetNodeAtEntry the i'th finger table entry's NodeID to n
 func (ft FingerTable) SetNodeAtEntry(i int, n Node) {
 	oldNodeRef := ft.entries[i].Node
-	if oldNodeRef.ID == n.GetID() {
+	if oldNodeRef.GetID() == n.GetID() {
 		return
 	}
 
 	newNodeRef, ok := ft.neighbourhood[n.GetID()]
 	if !ok {
-		newNodeRef = &NodeRef{
+		newNodeRef = &nodeRef{
 			ID: n.GetID(),
 			Bind: n.GetBind(),
 		}
@@ -84,26 +84,26 @@ func (ft FingerTable) SetNodeAtEntry(i int, n Node) {
 
 	ft.entries[i].Node = newNodeRef
 
-	if oldNodeRef.ID == ft.ownerID {
+	if oldNodeRef.GetID() == ft.ownerID {
 		// Do not delete the node from the neighbourhood if it's the owner of the fingertable
 		return
 	}
 
 	for _, fte := range ft.entries {
-		if fte.Node.ID == oldNodeRef.ID {
+		if fte.Node.GetID() == oldNodeRef.GetID() {
 			// Old node still in the finger table
 			// Do not delete it from the neighbourhood
 			return
 		}
 	}
-	delete(ft.neighbourhood, oldNodeRef.ID)
+	delete(ft.neighbourhood, oldNodeRef.GetID())
 }
 
 func (ft FingerTable) GetEntry(i int) FingerTableEntry {
 	return ft.entries[i]
 }
 
-func (ft FingerTable) GetNodeByID(nodeID chord.ID) (*NodeRef, bool) {
+func (ft FingerTable) GetNodeByID(nodeID chord.ID) (NodeRef, bool) {
 	nodeRef, ok := ft.neighbourhood[nodeID]
 	return nodeRef, ok
 }
@@ -120,7 +120,7 @@ func (ft FingerTable) AsProtobufFT() *pb.FingerTable {
 		entries = append(entries, &pb.FingerTableEntry{
 			Start:  uint64(fte.Start),
 			End:    uint64(fte.Interval.End),
-			NodeID: uint64(fte.Node.ID),
+			NodeID: uint64(fte.Node.GetID()),
 		})
 	}
 	pbft.Entries = entries
@@ -131,12 +131,12 @@ func newFingerTable(initNode Node, m chord.Rank) FingerTable {
 	ft := FingerTable{
 		m:             m,
 		ownerID:       initNode.GetID(),
-		neighbourhood: make(map[chord.ID]*NodeRef),
+		neighbourhood: make(map[chord.ID]NodeRef),
 	}
 
 	ft.entries = make([]FingerTableEntry, 0, m)
 
-	initNodeRef := &NodeRef{
+	initNodeRef := &nodeRef{
 		ID: initNode.GetID(),
 		Bind: initNode.GetBind(),
 	}

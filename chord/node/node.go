@@ -10,12 +10,12 @@ import (
 )
 
 type Node interface {
-	fmt.Stringer
+	NodeRef
 
-	GetID() chord.ID
-	GetBind() string
-	GetPredNode() (*NodeRef, error)
-	GetSuccNode() (*NodeRef, error)
+	//GetID() chord.ID
+	//GetBind() string
+	GetPredNode() (*nodeRef, error)
+	GetSuccNode() (*nodeRef, error)
 	AsProtobufNode() *pb.Node
 
 	setNodeFactory(f factory)
@@ -41,14 +41,28 @@ type RemoteNode interface {
 	Node
 }
 
+type NodeRef interface {
+	fmt.Stringer
+	GetID() chord.ID
+	GetBind() string
+}
+
 // A node ref only contains ID and Bind info
 // It's used to reference a node with minimal information
-type NodeRef struct {
+type nodeRef struct {
 	ID   chord.ID
 	Bind string
 }
 
-func (nr NodeRef) String() string {
+func (nr *nodeRef) GetID() chord.ID {
+	return nr.ID
+}
+
+func (nr *nodeRef) GetBind() string {
+	return nr.Bind
+}
+
+func (nr nodeRef) String() string {
 	return fmt.Sprintf("<@%d %s>", nr.ID, nr.Bind)
 }
 

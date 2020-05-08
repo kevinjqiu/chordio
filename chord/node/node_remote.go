@@ -58,12 +58,12 @@ func (rn *remoteNode) GetBind() string {
 	return rn.bind
 }
 
-func (rn *remoteNode) GetPredNode() (*NodeRef, error) {
-	return &NodeRef{chord.ID(rn.predNode.Id), rn.predNode.Bind}, nil
+func (rn *remoteNode) GetPredNode() (*nodeRef, error) {
+	return &nodeRef{chord.ID(rn.predNode.Id), rn.predNode.Bind}, nil
 }
 
-func (rn *remoteNode) GetSuccNode() (*NodeRef, error) {
-	return &NodeRef{chord.ID(rn.succNode.Id), rn.succNode.Bind}, nil
+func (rn *remoteNode) GetSuccNode() (*nodeRef, error) {
+	return &nodeRef{chord.ID(rn.succNode.Id), rn.succNode.Bind}, nil
 }
 
 func (rn *remoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
