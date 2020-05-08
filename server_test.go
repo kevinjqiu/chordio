@@ -11,8 +11,21 @@ import (
 	"google.golang.org/grpc"
 	"strings"
 	"testing"
-	"time"
 )
+
+var defaultServiceConfig = `{
+	"methodConfig": [{
+		"waitForReady": true,
+
+		"retryPolicy": {
+			"MaxAttempts": 4,
+			"InitialBackoff": ".01s",
+			"MaxBackoff": ".01s",
+			"BackoffMultiplier": 1.0,
+			"RetryableStatusCodes": [ "UNAVAILABLE" ]
+		}
+	}]
+}`
 
 func ftCSV(table *pb.FingerTable) string {
 	var b bytes.Buffer
@@ -91,7 +104,7 @@ func newNode(id int, m int) testNode {
 		}
 	}()
 
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(addr, grpc.WithInsecure(), grpc.WithDefaultServiceConfig(defaultServiceConfig))
 	if err != nil {
 		panic(err)
 	}
@@ -113,8 +126,6 @@ func TestServer(t *testing.T) {
 	defer n0.stop()
 	defer n1.stop()
 	defer n3.stop()
-
-	time.Sleep(1000 * time.Millisecond)
 
 	t.Run("initially the finger tables contain their owner nodes", func(t *testing.T) {
 		n0.assertFingerTable(t, []string{
