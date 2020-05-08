@@ -9,6 +9,39 @@ import (
 	"testing"
 )
 
+func setupNetwork(t *testing.T) LocalNode {
+	n0, n0mock := newMockNode(0, "n0")
+	n1, n1mock := newMockNode(1, "n1")
+	n3, n3mock := newMockNode(3, "n3")
+
+	n, err := NewLocal(0, "n0", chord.Rank(3))
+	factory, m := newMockFactory()
+	n.setNodeFactory(factory)
+	n.SetPredNode(n3)
+	n.SetSuccNode(n1)
+
+	m.On("newRemoteNode", mock.Anything, "n0").Return(n0, nil)
+	m.On("newRemoteNode", mock.Anything, "n1").Return(n1, nil)
+	m.On("newRemoteNode", mock.Anything, "n3").Return(n3, nil)
+
+	n0mock.On("GetPredNode").Return(n3)
+	n0mock.On("GetSuccNode").Return(n1)
+
+	n1mock.On("GetPredNode").Return(n0)
+	n1mock.On("GetSuccNode").Return(n3)
+
+	n3mock.On("GetPredNode").Return(n1)
+	n3mock.On("GetSuccNode").Return(n0)
+
+	n.GetFingerTable().SetNodeAtEntry(0, n1)
+	n.GetFingerTable().SetNodeAtEntry(1, n3)
+	n.GetFingerTable().SetNodeAtEntry(2, n0)
+
+	assert.Nil(t, err)
+
+	return n
+}
+
 func setupRank3Network(t *testing.T) (n LocalNode, n2, n5 Node, n2mock, n5mock *mock.Mock){
 	n2, n2mock = newMockNode(2, "n2")
 	n5, n5mock = newMockNode(5, "n5")
@@ -79,8 +112,8 @@ func TestLocalNode_ClosestPrecedingFinger(t *testing.T) {
 }
 
 func TestLocalNode_FindPredecessor(t *testing.T) {
-	n, _, _, n2mock, n5mock := setupRank3Network(t)
-	n2mock.On("GetSuccNode").Return(n)
-	n5mock.On("GetSuccNode").Return(n)
-	fmt.Println(n.FindPredecessor(context.Background(), chord.ID(0)))
+	n := setupNetwork(t)
+	for i := 0; i < 8; i++ {
+		fmt.Println(n.FindPredecessor(context.Background(), chord.ID(i)))
+	}
 }

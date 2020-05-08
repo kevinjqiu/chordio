@@ -38,6 +38,8 @@ type (
 		GetFingerTable() *FingerTable
 		Join(ctx context.Context, introducerNode RemoteNode) error
 		GetRank() chord.Rank
+		SetPredNode(n NodeRef)
+		SetSuccNode(n NodeRef)
 	}
 
 	RemoteNode interface {
