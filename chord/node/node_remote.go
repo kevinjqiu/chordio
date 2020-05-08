@@ -22,6 +22,17 @@ type RemoteNode struct {
 	predNode *pb.Node
 	succNode *pb.Node
 	client   pb.ChordClient
+
+	newLocalNodeFn  localNodeConstructor
+	newRemoteNodeFn remoteNodeConstructor
+}
+
+func (rn *RemoteNode) setLocalNodeConstructor(fn localNodeConstructor) {
+	rn.newLocalNodeFn = fn
+}
+
+func (rn *RemoteNode) setRemoteNodeConstructor(fn remoteNodeConstructor) {
+	rn.newRemoteNodeFn = fn
 }
 
 func (rn *RemoteNode) String() string {
@@ -160,7 +171,7 @@ func (rn *RemoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int)
 	return err
 }
 
-func NewRemote(ctx context.Context, bind string) (*RemoteNode, error) {
+func NewRemote(ctx context.Context, bind string, opts ...nodeConstructorOption) (*RemoteNode, error) {
 	conn, err := grpc.Dial(bind,
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
@@ -183,6 +194,13 @@ func NewRemote(ctx context.Context, bind string) (*RemoteNode, error) {
 		predNode: resp.Node.GetPred(),
 		succNode: resp.Node.GetSucc(),
 		client:   client,
+
+		newLocalNodeFn:  NewLocal,
+		newRemoteNodeFn: NewRemote,
+	}
+
+	for _, opt := range opts {
+		opt(rn)
 	}
 	return rn, nil
 }

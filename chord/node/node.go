@@ -9,8 +9,16 @@ import (
 	"github.com/kevinjqiu/chordio/pb"
 )
 
+type (
+	canSetNodeConstructors interface {
+		setLocalNodeConstructor(localNodeConstructor)
+		setRemoteNodeConstructor(remoteNodeConstructor)
+	}
+)
+
 type Node interface {
 	fmt.Stringer
+	canSetNodeConstructors
 
 	GetID() chord.ID
 	GetBind() string
@@ -25,7 +33,7 @@ type Node interface {
 	// find the closest finger entry that's preceding the ID
 	ClosestPrecedingFinger(context.Context, chord.ID) (Node, error)
 	// update the finger table entry at index i to node s
-	UpdateFingerTableEntry(_ context.Context, s Node, i int) error
+	UpdateFingerTableEntry(ctx context.Context, s Node, i int) error
 }
 
 // A node ref only contains ID and Bind info
@@ -34,6 +42,25 @@ type NodeRef struct {
 	ID   chord.ID
 	Bind string
 }
+
+type (
+	localNodeConstructor  func(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOption) (*LocalNode, error)
+	remoteNodeConstructor func(ctx context.Context, bind string, opts ...nodeConstructorOption) (*RemoteNode, error)
+	nodeConstructorOption func(n canSetNodeConstructors)
+)
+
+func withLocalNodeConstructor(fn localNodeConstructor) nodeConstructorOption {
+	return func(n canSetNodeConstructors) {
+		n.setLocalNodeConstructor(fn)
+	}
+}
+
+func withRemoteNodeConstructor(fn remoteNodeConstructor) nodeConstructorOption {
+	return func(n canSetNodeConstructors) {
+		n.setRemoteNodeConstructor(fn)
+	}
+}
+
 
 func AssignID(key []byte, m chord.Rank) chord.ID {
 	hasher := sha1.New()

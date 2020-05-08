@@ -12,6 +12,9 @@ fmt:
 gen:
 	protoc -I pb pb/chordio.proto --go_out=plugins=grpc:pb
 
+gen-mock:
+	cd chord/node/ && mockery -inpkg -case underscore -name Node
+
 run:
 	docker-compose up -d --service-ports
 

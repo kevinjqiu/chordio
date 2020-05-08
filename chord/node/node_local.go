@@ -23,6 +23,18 @@ type LocalNode struct {
 	succNode *NodeRef
 	m        chord.Rank
 	ft       *FingerTable
+
+	// These fields allow the constructors to be swapped out during tests
+	newLocalNodeFn  localNodeConstructor
+	newRemoteNodeFn remoteNodeConstructor
+}
+
+func (n *LocalNode) setLocalNodeConstructor(fn localNodeConstructor) {
+	n.newLocalNodeFn = fn
+}
+
+func (n *LocalNode) setRemoteNodeConstructor(fn remoteNodeConstructor) {
+	n.newRemoteNodeFn = fn
 }
 
 func (n *LocalNode) GetFingerTable() *FingerTable {
@@ -311,7 +323,7 @@ func (n *LocalNode) UpdateFingerTableEntry(_ context.Context, s Node, i int) err
 	return nil
 }
 
-func NewLocal(id chord.ID, bind string, m chord.Rank) (*LocalNode, error) {
+func NewLocal(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOption) (*LocalNode, error) {
 	localNode := &LocalNode{
 		Tracer: global.Tracer(""),
 		mu:     new(sync.Mutex),
@@ -321,8 +333,15 @@ func NewLocal(id chord.ID, bind string, m chord.Rank) (*LocalNode, error) {
 		succ:   id,
 		ft:     nil,
 		m:      m,
+
+		newLocalNodeFn: NewLocal,
+		newRemoteNodeFn: NewRemote,
 	}
 	ft := newFingerTable(localNode, m)
 	localNode.ft = &ft
+
+	for _, opt := range opts {
+		opt(localNode)
+	}
 	return localNode, nil
 }
