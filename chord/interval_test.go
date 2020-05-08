@@ -128,4 +128,3 @@ func TestInterval_Has(t *testing.T) {
 		}
 	})
 }
-

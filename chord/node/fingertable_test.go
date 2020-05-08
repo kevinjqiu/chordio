@@ -36,7 +36,7 @@ func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 	t.Run("the replaced node is the owner node", func(t *testing.T) {
 		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
 			replacingNode := &nodeRef{
-				ID: 35,
+				ID:   35,
 				Bind: "n35",
 			}
 
@@ -54,7 +54,7 @@ func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 	t.Run("the replaced node is no longer in the finger table", func(t *testing.T) {
 		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
 			nodeToBeReplaced := &nodeRef{
-				ID: 35,
+				ID:   35,
 				Bind: "n35",
 			}
 			ft.entries[1].Node = nodeToBeReplaced
@@ -80,7 +80,7 @@ func TestFingerTable_SetEntryAt(t *testing.T) {
 	t.Run("the replaced node is the owner node", func(t *testing.T) {
 		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
 			replacingNode := &nodeRef{
-				ID: 35,
+				ID:   35,
 				Bind: "n35",
 			}
 
@@ -99,7 +99,7 @@ func TestFingerTable_SetEntryAt(t *testing.T) {
 	t.Run("the replaced node is no longer in the finger table", func(t *testing.T) {
 		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
 			nodeToBeReplaced := &nodeRef{
-				ID: 35,
+				ID:   35,
 				Bind: "n35",
 			}
 			ft.entries[1].Node = nodeToBeReplaced

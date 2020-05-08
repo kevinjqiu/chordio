@@ -10,7 +10,8 @@ type factory interface {
 	newRemoteNode(ctx context.Context, bind string) (RemoteNode, error)
 }
 
-type defaultFactory struct {}
+type defaultFactory struct{}
+
 func (d defaultFactory) newLocalNode(id chord.ID, bind string, m chord.Rank) (LocalNode, error) {
 	return NewLocal(id, bind, m)
 }

@@ -24,7 +24,7 @@ type localNode struct {
 	m        chord.Rank
 	ft       *FingerTable
 
-	factory  factory
+	factory factory
 }
 
 func (n *localNode) GetFingerTable() *FingerTable {
