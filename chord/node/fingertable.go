@@ -48,7 +48,7 @@ func (ft FingerTable) SetID(i int, id chord.ID) error {
 		return nil
 	}
 
-	_, _, _, ok := ft.neighbourhood.Get(id)
+	_, ok := ft.neighbourhood.Get(id)
 	if !ok {
 		return fmt.Errorf("cannot set %dth fingertable entry to %d: NodeID %d not found in the neighbourhood", i, id, id)
 	}
@@ -84,12 +84,12 @@ func (ft FingerTable) GetEntry(i int) FingerTableEntry {
 }
 
 // Get the NodeID, pred, succ at fingertable entry index i
-func (ft FingerTable) GetNodeByFingerIdx(i int) (NodeRef, chord.ID, chord.ID, bool) {
+func (ft FingerTable) GetNodeByFingerIdx(i int) (NodeRef, bool) {
 	nodeID := ft.entries[i].NodeID
 	return ft.neighbourhood.Get(nodeID)
 }
 
-func (ft FingerTable) GetNodeByID(nodeID chord.ID) (NodeRef, chord.ID, chord.ID, bool) {
+func (ft FingerTable) GetNodeByID(nodeID chord.ID) (NodeRef, bool) {
 	return ft.neighbourhood.Get(nodeID)
 }
 

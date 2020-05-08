@@ -53,7 +53,7 @@ func (neigh *Neighbourhood) Remove(nodeID chord.ID) {
 }
 
 // GetEntry the NodeRef for the NodeID given the ID, as well as the ID for the preceding and succeeding nodes
-func (neigh *Neighbourhood) Get(id chord.ID) (n NodeRef, predID chord.ID, succID chord.ID, ok bool) {
+func (neigh *Neighbourhood) Get(id chord.ID) (n NodeRef, ok bool) {
 	idx := sort.Search(len(neigh.nodes), func(i int) bool {
 		return neigh.nodes[i].ID >= id
 	})
@@ -65,16 +65,6 @@ func (neigh *Neighbourhood) Get(id chord.ID) (n NodeRef, predID chord.ID, succID
 	n = NodeRef{
 		ID:   neigh.nodes[idx].ID,
 		Bind: neigh.nodes[idx].Bind,
-	}
-	if idx == 0 {
-		predID = neigh.nodes[len(neigh.nodes)-1].ID
-	} else {
-		predID = neigh.nodes[idx-1].ID
-	}
-	if idx == len(neigh.nodes)-1 {
-		succID = neigh.nodes[0].ID
-	} else {
-		succID = neigh.nodes[idx+1].ID
 	}
 	return
 }

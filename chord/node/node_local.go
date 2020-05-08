@@ -98,7 +98,7 @@ func (n *LocalNode) GetPredNode() (*NodeRef, error) {
 	if n.predNode != nil && n.predNode.ID != n.pred {
 		return n.predNode, nil
 	}
-	node, _, _, ok := n.ft.GetNodeByID(n.pred)
+	node, ok := n.ft.GetNodeByID(n.pred)
 	if !ok {
 		return nil, fmt.Errorf("predecessor node %v not found in neighbourhood", n.pred)
 	}
@@ -109,7 +109,7 @@ func (n *LocalNode) GetSuccNode() (*NodeRef, error) {
 	if n.succNode != nil && n.succNode.ID != n.succ {
 		return n.succNode, nil
 	}
-	node, _, _, ok := n.ft.GetNodeByID(n.succ)
+	node, ok := n.ft.GetNodeByID(n.succ)
 	if !ok {
 		return nil, fmt.Errorf("successor node %v not found in neighbourhood", n.pred)
 	}
@@ -196,7 +196,7 @@ func (n *LocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 		fte := n.ft.GetEntry(i)
 		interval := chord.NewInterval(n.m, n.id, id, chord.WithLeftOpen, chord.WithRightOpen)
 		if interval.Has(fte.NodeID) {
-			node, _, _, ok := n.ft.GetNodeByID(fte.NodeID)
+			node, ok := n.ft.GetNodeByID(fte.NodeID)
 			if !ok {
 				return nil, fmt.Errorf("node %d at fte[%d] not found", fte.NodeID, i)
 			}

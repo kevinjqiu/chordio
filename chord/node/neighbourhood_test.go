@@ -30,7 +30,7 @@ func TestNeighbourhood_Get(t *testing.T) {
 		n := newNeighbourhood(m)
 		n.Add(&NodeRef{ID: 5})
 
-		_, _, _, ok := n.Get(50)
+		_, ok := n.Get(50)
 		assert.False(t, ok)
 	})
 
@@ -39,12 +39,10 @@ func TestNeighbourhood_Get(t *testing.T) {
 		n := newNeighbourhood(m)
 		n.Add(&NodeRef{ID: 5})
 
-		node, pred, succ, ok := n.Get(5)
+		node, ok := n.Get(5)
 		assert.True(t, ok)
 
 		assert.Equal(t, chord.ID(5), node.ID)
-		assert.Equal(t, chord.ID(5), pred)
-		assert.Equal(t, chord.ID(5), succ)
 	})
 
 	t.Run("two nodes", func(t *testing.T) {
@@ -53,12 +51,10 @@ func TestNeighbourhood_Get(t *testing.T) {
 		n.Add(&NodeRef{ID: 5})
 		n.Add(&NodeRef{ID: 51})
 
-		node, pred, succ, ok := n.Get(5)
+		node, ok := n.Get(5)
 		assert.True(t, ok)
 
 		assert.Equal(t, chord.ID(5), node.ID)
-		assert.Equal(t, chord.ID(51), pred)
-		assert.Equal(t, chord.ID(51), succ)
 	})
 
 	t.Run("three nodes", func(t *testing.T) {
@@ -68,11 +64,9 @@ func TestNeighbourhood_Get(t *testing.T) {
 		n.Add(&NodeRef{ID: 51})
 		n.Add(&NodeRef{ID: 23})
 
-		node, pred, succ, ok := n.Get(5)
+		node, ok := n.Get(5)
 		assert.True(t, ok)
 
 		assert.Equal(t, chord.ID(5), node.ID)
-		assert.Equal(t, chord.ID(51), pred)
-		assert.Equal(t, chord.ID(23), succ)
 	})
 }
