@@ -22,9 +22,9 @@ func TestLocalNode_ClosestPrecedingFinger(t *testing.T) {
 	m.On("newRemoteNode", mock.Anything, "n2").Return(n2, nil)
 	m.On("newRemoteNode", mock.Anything, "n5").Return(n5, nil)
 
-	n.GetFingerTable().SetEntry(0, n2)
-	n.GetFingerTable().SetEntry(1, n2)
-	n.GetFingerTable().SetEntry(2, n5)
+	n.GetFingerTable().SetEntryAt(0, n2)
+	n.GetFingerTable().SetEntryAt(1, n2)
+	n.GetFingerTable().SetEntryAt(2, n5)
 	n.GetFingerTable().Print(nil)
 
 	tcs := []struct {
