@@ -40,34 +40,18 @@ func (ft FingerTable) Print(w io.Writer) {
 }
 
 // Replace the node in FingerTable entry at i with the node at j
-func (ft FingerTable) ReplaceNodeAt(i, j int) {
+func (ft FingerTable) ReplaceNodeWithAnotherEntry(i, j int) {
 	newNodeRef := ft.entries[j].Node
 	oldNodeRef := ft.entries[i].Node
 	if oldNodeRef.GetID() == newNodeRef.GetID() {
 		return
 	}
 
-	//ft.SetNodeAtEntry(i, newNodeRef)
-
-	ft.entries[i].Node = newNodeRef
-
-	if oldNodeRef.GetID() == ft.ownerID {
-		// Do not delete the node from the neighbourhood if it's the owner of the fingertable
-		return
-	}
-
-	for _, fte := range ft.entries {
-		if fte.Node.GetID() == oldNodeRef.GetID() {
-			// Old node still in the finger table
-			// Do not delete it from the neighbourhood
-			return
-		}
-	}
-	delete(ft.neighbourhood, oldNodeRef.GetID())
+	ft.SetNodeAtEntry(i, newNodeRef)
 }
 
 // SetNodeAtEntry the i'th finger table entry's NodeID to n
-func (ft FingerTable) SetNodeAtEntry(i int, n Node) {
+func (ft FingerTable) SetNodeAtEntry(i int, n NodeRef) {
 	oldNodeRef := ft.entries[i].Node
 	if oldNodeRef.GetID() == n.GetID() {
 		return

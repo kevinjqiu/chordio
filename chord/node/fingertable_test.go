@@ -46,7 +46,7 @@ func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 			ft.neighbourhood[chord.ID(35)] = replacingNode
 		})
 
-		ft.ReplaceNodeAt(0, 1)
+		ft.ReplaceNodeWithAnotherEntry(0, 1)
 		assert.True(t, ft.entries[0].Node.GetID() == 35)
 		assert.True(t, ft.HasNode(chord.ID(15)))
 	})
@@ -62,14 +62,14 @@ func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 		})
 
 		assert.True(t, ft.entries[1].Node.GetID() == 35)
-		ft.ReplaceNodeAt(1, 2)
+		ft.ReplaceNodeWithAnotherEntry(1, 2)
 		assert.True(t, ft.entries[1].Node.GetID() == 15)
 		assert.False(t, ft.HasNode(chord.ID(35)))
 	})
 
 	t.Run("the replacing node is the same as the replaced node", func(t *testing.T) {
 		_, ft := setup(t)
-		ft.ReplaceNodeAt(0, 1)
+		ft.ReplaceNodeWithAnotherEntry(0, 1)
 		for _, fte := range ft.entries {
 			assert.Equal(t, chord.ID(15), fte.Node.GetID())
 		}
