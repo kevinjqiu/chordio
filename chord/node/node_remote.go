@@ -58,12 +58,12 @@ func (rn *remoteNode) GetBind() string {
 	return rn.bind
 }
 
-func (rn *remoteNode) GetPredNode() (*nodeRef, error) {
-	return &nodeRef{chord.ID(rn.predNode.Id), rn.predNode.Bind}, nil
+func (rn *remoteNode) GetPredNode() NodeRef {
+	return &nodeRef{chord.ID(rn.predNode.Id), rn.predNode.Bind}
 }
 
-func (rn *remoteNode) GetSuccNode() (*nodeRef, error) {
-	return &nodeRef{chord.ID(rn.succNode.Id), rn.succNode.Bind}, nil
+func (rn *remoteNode) GetSuccNode() NodeRef {
+	return &nodeRef{chord.ID(rn.succNode.Id), rn.succNode.Bind}
 }
 
 func (rn *remoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
@@ -134,19 +134,19 @@ func (rn *remoteNode) AsProtobufNode() *pb.Node {
 		Succ: nil,
 	}
 
-	pred, err := rn.GetPredNode()
-	if err != nil {
+	pred := rn.GetPredNode()
+	if pred != nil {
 		pbn.Pred = &pb.Node{
-			Id:   uint64(pred.ID),
-			Bind: pred.Bind,
+			Id:   uint64(pred.GetID()),
+			Bind: pred.GetBind(),
 		}
 	}
 
-	succ, err := rn.GetSuccNode()
-	if err != nil {
+	succ := rn.GetSuccNode()
+	if succ != nil {
 		pbn.Succ = &pb.Node{
-			Id:   uint64(succ.ID),
-			Bind: succ.Bind,
+			Id:   uint64(succ.GetID()),
+			Bind: succ.GetBind(),
 		}
 	}
 

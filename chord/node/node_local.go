@@ -12,15 +12,20 @@ import (
 	"sync"
 )
 
+var (
+	errNoSuccessorNode   = errors.New("no successor node found")
+	errNoPredecessorNode = errors.New("no predecessor node found")
+)
+
 type localNode struct {
 	trace.Tracer
-	mu       *sync.Mutex
-	id       chord.ID
-	bind     string
-	pred     chord.ID
-	succ     chord.ID
-	predNode *nodeRef
-	succNode *nodeRef
+	mu   *sync.Mutex
+	id   chord.ID
+	bind string
+	//pred     chord.ID
+	//succ     chord.ID
+	predNode NodeRef
+	succNode NodeRef
 	m        chord.Rank
 	ft       *FingerTable
 
@@ -41,25 +46,25 @@ func (n *localNode) String() string {
 	if n.predNode == nil {
 		pred = "<nil>"
 	} else {
-		pred = fmt.Sprintf("%d@%s", n.predNode.ID, n.predNode.Bind)
+		pred = n.predNode.String()
 	}
 
 	if n.succNode == nil {
 		succ = "<nil>"
 	} else {
-		succ = fmt.Sprintf("%d@%s", n.succNode.ID, n.succNode.Bind)
+		succ = n.succNode.String()
 	}
 	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
 }
 
-func (n *localNode) SetPredNode(pn *nodeRef) {
+func (n *localNode) SetPredNode(pn NodeRef) {
 	n.predNode = pn
-	n.pred = pn.ID
+	//n.pred = pn.ID
 }
 
-func (n *localNode) SetSuccNode(sn *nodeRef) {
+func (n *localNode) SetSuccNode(sn NodeRef) {
 	n.succNode = sn
-	n.succ = sn.ID
+	//n.succ = sn.ID
 }
 
 func (n *localNode) GetID() chord.ID {
@@ -78,44 +83,30 @@ func (n *localNode) AsProtobufNode() *pb.Node {
 		Succ: nil,
 	}
 
-	predNode, err := n.GetPredNode()
-	if err == nil {
+	predNode := n.GetPredNode()
+	if predNode != nil {
 		pbn.Pred = &pb.Node{
-			Id:   uint64(predNode.ID),
-			Bind: predNode.Bind,
+			Id:   uint64(predNode.GetID()),
+			Bind: predNode.GetBind(),
 		}
 	}
 
-	succNode, err := n.GetSuccNode()
-	if err == nil {
+	succNode := n.GetSuccNode()
+	if succNode != nil {
 		pbn.Succ = &pb.Node{
-			Id:   uint64(succNode.ID),
-			Bind: succNode.Bind,
+			Id:   uint64(succNode.GetID()),
+			Bind: succNode.GetBind(),
 		}
 	}
 	return pbn
 }
 
-func (n *localNode) GetPredNode() (*nodeRef, error) {
-	if n.predNode != nil && n.predNode.ID != n.pred {
-		return n.predNode, nil
-	}
-	node, ok := n.ft.GetNodeByID(n.pred)
-	if !ok {
-		return nil, fmt.Errorf("predecessor node %v not found in neighbourhood", n.pred)
-	}
-	return &nodeRef{Bind: node.GetBind(), ID: node.GetID()}, nil
+func (n *localNode) GetPredNode() NodeRef {
+	return n.predNode
 }
 
-func (n *localNode) GetSuccNode() (*nodeRef, error) {
-	if n.succNode != nil && n.succNode.ID != n.succ {
-		return n.succNode, nil
-	}
-	node, ok := n.ft.GetNodeByID(n.succ)
-	if !ok {
-		return nil, fmt.Errorf("successor node %v not found in neighbourhood", n.pred)
-	}
-	return &nodeRef{Bind: node.GetBind(), ID: node.GetID()}, nil
+func (n *localNode) GetSuccNode() NodeRef {
+	return n.succNode
 }
 
 // TODO: if the node is itself, do not return a remoteNode version of it
@@ -129,7 +120,7 @@ func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, err
 		err        error
 	)
 
-	if !id.In(n.id, n.succ, n.m) {
+	if !id.In(n.id, n.succNode.GetID(), n.m) {
 		logger.Debugf("ID is within %v, the predecessor is the local node", n)
 		return n, nil
 	}
@@ -146,11 +137,11 @@ func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, err
 	}
 
 	for {
-		succNode, err := n_.GetSuccNode()
-		if err != nil {
-			return nil, err
+		succNode := n_.GetSuccNode()
+		if succNode == nil {
+			return nil, errNoSuccessorNode
 		}
-		interval := chord.NewInterval(n.m, n_.GetID(), succNode.ID, chord.WithLeftOpen, chord.WithRightClosed)
+		interval := chord.NewInterval(n.m, n_.GetID(), succNode.GetID(), chord.WithLeftOpen, chord.WithRightClosed)
 		if !interval.Has(id) {
 			logger.Debugf("ID is not in %v's range", n_)
 			remoteNode, err = remoteNode.ClosestPrecedingFinger(ctx, id)
@@ -177,12 +168,12 @@ func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error
 		return nil, err
 	}
 
-	succNode, err := predNode.GetSuccNode()
-	if err != nil {
-		return nil, err
+	succNode := predNode.GetSuccNode()
+	if succNode == nil {
+		return nil, errNoSuccessorNode
 	}
 
-	return n.factory.newRemoteNode(ctx, succNode.Bind)
+	return n.factory.newRemoteNode(ctx, succNode.GetBind())
 }
 
 func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
@@ -234,9 +225,9 @@ func (n *localNode) initFinger(ctx context.Context, remote RemoteNode) error {
 	logger.Debugf("Successor node for %d is %s", n.ft.GetEntry(0).Start, succ)
 	n.ft.SetNodeAtEntry(0, succ)
 
-	predNode, err := succ.GetPredNode()
-	if err != nil {
-		return err
+	predNode := succ.GetPredNode()
+	if predNode == nil {
+		return errNoPredecessorNode
 	}
 	local.SetPredNode(predNode)
 	logger.Debugf("Local node's predecessor set to %v", predNode)
@@ -318,15 +309,18 @@ func (n *localNode) setNodeFactory(f factory) {
 }
 
 func NewLocal(id chord.ID, bind string, m chord.Rank) (LocalNode, error) {
+	localNodeRef := &nodeRef{
+		ID: id, Bind: bind,
+	}
 	localNode := &localNode{
-		Tracer: global.Tracer(""),
-		mu:     new(sync.Mutex),
-		id:     id,
-		bind:   bind,
-		pred:   id,
-		succ:   id,
-		ft:     nil,
-		m:      m,
+		Tracer:   global.Tracer(""),
+		mu:       new(sync.Mutex),
+		id:       id,
+		bind:     bind,
+		predNode: localNodeRef,
+		succNode: localNodeRef,
+		ft:       nil,
+		m:        m,
 
 		factory: defaultFactory{},
 	}

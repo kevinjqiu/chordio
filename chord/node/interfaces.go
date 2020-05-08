@@ -17,8 +17,8 @@ type (
 	Node interface {
 		NodeRef
 
-		GetPredNode() (*nodeRef, error)
-		GetSuccNode() (*nodeRef, error)
+		GetPredNode() NodeRef
+		GetSuccNode() NodeRef
 		AsProtobufNode() *pb.Node
 
 		setNodeFactory(f factory)
