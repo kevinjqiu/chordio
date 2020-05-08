@@ -46,7 +46,7 @@ func TestLocalNode_ClosestPrecedingFinger(t *testing.T) {
 		},
 		{
 			id:           2,
-			expectedNode: 3,
+			expectedNode: 1,
 		},
 		{
 			id:           3,
@@ -58,7 +58,7 @@ func TestLocalNode_ClosestPrecedingFinger(t *testing.T) {
 		},
 		{
 			id:           5,
-			expectedNode: 5,
+			expectedNode: 2,
 		},
 		{
 			id:           6,
