@@ -113,3 +113,16 @@ func TestFingerTable_SetEntryAt(t *testing.T) {
 		assert.False(t, ft.HasNode(chord.ID(35)))
 	})
 }
+
+func TestFingerTable_AsProtobufFT(t *testing.T) {
+	_, ft := setup(t)
+	pbft := ft.AsProtobufFT()
+	assert.Equal(t, len(pbft.Entries), len(ft.entries))
+
+	for i, fte := range ft.entries {
+		pbfte := pbft.Entries[i]
+		assert.Equal(t, pbfte.Start, fte.Start.AsU64())
+		assert.Equal(t, pbfte.End, fte.Interval.End.AsU64())
+		assert.Equal(t, pbfte.NodeID, fte.Node.GetID().AsU64())
+	}
+}
