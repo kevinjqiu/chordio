@@ -21,11 +21,11 @@ type Node interface {
 	setNodeFactory(f factory)
 
 	// FindPredecessor for the given ID
-	FindPredecessor(context.Context, chord.ID) (Node, error)
+	FindPredecessor(ctx context.Context, id chord.ID) (Node, error)
 	// FindSuccessor for the given ID
-	FindSuccessor(context.Context, chord.ID) (Node, error)
+	FindSuccessor(ctx context.Context, id chord.ID) (Node, error)
 	// find the closest finger entry that's preceding the ID
-	ClosestPrecedingFinger(context.Context, chord.ID) (Node, error)
+	ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error)
 	// update the finger table entry at index i to node s
 	UpdateFingerTableEntry(ctx context.Context, s Node, i int) error
 }
