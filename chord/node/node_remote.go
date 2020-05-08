@@ -189,6 +189,7 @@ func NewRemote(ctx context.Context, bind string) (RemoteNode, error) {
 		predNode: resp.Node.GetPred(),
 		succNode: resp.Node.GetSucc(),
 		client:   client,
+		factory: defaultFactory{},
 	}
 
 	return rn, nil
