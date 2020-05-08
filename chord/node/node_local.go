@@ -24,17 +24,7 @@ type localNode struct {
 	m        chord.Rank
 	ft       *FingerTable
 
-	// These fields allow the constructors to be swapped out during tests
-	newLocalNodeFn  localNodeConstructor
-	newRemoteNodeFn remoteNodeConstructor
-}
-
-func (n *localNode) setLocalNodeConstructor(fn localNodeConstructor) {
-	n.newLocalNodeFn = fn
-}
-
-func (n *localNode) setRemoteNodeConstructor(fn remoteNodeConstructor) {
-	n.newRemoteNodeFn = fn
+	factory  factory
 }
 
 func (n *localNode) GetFingerTable() *FingerTable {
@@ -150,7 +140,7 @@ func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, err
 	}
 
 	logger.Debugf("the closest preceding node is %v", n_)
-	remoteNode, err = n.newRemoteNodeFn(ctx, n_.GetBind())
+	remoteNode, err = n.factory.newRemoteNode(ctx, n_.GetBind())
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +182,7 @@ func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error
 		return nil, err
 	}
 
-	return n.newRemoteNodeFn(ctx, succNode.Bind)
+	return n.factory.newRemoteNode(ctx, succNode.Bind)
 }
 
 func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
@@ -214,9 +204,9 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 			}
 
 			if node.ID == n.id {
-				return n.newLocalNodeFn(node.ID, node.Bind, n.m)
+				return n.factory.newLocalNode(node.ID, node.Bind, n.m)
 			} else {
-				return n.newRemoteNodeFn(ctx, node.Bind)
+				return n.factory.newRemoteNode(ctx, node.Bind)
 			}
 		}
 	}
@@ -323,7 +313,11 @@ func (n *localNode) UpdateFingerTableEntry(_ context.Context, s Node, i int) err
 	return nil
 }
 
-func NewLocal(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOption) (LocalNode, error) {
+func (n *localNode) setNodeFactory(f factory) {
+	n.factory = f
+}
+
+func NewLocal(id chord.ID, bind string, m chord.Rank) (LocalNode, error) {
 	localNode := &localNode{
 		Tracer: global.Tracer(""),
 		mu:     new(sync.Mutex),
@@ -334,14 +328,10 @@ func NewLocal(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOpt
 		ft:     nil,
 		m:      m,
 
-		newLocalNodeFn: NewLocal,
-		newRemoteNodeFn: NewRemote,
+		factory: defaultFactory{},
 	}
 	ft := newFingerTable(localNode, m)
 	localNode.ft = &ft
 
-	for _, opt := range opts {
-		opt.apply(localNode)
-	}
 	return localNode, nil
 }

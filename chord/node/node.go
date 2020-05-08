@@ -9,22 +9,16 @@ import (
 	"github.com/kevinjqiu/chordio/pb"
 )
 
-type (
-	canSetNodeConstructors interface {
-		setLocalNodeConstructor(localNodeConstructor)
-		setRemoteNodeConstructor(remoteNodeConstructor)
-	}
-)
-
 type Node interface {
 	fmt.Stringer
-	canSetNodeConstructors
 
 	GetID() chord.ID
 	GetBind() string
 	GetPredNode() (*NodeRef, error)
 	GetSuccNode() (*NodeRef, error)
 	AsProtobufNode() *pb.Node
+
+	setNodeFactory(f factory)
 
 	// FindPredecessor for the given ID
 	FindPredecessor(context.Context, chord.ID) (Node, error)
@@ -52,39 +46,6 @@ type RemoteNode interface {
 type NodeRef struct {
 	ID   chord.ID
 	Bind string
-}
-
-// TODO: all these to support testing... an awful lot of structs and interfaces
-// any way to simplify??
-type (
-	localNodeConstructor  func(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOption) (LocalNode, error)
-	remoteNodeConstructor func(ctx context.Context, bind string, opts ...nodeConstructorOption) (RemoteNode, error)
-	nodeConstructorOption interface {
-		apply(n canSetNodeConstructors)
-	}
-
-)
-
-type _nodeConstructorOption struct {fn func(n canSetNodeConstructors)}
-
-func (n _nodeConstructorOption) apply(o canSetNodeConstructors) {
-	n.fn(o)
-}
-
-func nodeConstructorOptionFunc(fn func(n canSetNodeConstructors)) nodeConstructorOption {
-	return _nodeConstructorOption{fn}
-}
-
-func withLocalNodeConstructor(fn localNodeConstructor) nodeConstructorOption {
-	return nodeConstructorOptionFunc(func(n canSetNodeConstructors) {
-		n.setLocalNodeConstructor(fn)
-	})
-}
-
-func withRemoteNodeConstructor(fn remoteNodeConstructor) nodeConstructorOption {
-	return nodeConstructorOptionFunc(func(n canSetNodeConstructors) {
-		n.setRemoteNodeConstructor(fn)
-	})
 }
 
 func AssignID(key []byte, m chord.Rank) chord.ID {

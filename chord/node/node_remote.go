@@ -23,16 +23,11 @@ type remoteNode struct {
 	succNode *pb.Node
 	client   pb.ChordClient
 
-	newLocalNodeFn  localNodeConstructor
-	newRemoteNodeFn remoteNodeConstructor
+	factory factory
 }
 
-func (rn *remoteNode) setLocalNodeConstructor(fn localNodeConstructor) {
-	rn.newLocalNodeFn = fn
-}
-
-func (rn *remoteNode) setRemoteNodeConstructor(fn remoteNodeConstructor) {
-	rn.newRemoteNodeFn = fn
+func (rn *remoteNode) setNodeFactory(f factory) {
+	rn.factory = f
 }
 
 func (rn *remoteNode) String() string {
@@ -82,7 +77,7 @@ func (rn *remoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, e
 			return err
 		}
 
-		n, err = rn.newRemoteNodeFn(ctx, resp.Node.Bind)
+		n, err = rn.factory.newRemoteNode(ctx, resp.Node.Bind)
 		return err
 	})
 	return n, err
@@ -101,7 +96,7 @@ func (rn *remoteNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, err
 			return err
 		}
 
-		n, err = rn.newRemoteNodeFn(ctx, resp.Node.Bind)
+		n, err = rn.factory.newRemoteNode(ctx, resp.Node.Bind)
 		return err
 	})
 
@@ -122,7 +117,7 @@ func (rn *remoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (
 			return err
 		}
 
-		n, err = rn.newRemoteNodeFn(ctx, resp.Node.Bind)
+		n, err = rn.factory.newRemoteNode(ctx, resp.Node.Bind)
 		return err
 	})
 
@@ -171,7 +166,7 @@ func (rn *remoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int)
 	return err
 }
 
-func NewRemote(ctx context.Context, bind string, opts ...nodeConstructorOption) (RemoteNode, error) {
+func NewRemote(ctx context.Context, bind string) (RemoteNode, error) {
 	conn, err := grpc.Dial(bind,
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
@@ -194,13 +189,7 @@ func NewRemote(ctx context.Context, bind string, opts ...nodeConstructorOption) 
 		predNode: resp.Node.GetPred(),
 		succNode: resp.Node.GetSucc(),
 		client:   client,
-
-		newLocalNodeFn:  NewLocal,
-		newRemoteNodeFn: NewRemote,
 	}
 
-	for _, opt := range opts {
-		opt.apply(rn)
-	}
 	return rn, nil
 }
