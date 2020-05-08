@@ -1,6 +1,8 @@
 package chord
 
 import (
+	"bytes"
+	"fmt"
 	"math"
 )
 
@@ -10,13 +12,6 @@ const (
 	intervalOptionOpen int = iota
 	intervalOptionClosed
 )
-
-type Interval struct {
-	m           Rank
-	Start, End  ID
-	leftOption  int
-	rightOption int
-}
 
 func WithLeftOpen(i *Interval) {
 	i.leftOption = intervalOptionOpen
@@ -32,6 +27,32 @@ func WithRightOpen(i *Interval) {
 
 func WithRightClosed(i *Interval) {
 	i.rightOption = intervalOptionClosed
+}
+
+type Interval struct {
+	m           Rank
+	Start, End  ID
+	leftOption  int
+	rightOption int
+}
+
+func (i Interval) String() string {
+	var b bytes.Buffer
+
+	switch i.leftOption {
+	case intervalOptionOpen:
+		b.WriteString("(")
+	case intervalOptionClosed:
+		b.WriteString("[")
+	}
+	b.WriteString(fmt.Sprintf("%d, %d", i.Start, i.End))
+	switch i.rightOption {
+	case intervalOptionOpen:
+		b.WriteString(")")
+	case intervalOptionClosed:
+		b.WriteString("]")
+	}
+	return b.String()
 }
 
 func (i Interval) Has(id ID) bool {

@@ -284,8 +284,7 @@ func (n *LocalNode) updateOthers(ctx context.Context) error {
 	logger := logrus.WithField("method", "LocalNode.updateOthers")
 	for i := 0; i < int(n.m); i++ {
 		logger.Debugf("iteration: %d", i)
-		//newID := n.ID.Sub(chord.ID(chord.pow2(uint32(i))), n.m)
-		newID := n.id.Sub(chord.ID(chord.ID(2).Pow(i)), n.m)
+		newID := n.id.Sub(chord.ID(2).Pow(i), n.m)
 		logger.Debugf(fmt.Sprintf("FindPredecessor for ft[%d]=%d", i, newID))
 		span.AddEvent(newCtx, fmt.Sprintf("FindPredecessor for ft[%d]=%d", i, newID))
 		p, err := n.FindPredecessor(newCtx, newID)
