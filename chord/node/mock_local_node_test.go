@@ -147,26 +147,19 @@ func (_m *MockLocalNode) GetID() chord.ID {
 }
 
 // GetPredNode provides a mock function with given fields:
-func (_m *MockLocalNode) GetPredNode() (*nodeRef, error) {
+func (_m *MockLocalNode) GetPredNode() NodeRef {
 	ret := _m.Called()
 
-	var r0 *nodeRef
-	if rf, ok := ret.Get(0).(func() *nodeRef); ok {
+	var r0 NodeRef
+	if rf, ok := ret.Get(0).(func() NodeRef); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*nodeRef)
+			r0 = ret.Get(0).(NodeRef)
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // GetRank provides a mock function with given fields:
@@ -184,26 +177,19 @@ func (_m *MockLocalNode) GetRank() chord.Rank {
 }
 
 // GetSuccNode provides a mock function with given fields:
-func (_m *MockLocalNode) GetSuccNode() (*nodeRef, error) {
+func (_m *MockLocalNode) GetSuccNode() NodeRef {
 	ret := _m.Called()
 
-	var r0 *nodeRef
-	if rf, ok := ret.Get(0).(func() *nodeRef); ok {
+	var r0 NodeRef
+	if rf, ok := ret.Get(0).(func() NodeRef); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*nodeRef)
+			r0 = ret.Get(0).(NodeRef)
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // Join provides a mock function with given fields: ctx, introducerNode
