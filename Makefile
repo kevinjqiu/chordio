@@ -14,6 +14,9 @@ gen:
 
 gen-mock:
 	cd chord/node/ && mockery -inpkg -case underscore -name Node
+	cd chord/node/ && mockery -inpkg -case underscore -name LocalNode
+	cd chord/node/ && mockery -inpkg -case underscore -name RemoteNode
+	cd chord/node/ && mockery -inpkg -case underscore -name factory
 
 run:
 	docker-compose up -d --service-ports

@@ -5,27 +5,22 @@ import (
 	"fmt"
 	"github.com/kevinjqiu/chordio/chord"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
 func TestLocalNode_ClosestPrecedingFinger(t *testing.T) {
-	n, err := NewLocal(1, "n1", chord.Rank(3),
-		withLocalNodeConstructor(newMockLocalNode),
-		withRemoteNodeConstructor(func(ctx context.Context, bind string, opts ...nodeConstructorOption) (node *RemoteNode, err error) {
-			var id chord.ID
-			switch bind {
-			case "n2":
-				id = 2
-			case "n5":
-				id = 5
-			}
-			return &RemoteNode{bind: bind, id: id}, nil
-		}),
-	)
+	n2, _ := newMockNode(2, "n2")
+	n5, _ := newMockNode(5, "n5")
+
+	n, err := NewLocal(1, "n1", chord.Rank(3))
+
 	assert.Nil(t, err)
 
-	n2 := newMockNode(2, "n2")
-	n5 := newMockNode(5, "n5")
+	factory, m := newMockFactory()
+	n.setNodeFactory(factory)
+	m.On("newRemoteNode", mock.Anything, "n2").Return(n2, nil)
+	m.On("newRemoteNode", mock.Anything, "n5").Return(n5, nil)
 
 	n.GetFingerTable().SetEntry(0, n2)
 	n.GetFingerTable().SetEntry(1, n2)
@@ -46,7 +41,7 @@ func TestLocalNode_ClosestPrecedingFinger(t *testing.T) {
 		},
 		{
 			id:           2,
-			expectedNode: 3,
+			expectedNode: 1,
 		},
 		{
 			id:           3,
@@ -58,7 +53,7 @@ func TestLocalNode_ClosestPrecedingFinger(t *testing.T) {
 		},
 		{
 			id:           5,
-			expectedNode: 5,
+			expectedNode: 2,
 		},
 		{
 			id:           6,
