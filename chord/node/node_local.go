@@ -150,7 +150,7 @@ func (n *LocalNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, err
 	}
 
 	logger.Debugf("the closest preceding node is %v", n_)
-	remoteNode, err = NewRemote(ctx, n_.GetBind())
+	remoteNode, err = n.newRemoteNodeFn(ctx, n_.GetBind())
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +192,7 @@ func (n *LocalNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error
 		return nil, err
 	}
 
-	return NewRemote(ctx, succNode.Bind)
+	return n.newRemoteNodeFn(ctx, succNode.Bind)
 }
 
 func (n *LocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
@@ -214,9 +214,9 @@ func (n *LocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 			}
 
 			if node.ID == n.id {
-				return NewLocal(node.ID, node.Bind, n.m)
+				return n.newLocalNodeFn(node.ID, node.Bind, n.m)
 			} else {
-				return NewRemote(ctx, node.Bind)
+				return n.newRemoteNodeFn(ctx, node.Bind)
 			}
 		}
 	}
