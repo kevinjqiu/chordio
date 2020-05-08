@@ -9,7 +9,7 @@
 
 A distributed hash table (DHT) based on Chord
 
-![build status](https://github.com/actions/kevinjqiu/chordio/workflows/.github/workflows/go.yml/badge.svg)
+![build status](https://github.com/kevinjqiu/chordio/workflows/Go/badge.svg)
 
 
 # Design
