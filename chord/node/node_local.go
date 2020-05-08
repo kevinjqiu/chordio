@@ -197,10 +197,10 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 	for i := int(n.m) - 1; i >= 0; i-- {
 		fte := n.ft.GetEntry(i)
 		interval := chord.NewInterval(n.m, n.id, id, chord.WithLeftOpen, chord.WithRightOpen)
-		if interval.Has(fte.NodeID) {
-			node, ok := n.ft.GetNodeByID(fte.NodeID)
+		if interval.Has(fte.Node.ID) {
+			node, ok := n.ft.GetNodeByID(fte.Node.ID)
 			if !ok {
-				return nil, fmt.Errorf("node %d at fte[%d] not found", fte.NodeID, i)
+				return nil, fmt.Errorf("node %s at fte[%d] not found", fte.Node, i)
 			}
 
 			if node.ID == n.id {
@@ -245,11 +245,11 @@ func (n *localNode) initFinger(ctx context.Context, remote RemoteNode) error {
 	for i := 0; i < int(n.m)-1; i++ {
 		logger.Debugf("i=%d", i)
 		logger.Debugf("finger[i+1].start=%d", n.ft.GetEntry(i+1).Start)
-		logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).NodeID)
+		logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.ID)
 
-		if n.ft.GetEntry(i+1).Start.In(local.id, n.ft.GetEntry(i).NodeID, n.m) {
-			logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).NodeID)
-			_ = n.ft.SetID(i+1, n.ft.GetEntry(i).NodeID) // TODO: handle error
+		if n.ft.GetEntry(i+1).Start.In(local.id, n.ft.GetEntry(i).Node.ID, n.m) {
+			logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.ID)
+			_ = n.ft.SetID(i+1, n.ft.GetEntry(i).Node.ID) // TODO: handle error
 		} else {
 			newSucc, err := remote.FindSuccessor(ctx, n.ft.GetEntry(i+1).Start)
 			logger.Debugf("new successor for %d is %v", n.ft.GetEntry(i+1).Start, newSucc)

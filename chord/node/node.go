@@ -48,6 +48,10 @@ type NodeRef struct {
 	Bind string
 }
 
+func (nr NodeRef) String() string {
+	return fmt.Sprintf("<@%d %s>", nr.ID, nr.Bind)
+}
+
 func AssignID(key []byte, m chord.Rank) chord.ID {
 	hasher := sha1.New()
 	hasher.Write(key)
