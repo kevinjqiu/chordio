@@ -45,7 +45,6 @@ type LocalNode interface {
 
 type RemoteNode interface {
 	Node
-
 }
 
 // A node ref only contains ID and Bind info
@@ -55,24 +54,38 @@ type NodeRef struct {
 	Bind string
 }
 
+// TODO: all these to support testing... an awful lot of structs and interfaces
+// any way to simplify??
 type (
 	localNodeConstructor  func(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOption) (LocalNode, error)
 	remoteNodeConstructor func(ctx context.Context, bind string, opts ...nodeConstructorOption) (RemoteNode, error)
-	nodeConstructorOption func(n canSetNodeConstructors)
+	nodeConstructorOption interface {
+		apply(n canSetNodeConstructors)
+	}
+
 )
 
+type _nodeConstructorOption struct {fn func(n canSetNodeConstructors)}
+
+func (n _nodeConstructorOption) apply(o canSetNodeConstructors) {
+	n.fn(o)
+}
+
+func nodeConstructorOptionFunc(fn func(n canSetNodeConstructors)) nodeConstructorOption {
+	return _nodeConstructorOption{fn}
+}
+
 func withLocalNodeConstructor(fn localNodeConstructor) nodeConstructorOption {
-	return func(n canSetNodeConstructors) {
+	return nodeConstructorOptionFunc(func(n canSetNodeConstructors) {
 		n.setLocalNodeConstructor(fn)
-	}
+	})
 }
 
 func withRemoteNodeConstructor(fn remoteNodeConstructor) nodeConstructorOption {
-	return func(n canSetNodeConstructors) {
+	return nodeConstructorOptionFunc(func(n canSetNodeConstructors) {
 		n.setRemoteNodeConstructor(fn)
-	}
+	})
 }
-
 
 func AssignID(key []byte, m chord.Rank) chord.ID {
 	hasher := sha1.New()

@@ -341,7 +341,7 @@ func NewLocal(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOpt
 	localNode.ft = &ft
 
 	for _, opt := range opts {
-		opt(localNode)
+		opt.apply(localNode)
 	}
 	return localNode, nil
 }

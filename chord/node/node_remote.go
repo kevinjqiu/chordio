@@ -200,7 +200,7 @@ func NewRemote(ctx context.Context, bind string, opts ...nodeConstructorOption) 
 	}
 
 	for _, opt := range opts {
-		opt(rn)
+		opt.apply(rn)
 	}
 	return rn, nil
 }
