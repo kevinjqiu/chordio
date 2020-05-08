@@ -9,10 +9,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
+	"sync"
 )
 
 type LocalNode struct {
 	trace.Tracer
+	mu       *sync.Mutex
 	id       chord.ID
 	bind     string
 	pred     chord.ID
@@ -212,6 +214,9 @@ func (n *LocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 // initialize finger table of the local node
 // n' is an arbitrary node already in the network
 func (n *LocalNode) initFinger(ctx context.Context, remote *RemoteNode) error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	ctx, span := n.Start(ctx, "LocalNode.initFinger")
 	defer span.End()
 
@@ -242,7 +247,7 @@ func (n *LocalNode) initFinger(ctx context.Context, remote *RemoteNode) error {
 
 		if n.ft.GetEntry(i+1).Start.In(local.id, n.ft.GetEntry(i).NodeID, n.m) {
 			logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).NodeID)
-			_ = n.ft.SetID(i+1, n.ft.GetEntry(i).NodeID)  // TODO: handle error
+			_ = n.ft.SetID(i+1, n.ft.GetEntry(i).NodeID) // TODO: handle error
 		} else {
 			newSucc, err := remote.FindSuccessor(ctx, n.ft.GetEntry(i+1).Start)
 			logger.Debugf("new successor for %d is %v", n.ft.GetEntry(i+1).Start, newSucc)
@@ -300,6 +305,9 @@ func (n *LocalNode) updateOthers(ctx context.Context) error {
 }
 
 func (n *LocalNode) UpdateFingerTableEntry(_ context.Context, s Node, i int) error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.ft.SetEntry(i, s)
 	return nil
 }
@@ -307,6 +315,7 @@ func (n *LocalNode) UpdateFingerTableEntry(_ context.Context, s Node, i int) err
 func NewLocal(id chord.ID, bind string, m chord.Rank) (*LocalNode, error) {
 	localNode := &LocalNode{
 		Tracer: global.Tracer(""),
+		mu:     new(sync.Mutex),
 		id:     id,
 		bind:   bind,
 		pred:   id,
