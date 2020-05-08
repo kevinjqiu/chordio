@@ -1,6 +1,7 @@
 package node
 
 import (
+	"fmt"
 	"github.com/kevinjqiu/chordio/chord"
 	"github.com/stretchr/testify/mock"
 )
@@ -16,6 +17,7 @@ func newMockNode(id chord.ID, bind string, builders ...mockBuilder) (Node, *mock
 	mn := MockNode{}
 	mn.Mock.On("GetID").Return(id)
 	mn.Mock.On("GetBind").Return(bind)
+	mn.Mock.On("String").Return(fmt.Sprintf("<@%d %s>", id, bind))
 	for _, mb := range builders {
 		mb(&mn.Mock)
 	}

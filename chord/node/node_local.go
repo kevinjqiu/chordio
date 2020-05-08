@@ -12,10 +12,6 @@ import (
 	"sync"
 )
 
-var (
-	errNoSuccessorNode   = errors.New("no successor node found")
-	errNoPredecessorNode = errors.New("no predecessor node found")
-)
 
 type localNode struct {
 	trace.Tracer
@@ -187,7 +183,7 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 		if interval.Has(fte.Node.GetID()) {
 			node, ok := n.ft.GetNodeByID(fte.Node.GetID())
 			if !ok {
-				return nil, fmt.Errorf("node %s at fte[%d] not found", fte.Node, i)
+				return nil, errNodeNotFound(fte.Node.GetID())
 			}
 
 			if node.GetID() == n.id {
