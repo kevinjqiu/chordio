@@ -15,7 +15,7 @@ import (
 )
 
 type Server struct {
-	localNode  *node.LocalNode
+	localNode  node.LocalNode
 	grpcServer *grpc.Server
 }
 

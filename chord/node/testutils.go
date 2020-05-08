@@ -8,16 +8,16 @@ import (
 
 type mockBuilder func(m *mock.Mock)
 
-func newMockLocalNode(id chord.ID, bind string, m chord.Rank, _ ...nodeConstructorOption) (*LocalNode, error) {
-	return &LocalNode{
+func newMockLocalNode(id chord.ID, bind string, m chord.Rank, _ ...nodeConstructorOption) (LocalNode, error) {
+	return &localNode{
 		id:   id,
 		bind: bind,
 		m:    m,
 	}, nil
 }
 
-func newMockRemoteNode(ctx context.Context, bind string, _ ...nodeConstructorOption) (*RemoteNode, error) {
-	return &RemoteNode{
+func newMockRemoteNode(ctx context.Context, bind string, _ ...nodeConstructorOption) (RemoteNode, error) {
+	return &remoteNode{
 		bind: bind,
 	}, nil
 }

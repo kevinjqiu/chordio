@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-type RemoteNode struct {
+type remoteNode struct {
 	trace.Tracer
 	id       chord.ID
 	bind     string
@@ -27,15 +27,15 @@ type RemoteNode struct {
 	newRemoteNodeFn remoteNodeConstructor
 }
 
-func (rn *RemoteNode) setLocalNodeConstructor(fn localNodeConstructor) {
+func (rn *remoteNode) setLocalNodeConstructor(fn localNodeConstructor) {
 	rn.newLocalNodeFn = fn
 }
 
-func (rn *RemoteNode) setRemoteNodeConstructor(fn remoteNodeConstructor) {
+func (rn *remoteNode) setRemoteNodeConstructor(fn remoteNodeConstructor) {
 	rn.newRemoteNodeFn = fn
 }
 
-func (rn *RemoteNode) String() string {
+func (rn *remoteNode) String() string {
 	var pred, succ string
 
 	if rn.predNode == nil {
@@ -53,26 +53,26 @@ func (rn *RemoteNode) String() string {
 	return fmt.Sprintf("<R: %d@%s, p=%s, s=%s>", rn.id, rn.bind, pred, succ)
 }
 
-func (rn *RemoteNode) GetID() chord.ID {
+func (rn *remoteNode) GetID() chord.ID {
 	return rn.id
 }
 
-func (rn *RemoteNode) GetBind() string {
+func (rn *remoteNode) GetBind() string {
 	return rn.bind
 }
 
-func (rn *RemoteNode) GetPredNode() (*NodeRef, error) {
+func (rn *remoteNode) GetPredNode() (*NodeRef, error) {
 	return &NodeRef{chord.ID(rn.predNode.Id), rn.predNode.Bind}, nil
 }
 
-func (rn *RemoteNode) GetSuccNode() (*NodeRef, error) {
+func (rn *remoteNode) GetSuccNode() (*NodeRef, error) {
 	return &NodeRef{chord.ID(rn.succNode.Id), rn.succNode.Bind}, nil
 }
 
-func (rn *RemoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
-	var n *RemoteNode
-	err := rn.WithSpan(ctx, "RemoteNode.FindPredecessor", func(ctx context.Context) error {
-		logrus.Debug("[RemoteNode] FindPredecessor: ", id)
+func (rn *remoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
+	var n RemoteNode
+	err := rn.WithSpan(ctx, "remoteNode.FindPredecessor", func(ctx context.Context) error {
+		logrus.Debug("[remoteNode] FindPredecessor: ", id)
 		req := pb.FindPredecessorRequest{
 			Id: uint64(id),
 		}
@@ -88,10 +88,10 @@ func (rn *RemoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, e
 	return n, err
 }
 
-func (rn *RemoteNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error) {
-	var n *RemoteNode
-	err := rn.WithSpan(ctx, "RemoteNode.FindSuccessor", func(ctx context.Context) error {
-		logrus.Debug("[RemoteNode] FindSuccessor: ", id)
+func (rn *remoteNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error) {
+	var n RemoteNode
+	err := rn.WithSpan(ctx, "remoteNode.FindSuccessor", func(ctx context.Context) error {
+		logrus.Debug("[remoteNode] FindSuccessor: ", id)
 		req := pb.FindSuccessorRequest{
 			Id: uint64(id),
 		}
@@ -108,11 +108,11 @@ func (rn *RemoteNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, err
 	return n, err
 }
 
-func (rn *RemoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
-	var n *RemoteNode
+func (rn *remoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
+	var n RemoteNode
 
-	err := rn.WithSpan(ctx, "RemoteNode.ClosestPrecedingFinger", func(ctx context.Context) error {
-		logrus.Debug("[RemoteNode] ClosestPrecedingFinger: ", id)
+	err := rn.WithSpan(ctx, "remoteNode.ClosestPrecedingFinger", func(ctx context.Context) error {
+		logrus.Debug("[remoteNode] ClosestPrecedingFinger: ", id)
 		req := pb.ClosestPrecedingFingerRequest{
 			Id: uint64(id),
 		}
@@ -129,7 +129,7 @@ func (rn *RemoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (
 	return n, err
 }
 
-func (rn *RemoteNode) AsProtobufNode() *pb.Node {
+func (rn *remoteNode) AsProtobufNode() *pb.Node {
 	pbn := &pb.Node{
 		Id:   uint64(rn.GetID()),
 		Bind: rn.GetBind(),
@@ -156,12 +156,12 @@ func (rn *RemoteNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
-func (rn *RemoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) error {
-	ctx, span := rn.Start(ctx, "RemoteNode.UpdateFingerTableEntry",
+func (rn *remoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) error {
+	ctx, span := rn.Start(ctx, "remoteNode.UpdateFingerTableEntry",
 		trace.WithAttributes(core.Key("s").String(s.String())))
 	defer span.End()
 
-	logrus.Debugf("[RemoteNode] UpdateFingerTableEntry: ID=%d, i=%d", s.GetID(), i)
+	logrus.Debugf("[remoteNode] UpdateFingerTableEntry: ID=%d, i=%d", s.GetID(), i)
 	req := pb.UpdateFingerTableRequest{
 		Node: s.AsProtobufNode(),
 		I:    int64(i),
@@ -171,7 +171,7 @@ func (rn *RemoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int)
 	return err
 }
 
-func NewRemote(ctx context.Context, bind string, opts ...nodeConstructorOption) (*RemoteNode, error) {
+func NewRemote(ctx context.Context, bind string, opts ...nodeConstructorOption) (RemoteNode, error) {
 	conn, err := grpc.Dial(bind,
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
@@ -187,7 +187,7 @@ func NewRemote(ctx context.Context, bind string, opts ...nodeConstructorOption) 
 		return nil, err
 	}
 
-	rn := &RemoteNode{
+	rn := &remoteNode{
 		Tracer:   global.Tracer(""),
 		id:       chord.ID(resp.Node.GetId()),
 		bind:     bind,

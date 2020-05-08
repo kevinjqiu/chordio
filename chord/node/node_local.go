@@ -12,7 +12,7 @@ import (
 	"sync"
 )
 
-type LocalNode struct {
+type localNode struct {
 	trace.Tracer
 	mu       *sync.Mutex
 	id       chord.ID
@@ -29,23 +29,23 @@ type LocalNode struct {
 	newRemoteNodeFn remoteNodeConstructor
 }
 
-func (n *LocalNode) setLocalNodeConstructor(fn localNodeConstructor) {
+func (n *localNode) setLocalNodeConstructor(fn localNodeConstructor) {
 	n.newLocalNodeFn = fn
 }
 
-func (n *LocalNode) setRemoteNodeConstructor(fn remoteNodeConstructor) {
+func (n *localNode) setRemoteNodeConstructor(fn remoteNodeConstructor) {
 	n.newRemoteNodeFn = fn
 }
 
-func (n *LocalNode) GetFingerTable() *FingerTable {
+func (n *localNode) GetFingerTable() *FingerTable {
 	return n.ft
 }
 
-func (n *LocalNode) GetRank() chord.Rank {
+func (n *localNode) GetRank() chord.Rank {
 	return n.m
 }
 
-func (n *LocalNode) String() string {
+func (n *localNode) String() string {
 	var pred, succ string
 
 	if n.predNode == nil {
@@ -62,25 +62,25 @@ func (n *LocalNode) String() string {
 	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
 }
 
-func (n *LocalNode) SetPredNode(pn *NodeRef) {
+func (n *localNode) SetPredNode(pn *NodeRef) {
 	n.predNode = pn
 	n.pred = pn.ID
 }
 
-func (n *LocalNode) SetSuccNode(sn *NodeRef) {
+func (n *localNode) SetSuccNode(sn *NodeRef) {
 	n.succNode = sn
 	n.succ = sn.ID
 }
 
-func (n *LocalNode) GetID() chord.ID {
+func (n *localNode) GetID() chord.ID {
 	return n.id
 }
 
-func (n *LocalNode) GetBind() string {
+func (n *localNode) GetBind() string {
 	return n.bind
 }
 
-func (n *LocalNode) AsProtobufNode() *pb.Node {
+func (n *localNode) AsProtobufNode() *pb.Node {
 	pbn := &pb.Node{
 		Id:   uint64(n.GetID()),
 		Bind: n.GetBind(),
@@ -106,7 +106,7 @@ func (n *LocalNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
-func (n *LocalNode) GetPredNode() (*NodeRef, error) {
+func (n *localNode) GetPredNode() (*NodeRef, error) {
 	if n.predNode != nil && n.predNode.ID != n.pred {
 		return n.predNode, nil
 	}
@@ -117,7 +117,7 @@ func (n *LocalNode) GetPredNode() (*NodeRef, error) {
 	return &NodeRef{Bind: node.Bind, ID: node.ID}, nil
 }
 
-func (n *LocalNode) GetSuccNode() (*NodeRef, error) {
+func (n *localNode) GetSuccNode() (*NodeRef, error) {
 	if n.succNode != nil && n.succNode.ID != n.succ {
 		return n.succNode, nil
 	}
@@ -128,12 +128,12 @@ func (n *LocalNode) GetSuccNode() (*NodeRef, error) {
 	return &NodeRef{Bind: node.Bind, ID: node.ID}, nil
 }
 
-// TODO: if the node is itself, do not return a RemoteNode version of it
-func (n *LocalNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
-	ctx, span := n.Start(ctx, "LocalNode.FindPredecessor")
+// TODO: if the node is itself, do not return a remoteNode version of it
+func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
+	ctx, span := n.Start(ctx, "localNode.FindPredecessor")
 	defer span.End()
 
-	logger := logrus.WithField("method", "LocalNode.FindPredecessor")
+	logger := logrus.WithField("method", "localNode.FindPredecessor")
 	var (
 		remoteNode Node
 		err        error
@@ -178,8 +178,8 @@ func (n *LocalNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, err
 
 }
 
-func (n *LocalNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error) {
-	ctx, span := n.Start(ctx, "LocalNode.FindSuccessor")
+func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error) {
+	ctx, span := n.Start(ctx, "localNode.FindSuccessor")
 	defer span.End()
 
 	predNode, err := n.FindPredecessor(ctx, id)
@@ -195,11 +195,11 @@ func (n *LocalNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error
 	return n.newRemoteNodeFn(ctx, succNode.Bind)
 }
 
-func (n *LocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
-	ctx, span := n.Start(ctx, "LocalNode.ClosestPrecedingFinger")
+func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
+	ctx, span := n.Start(ctx, "localNode.ClosestPrecedingFinger")
 	defer span.End()
 
-	logger := logrus.WithField("method", "LocalNode.ClosestPrecedingFinger")
+	logger := logrus.WithField("method", "localNode.ClosestPrecedingFinger")
 	logger.Debugf("ID=%d", id)
 	// nb: int cast here is IMPORTANT!
 	// because n.m is of type uint32
@@ -225,14 +225,14 @@ func (n *LocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 
 // initialize finger table of the local node
 // n' is an arbitrary node already in the network
-func (n *LocalNode) initFinger(ctx context.Context, remote *RemoteNode) error {
+func (n *localNode) initFinger(ctx context.Context, remote RemoteNode) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
-	ctx, span := n.Start(ctx, "LocalNode.initFinger")
+	ctx, span := n.Start(ctx, "localNode.initFinger")
 	defer span.End()
 
-	logger := logrus.WithField("method", "LocalNode.initFinger")
+	logger := logrus.WithField("method", "localNode.initFinger")
 	logger.Infof("using remote node %s", remote)
 	local := n
 	logger.Debugf("Try to find successor for %d on %s", n.ft.GetEntry(0).Start, remote)
@@ -272,11 +272,11 @@ func (n *LocalNode) initFinger(ctx context.Context, remote *RemoteNode) error {
 	return nil
 }
 
-func (n *LocalNode) Join(ctx context.Context, introducerNode *RemoteNode) error {
-	ctx, span := n.Start(ctx, "LocalNode.Join")
+func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
+	ctx, span := n.Start(ctx, "localNode.Join")
 	defer span.End()
 
-	logger := logrus.WithField("method", "LocalNode.Join")
+	logger := logrus.WithField("method", "localNode.Join")
 	logger.Debugf("introducerNode: %s", introducerNode)
 
 	if err := n.initFinger(ctx, introducerNode); err != nil {
@@ -289,11 +289,11 @@ func (n *LocalNode) Join(ctx context.Context, introducerNode *RemoteNode) error 
 	return nil
 }
 
-func (n *LocalNode) updateOthers(ctx context.Context) error {
-	newCtx, span := n.Start(ctx, "LocalNode.updateOthers")
+func (n *localNode) updateOthers(ctx context.Context) error {
+	newCtx, span := n.Start(ctx, "localNode.updateOthers")
 	defer span.End()
 
-	logger := logrus.WithField("method", "LocalNode.updateOthers")
+	logger := logrus.WithField("method", "localNode.updateOthers")
 	for i := 0; i < int(n.m); i++ {
 		logger.Debugf("iteration: %d", i)
 		newID := n.id.Sub(chord.ID(2).Pow(i), n.m)
@@ -315,7 +315,7 @@ func (n *LocalNode) updateOthers(ctx context.Context) error {
 	return nil
 }
 
-func (n *LocalNode) UpdateFingerTableEntry(_ context.Context, s Node, i int) error {
+func (n *localNode) UpdateFingerTableEntry(_ context.Context, s Node, i int) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
@@ -323,8 +323,8 @@ func (n *LocalNode) UpdateFingerTableEntry(_ context.Context, s Node, i int) err
 	return nil
 }
 
-func NewLocal(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOption) (*LocalNode, error) {
-	localNode := &LocalNode{
+func NewLocal(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOption) (LocalNode, error) {
+	localNode := &localNode{
 		Tracer: global.Tracer(""),
 		mu:     new(sync.Mutex),
 		id:     id,

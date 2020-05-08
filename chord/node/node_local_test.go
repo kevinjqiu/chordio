@@ -11,7 +11,7 @@ import (
 func TestLocalNode_ClosestPrecedingFinger(t *testing.T) {
 	n, err := NewLocal(1, "n1", chord.Rank(3),
 		withLocalNodeConstructor(newMockLocalNode),
-		withRemoteNodeConstructor(func(ctx context.Context, bind string, opts ...nodeConstructorOption) (node *RemoteNode, err error) {
+		withRemoteNodeConstructor(func(ctx context.Context, bind string, opts ...nodeConstructorOption) (node RemoteNode, err error) {
 			var id chord.ID
 			switch bind {
 			case "n2":
@@ -19,7 +19,7 @@ func TestLocalNode_ClosestPrecedingFinger(t *testing.T) {
 			case "n5":
 				id = 5
 			}
-			return &RemoteNode{bind: bind, id: id}, nil
+			return &remoteNode{bind: bind, id: id}, nil
 		}),
 	)
 	assert.Nil(t, err)

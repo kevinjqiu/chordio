@@ -36,6 +36,18 @@ type Node interface {
 	UpdateFingerTableEntry(ctx context.Context, s Node, i int) error
 }
 
+type LocalNode interface {
+	Node
+	GetFingerTable() *FingerTable
+	Join(ctx context.Context, introducerNode RemoteNode) error
+	GetRank() chord.Rank
+}
+
+type RemoteNode interface {
+	Node
+
+}
+
 // A node ref only contains ID and Bind info
 // It's used to reference a node with minimal information
 type NodeRef struct {
@@ -44,8 +56,8 @@ type NodeRef struct {
 }
 
 type (
-	localNodeConstructor  func(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOption) (*LocalNode, error)
-	remoteNodeConstructor func(ctx context.Context, bind string, opts ...nodeConstructorOption) (*RemoteNode, error)
+	localNodeConstructor  func(id chord.ID, bind string, m chord.Rank, opts ...nodeConstructorOption) (LocalNode, error)
+	remoteNodeConstructor func(ctx context.Context, bind string, opts ...nodeConstructorOption) (RemoteNode, error)
 	nodeConstructorOption func(n canSetNodeConstructors)
 )
 
