@@ -249,7 +249,10 @@ func (n *localNode) initFinger(ctx context.Context, remote RemoteNode) error {
 
 		if n.ft.GetEntry(i+1).Start.In(local.id, n.ft.GetEntry(i).Node.ID, n.m) {
 			logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.ID)
-			_ = n.ft.SetID(i+1, n.ft.GetEntry(i).Node.ID) // TODO: handle error
+			err = n.ft.ReplaceNodeAt(i+1, i) // TODO: handle error
+			if err != nil {
+				return err
+			}
 		} else {
 			newSucc, err := remote.FindSuccessor(ctx, n.ft.GetEntry(i+1).Start)
 			logger.Debugf("new successor for %d is %v", n.ft.GetEntry(i+1).Start, newSucc)

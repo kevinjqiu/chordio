@@ -39,24 +39,18 @@ func (ft FingerTable) Print(w io.Writer) {
 	writer.Render()
 }
 
-// SetEntryAt the i'th finger table entry's NodeID to id
-// The NodeID represented by the id must already exist
-// in the neighbourhood
-func (ft FingerTable) SetID(i int, id chord.ID) error {
-	oldNodeID := ft.entries[i].Node.ID
-	if oldNodeID == id {
+// Replace the node in FingerTable entry at i with the node at j
+func (ft FingerTable) ReplaceNodeAt(i, j int) error {
+	newNodeRef := ft.entries[j].Node
+	oldNodeRef := ft.entries[i].Node
+	if oldNodeRef.ID == newNodeRef.ID {
 		return nil
-	}
-
-	newNodeRef, ok := ft.neighbourhood[id]
-	if !ok {
-		return fmt.Errorf("cannot set %dth fingertable entry to %d: NodeID %d not found in the neighbourhood", i, id, id)
 	}
 
 	ft.entries[i].Node = newNodeRef
 
-	if oldNodeID != ft.ownerID && !ft.HasNode(oldNodeID) {
-		delete(ft.neighbourhood, oldNodeID)
+	if oldNodeRef.ID != ft.ownerID && !ft.HasNode(oldNodeRef.ID) {
+		delete(ft.neighbourhood, oldNodeRef.ID)
 	}
 	return nil
 }
