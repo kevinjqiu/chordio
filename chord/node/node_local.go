@@ -22,8 +22,6 @@ type localNode struct {
 	mu   *sync.Mutex
 	id   chord.ID
 	bind string
-	//pred     chord.ID
-	//succ     chord.ID
 	predNode NodeRef
 	succNode NodeRef
 	m        chord.Rank
@@ -59,12 +57,10 @@ func (n *localNode) String() string {
 
 func (n *localNode) SetPredNode(pn NodeRef) {
 	n.predNode = pn
-	//n.pred = pn.ID
 }
 
 func (n *localNode) SetSuccNode(sn NodeRef) {
 	n.succNode = sn
-	//n.succ = sn.ID
 }
 
 func (n *localNode) GetID() chord.ID {
