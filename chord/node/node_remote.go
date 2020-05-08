@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+// remoteNode is a proxy that implements the Node interface but
+// delegate the calls to the remote node via grpc
 type remoteNode struct {
 	trace.Tracer
 	id       chord.ID
