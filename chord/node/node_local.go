@@ -232,7 +232,7 @@ func (n *localNode) initFinger(ctx context.Context, remote RemoteNode) error {
 	}
 
 	logger.Debugf("Successor node for %d is %s", n.ft.GetEntry(0).Start, succ)
-	n.ft.SetEntryAt(0, succ)
+	n.ft.SetNodeAtEntry(0, succ)
 
 	predNode, err := succ.GetPredNode()
 	if err != nil {
@@ -249,17 +249,14 @@ func (n *localNode) initFinger(ctx context.Context, remote RemoteNode) error {
 
 		if n.ft.GetEntry(i+1).Start.In(local.id, n.ft.GetEntry(i).Node.ID, n.m) {
 			logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.ID)
-			err = n.ft.ReplaceNodeAt(i+1, i) // TODO: handle error
-			if err != nil {
-				return err
-			}
+			n.ft.ReplaceNodeAt(i+1, i)
 		} else {
 			newSucc, err := remote.FindSuccessor(ctx, n.ft.GetEntry(i+1).Start)
 			logger.Debugf("new successor for %d is %v", n.ft.GetEntry(i+1).Start, newSucc)
 			if err != nil {
 				return err
 			}
-			n.ft.SetEntryAt(i+1, newSucc)
+			n.ft.SetNodeAtEntry(i+1, newSucc)
 		}
 	}
 	return nil
@@ -312,7 +309,7 @@ func (n *localNode) UpdateFingerTableEntry(_ context.Context, s Node, i int) err
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
-	n.ft.SetEntryAt(i, s)
+	n.ft.SetNodeAtEntry(i, s)
 	return nil
 }
 
