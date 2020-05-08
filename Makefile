@@ -33,6 +33,10 @@ join:
 test:
 	go test -cover ./...
 
+cover:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out
+
 run-local:
 	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server -b 127.0.0.1:$(port) -l debug -m 5
 
