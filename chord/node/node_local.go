@@ -19,7 +19,6 @@ type localNode struct {
 	id   chord.ID
 	bind string
 	predNode NodeRef
-	succNode NodeRef
 	m        chord.Rank
 	ft       *FingerTable
 
@@ -43,10 +42,10 @@ func (n *localNode) String() string {
 		pred = n.predNode.String()
 	}
 
-	if n.succNode == nil {
+	if n.GetSuccNode() == nil {
 		succ = "<nil>"
 	} else {
-		succ = n.succNode.String()
+		succ = n.GetSuccNode().String()
 	}
 	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
 }
@@ -56,7 +55,7 @@ func (n *localNode) SetPredNode(_ context.Context, pn NodeRef) {
 }
 
 func (n *localNode) SetSuccNode(_ context.Context, sn NodeRef) {
-	n.succNode = sn
+	n.ft.SetNodeAtEntry(0, sn)
 }
 
 func (n *localNode) GetID() chord.ID {
@@ -98,7 +97,7 @@ func (n *localNode) GetPredNode() NodeRef {
 }
 
 func (n *localNode) GetSuccNode() NodeRef {
-	return n.succNode
+	return n.ft.GetEntry(0).Node
 }
 
 func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
@@ -292,7 +291,6 @@ func NewLocal(id chord.ID, bind string, m chord.Rank) (LocalNode, error) {
 		id:       id,
 		bind:     bind,
 		predNode: localNodeRef,
-		succNode: localNodeRef,
 		ft:       nil,
 		m:        m,
 
