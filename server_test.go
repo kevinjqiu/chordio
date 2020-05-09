@@ -18,7 +18,7 @@ var defaultServiceConfig = `{
 		"waitForReady": true,
 
 		"retryPolicy": {
-			"MaxAttempts": 4,
+			"MaxAttempts": 100,
 			"InitialBackoff": ".01s",
 			"MaxBackoff": ".01s",
 			"BackoffMultiplier": 1.0,
@@ -147,20 +147,20 @@ func TestServer(t *testing.T) {
 		})
 	})
 
-	//t.Run("after n0 and n1 join to each other, they have each other in their finger tables", func(t *testing.T) {
-	//	n0.join(n1)
-	//	n0.assertFingerTable(t, []string{
-	//		"1,2,1",
-	//		"2,4,1",
-	//		"4,0,1",
-	//	})
-	//	n1.assertFingerTable(t, []string{
-	//		"2,3,0",
-	//		"3,5,0",
-	//		"5,1,0",
-	//	})
-	//})
-	//
+	t.Run("after n0 and n1 join to each other, they have each other in their finger tables", func(t *testing.T) {
+		n0.join(n1)
+		n0.assertFingerTable(t, []string{
+			"1,2,1",
+			"2,4,1",
+			"4,0,1",
+		})
+		n1.assertFingerTable(t, []string{
+			"2,3,0",
+			"3,5,0",
+			"5,1,0",
+		})
+	})
+
 	//t.Run("after n3 join n1", func(t *testing.T) {
 	//	n3.join(n0)
 	//	n0.assertFingerTable(t, []string{

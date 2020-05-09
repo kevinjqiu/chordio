@@ -29,11 +29,21 @@ type remoteNode struct {
 }
 
 func (rn *remoteNode) SetPredNode(ctx context.Context, n NodeRef) {
-	panic("implement me")
+	rn.client.SetPredecessorNode(ctx, &pb.SetPredecessorNodeRequest{
+		Node: &pb.Node{
+			Id:   n.GetID().AsU64(),
+			Bind: n.GetBind(),
+		},
+	})
 }
 
 func (rn *remoteNode) SetSuccNode(ctx context.Context, n NodeRef) {
-	panic("implement me")
+	rn.client.SetSuccessorNode(ctx, &pb.SetSuccessorNodeRequest{
+		Node: &pb.Node{
+			Id:   n.GetID().AsU64(),
+			Bind: n.GetBind(),
+		},
+	})
 }
 
 func (rn *remoteNode) setNodeFactory(f factory) {
