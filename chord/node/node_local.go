@@ -111,7 +111,7 @@ func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, err
 	for {
 		interval := chord.NewInterval(n.m, n_.GetID(), n_.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightClosed)
 		if !interval.Has(id) {
-			if n_, err = n.ClosestPrecedingFinger(ctx, id); err != nil {
+			if n_, err = n_.ClosestPrecedingFinger(ctx, id); err != nil {
 				return nil, err
 			}
 		} else {
