@@ -51,11 +51,11 @@ func (n *localNode) String() string {
 	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
 }
 
-func (n *localNode) SetPredNode(pn NodeRef) {
+func (n *localNode) SetPredNode(_ context.Context, pn NodeRef) {
 	n.predNode = pn
 }
 
-func (n *localNode) SetSuccNode(sn NodeRef) {
+func (n *localNode) SetSuccNode(_ context.Context, sn NodeRef) {
 	n.succNode = sn
 }
 
@@ -185,8 +185,9 @@ func (n *localNode) initFinger(ctx context.Context, remote RemoteNode) error {
 		return err
 	}
 	n.ft.SetNodeAtEntry(0, succ)
-	n.SetPredNode(succ.GetPredNode())
+	n.SetPredNode(ctx, succ.GetPredNode())
 	succ.SetPredNode(ctx, n)
+	return nil
 
 	//local := n
 	//logger.Debugf("Try to find successor for %d on %s", n.ft.GetEntry(0).Start, remote)

@@ -162,6 +162,16 @@ func (_m *MockRemoteNode) GetSuccNode() NodeRef {
 	return r0
 }
 
+// SetPredNode provides a mock function with given fields: ctx, n
+func (_m *MockRemoteNode) SetPredNode(ctx context.Context, n NodeRef) {
+	_m.Called(ctx, n)
+}
+
+// SetSuccNode provides a mock function with given fields: ctx, n
+func (_m *MockRemoteNode) SetSuccNode(ctx context.Context, n NodeRef) {
+	_m.Called(ctx, n)
+}
+
 // String provides a mock function with given fields:
 func (_m *MockRemoteNode) String() string {
 	ret := _m.Called()

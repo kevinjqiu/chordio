@@ -206,6 +206,16 @@ func (_m *MockLocalNode) Join(ctx context.Context, introducerNode RemoteNode) er
 	return r0
 }
 
+// SetPredNode provides a mock function with given fields: ctx, n
+func (_m *MockLocalNode) SetPredNode(ctx context.Context, n NodeRef) {
+	_m.Called(ctx, n)
+}
+
+// SetSuccNode provides a mock function with given fields: ctx, n
+func (_m *MockLocalNode) SetSuccNode(ctx context.Context, n NodeRef) {
+	_m.Called(ctx, n)
+}
+
 // String provides a mock function with given fields:
 func (_m *MockLocalNode) String() string {
 	ret := _m.Called()
