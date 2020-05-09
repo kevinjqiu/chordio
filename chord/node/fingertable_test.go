@@ -16,9 +16,9 @@ func setup(t *testing.T, extraSteps ...extraSetupStep) (LocalNode, *FingerTable)
 	ft := newFingerTable(node, m)
 
 	for _, step := range extraSteps {
-		step(t, node, &ft)
+		step(t, node, ft)
 	}
-	return node, &ft
+	return node, ft
 }
 
 func TestNewFingerTable(t *testing.T) {

@@ -214,10 +214,14 @@ func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
 	if err := n.initFinger(ctx, introducerNode); err != nil {
 		return errors.Wrap(err, "error while init'ing fingertable")
 	}
+	fmt.Println("After initFinger(n)")
 	n.ft.Print(nil)
+
 	if err := n.updateOthers(ctx); err != nil {
 		return errors.Wrap(err, "error while updating other node's fingertables")
 	}
+	fmt.Println("After updateOthers()")
+	n.ft.Print(nil)
 	return nil
 }
 
@@ -247,11 +251,30 @@ func (n *localNode) updateOthers(ctx context.Context) error {
 	return nil
 }
 
-func (n *localNode) UpdateFingerTableEntry(_ context.Context, s Node, i int) error {
-	n.mu.Lock()
-	defer n.mu.Unlock()
+func (n *localNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) error {
+	// if s is the ith finger of n, then update n's finger table with s
+	interval := chord.NewInterval(n.m, n.id, n.ft.GetEntry(i).Node.GetID())
+	if interval.Has(s.GetID()) {
+		if s.GetID() != n.id {
+			n.mu.Lock()
+			n.ft.SetNodeAtEntry(i, s)
+			n.mu.Unlock()
+		}
 
-	n.ft.SetNodeAtEntry(i, s)
+		var (
+			predNode Node
+			err error
+		)
+		if n.GetPredNode().GetID() == n.id {
+			predNode, err = NewLocal(n.id, n.bind, n.m)
+		} else {
+			predNode, err = NewRemote(ctx, n.GetPredNode().GetBind())
+		}
+		if err != nil {
+			return err
+		}
+		return predNode.UpdateFingerTableEntry(ctx, s, i)
+	}
 	return nil
 }
 
@@ -275,8 +298,6 @@ func NewLocal(id chord.ID, bind string, m chord.Rank) (LocalNode, error) {
 
 		factory: defaultFactory{},
 	}
-	ft := newFingerTable(localNode, m)
-	localNode.ft = &ft
-
+	localNode.ft = newFingerTable(localNode, m)
 	return localNode, nil
 }
