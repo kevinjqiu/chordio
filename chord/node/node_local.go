@@ -112,7 +112,8 @@ func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, err
 		err        error
 	)
 
-	if !id.In(n.id, n.succNode.GetID(), n.m) {
+	interval := chord.NewInterval(n.m, n.id, n.succNode.GetID(), chord.WithLeftOpen, chord.WithRightClosed)
+	if interval.Has(id) {
 		logger.Debugf("ID is within %v, the predecessor is the local node", n)
 		return n, nil
 	}
