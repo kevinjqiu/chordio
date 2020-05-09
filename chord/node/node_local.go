@@ -101,55 +101,26 @@ func (n *localNode) GetSuccNode() NodeRef {
 	return n.succNode
 }
 
-// TODO: if the node is itself, do not return a remoteNode version of it
 func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
 	ctx, span := n.Start(ctx, "localNode.FindPredecessor")
 	defer span.End()
 
-	logger := logrus.WithField("method", "localNode.FindPredecessor")
 	var (
-		remoteNode Node
-		err        error
+		n_ Node = n
+		err error
 	)
-
-	interval := chord.NewInterval(n.m, n.id, n.succNode.GetID(), chord.WithLeftOpen, chord.WithRightClosed)
-	if interval.Has(id) {
-		logger.Debugf("ID is within %v, the predecessor is the local node", n)
-		return n, nil
-	}
-
-	n_, err := n.ClosestPrecedingFinger(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	logger.Debugf("the closest preceding node is %v", n_)
-	remoteNode, err = n.factory.newRemoteNode(ctx, n_.GetBind())
-	if err != nil {
-		return nil, err
-	}
-
 	for {
-		succNode := n_.GetSuccNode()
-		if succNode == nil {
-			return nil, errNoSuccessorNode
-		}
-		interval := chord.NewInterval(n.m, n_.GetID(), succNode.GetID(), chord.WithLeftOpen, chord.WithRightClosed)
+		interval := chord.NewInterval(n.m, n_.GetID(), n_.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightClosed)
 		if !interval.Has(id) {
-			logger.Debugf("ID is not in %v's range", n_)
-			remoteNode, err = remoteNode.ClosestPrecedingFinger(ctx, id)
-			if err != nil {
+			if n_, err = n.ClosestPrecedingFinger(ctx, id); err != nil {
 				return nil, err
 			}
-			logger.Debugf("the closest preceding node in %s's finger table is: ", remoteNode)
 		} else {
-			logger.Debugf("ID is in %v's range", n_)
 			break
 		}
 	}
 
-	return remoteNode, nil
-
+	return n_, nil
 }
 
 func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error) {
