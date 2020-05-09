@@ -11,9 +11,9 @@ require (
 	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.4.0
-	github.com/vektra/mockery v1.0.0 // indirect
 	go.opentelemetry.io/otel v0.4.3
 	go.opentelemetry.io/otel/exporters/trace/jaeger v0.4.3
+	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
 	google.golang.org/grpc v1.27.1
 )
 
