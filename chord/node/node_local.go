@@ -265,9 +265,9 @@ func (n *localNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) e
 			err error
 		)
 		if n.GetPredNode().GetID() == n.id {
-			predNode, err = NewLocal(n.id, n.bind, n.m)
+			predNode, err = n.factory.newLocalNode(n.id, n.bind, n.m)
 		} else {
-			predNode, err = NewRemote(ctx, n.GetPredNode().GetBind())
+			predNode, err = n.factory.newRemoteNode(ctx, n.GetPredNode().GetBind())
 		}
 		if err != nil {
 			return err
