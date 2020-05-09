@@ -136,6 +136,10 @@ func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error
 		return nil, errNoSuccessorNode
 	}
 
+	if succNode.GetID() == n.id {
+		return n, nil
+	}
+
 	return n.factory.newRemoteNode(ctx, succNode.GetBind())
 }
 
@@ -264,11 +268,15 @@ func (n *localNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) e
 			predNode Node
 			err error
 		)
-		if n.GetPredNode().GetID() == n.id {
-			predNode, err = n.factory.newLocalNode(n.id, n.bind, n.m)
-		} else {
-			predNode, err = n.factory.newRemoteNode(ctx, n.GetPredNode().GetBind())
-		}
+		//if n.GetPredNode().GetID() == n.id {
+		//	predNode, err = n.factory.newLocalNode(n.id, n.bind, n.m)
+		//} else {
+		//	predNode, err = n.factory.newRemoteNode(ctx, n.GetPredNode().GetBind())
+		//}
+		//if err != nil {
+		//	return err
+		//}
+		predNode, err = n.factory.newRemoteNode(ctx, n.GetPredNode().GetBind())
 		if err != nil {
 			return err
 		}
