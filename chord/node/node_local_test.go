@@ -17,8 +17,8 @@ func setupNetwork(t *testing.T) LocalNode {
 	n, err := NewLocal(0, "n0", chord.Rank(3))
 	factory, m := newMockFactory()
 	n.setNodeFactory(factory)
-	n.SetPredNode(n3)
-	n.SetSuccNode(n1)
+	n.SetPredNode(context.Background(), n3)
+	n.SetSuccNode(context.Background(), n1)
 
 	m.On("newRemoteNode", mock.Anything, "n0").Return(n0, nil)
 	m.On("newRemoteNode", mock.Anything, "n1").Return(n1, nil)
