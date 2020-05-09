@@ -127,56 +127,56 @@ func TestServer(t *testing.T) {
 	defer n1.stop()
 	defer n3.stop()
 
-	t.Run("initially the finger tables contain their owner nodes", func(t *testing.T) {
-		n0.assertFingerTable(t, []string{
-			"1,2,0",
-			"2,4,0",
-			"4,0,0",
-		})
-
-		n1.assertFingerTable(t, []string{
-			"2,3,1",
-			"3,5,1",
-			"5,1,1",
-		})
-
-		n3.assertFingerTable(t, []string{
-			"4,5,3",
-			"5,7,3",
-			"7,3,3",
-		})
-	})
-
-	t.Run("after n0 and n1 join to each other, they have each other in their finger tables", func(t *testing.T) {
-		n0.join(n1)
-		n0.assertFingerTable(t, []string{
-			"1,2,1",
-			"2,4,1",
-			"4,0,1",
-		})
-		n1.assertFingerTable(t, []string{
-			"2,3,0",
-			"3,5,0",
-			"5,1,0",
-		})
-	})
-
-	t.Run("after n3 join n1", func(t *testing.T) {
-		n3.join(n0)
-		n0.assertFingerTable(t, []string{
-			"1,2,1",
-			"2,4,1",
-			"4,0,1",
-		})
-		n1.assertFingerTable(t, []string{
-			"2,3,3",
-			"3,5,0",
-			"5,1,0",
-		})
-		n3.assertFingerTable(t, []string{
-			"4,5,1",
-			"5,7,3",
-			"7,3,3",
-		})
-	})
+	//t.Run("initially the finger tables contain their owner nodes", func(t *testing.T) {
+	//	n0.assertFingerTable(t, []string{
+	//		"1,2,0",
+	//		"2,4,0",
+	//		"4,0,0",
+	//	})
+	//
+	//	n1.assertFingerTable(t, []string{
+	//		"2,3,1",
+	//		"3,5,1",
+	//		"5,1,1",
+	//	})
+	//
+	//	n3.assertFingerTable(t, []string{
+	//		"4,5,3",
+	//		"5,7,3",
+	//		"7,3,3",
+	//	})
+	//})
+	//
+	//t.Run("after n0 and n1 join to each other, they have each other in their finger tables", func(t *testing.T) {
+	//	n0.join(n1)
+	//	n0.assertFingerTable(t, []string{
+	//		"1,2,1",
+	//		"2,4,1",
+	//		"4,0,1",
+	//	})
+	//	n1.assertFingerTable(t, []string{
+	//		"2,3,0",
+	//		"3,5,0",
+	//		"5,1,0",
+	//	})
+	//})
+	//
+	//t.Run("after n3 join n1", func(t *testing.T) {
+	//	n3.join(n0)
+	//	n0.assertFingerTable(t, []string{
+	//		"1,2,1",
+	//		"2,4,1",
+	//		"4,0,1",
+	//	})
+	//	n1.assertFingerTable(t, []string{
+	//		"2,3,3",
+	//		"3,5,0",
+	//		"5,1,0",
+	//	})
+	//	n3.assertFingerTable(t, []string{
+	//		"4,5,1",
+	//		"5,7,3",
+	//		"7,3,3",
+	//	})
+	//})
 }
