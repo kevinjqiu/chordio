@@ -122,3 +122,16 @@ func TestLocalNode_FindPredecessor(t *testing.T) {
 	expected := []chord.ID{3, 0, 1, 1, 3, 3, 3, 3}
 	assert.Equal(t, expected, results)
 }
+
+func TestLocalNode_FindSuccessor(t *testing.T) {
+	n := setupNetwork(t)
+	var results = make([]chord.ID, 0, 8)
+	for i := 0; i < 8; i++ {
+		succ, err := n.FindSuccessor(context.Background(), chord.ID(i))
+		assert.Nil(t, err)
+		results = append(results, succ.GetID())
+	}
+	fmt.Println(results)
+	expected := []chord.ID{0, 1, 3, 3, 0, 0, 0, 0}
+	assert.Equal(t, expected, results)
+}
