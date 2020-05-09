@@ -161,22 +161,22 @@ func TestServer(t *testing.T) {
 		})
 	})
 
-	//t.Run("after n3 join n1", func(t *testing.T) {
-	//	n3.join(n0)
-	//	n0.assertFingerTable(t, []string{
-	//		"1,2,1",
-	//		"2,4,1",
-	//		"4,0,1",
-	//	})
-	//	n1.assertFingerTable(t, []string{
-	//		"2,3,3",
-	//		"3,5,0",
-	//		"5,1,0",
-	//	})
-	//	n3.assertFingerTable(t, []string{
-	//		"4,5,1",
-	//		"5,7,3",
-	//		"7,3,3",
-	//	})
-	//})
+	t.Run("after n3 join n1", func(t *testing.T) {
+		n3.join(n0)
+		n0.assertFingerTable(t, []string{
+			"1,2,1",
+			"2,4,1",
+			"4,0,1",
+		})
+		n1.assertFingerTable(t, []string{
+			"2,3,3",
+			"3,5,0",  // FIXME: verify this
+			"5,1,3",
+		})
+		n3.assertFingerTable(t, []string{
+			"4,5,0",
+			"5,7,0",
+			"7,3,0",
+		})
+	})
 }
