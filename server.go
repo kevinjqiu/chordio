@@ -2,6 +2,7 @@ package chordio
 
 import (
 	"context"
+	"fmt"
 	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/chord/node"
 	"github.com/kevinjqiu/chordio/pb"
@@ -14,9 +15,35 @@ import (
 	"net"
 )
 
+type PBNodeRef pb.Node
+
+func (p *PBNodeRef) GetID() chord.ID {
+	return chord.ID(p.Id)
+}
+
+func (p *PBNodeRef) GetBind() string {
+	return p.Bind
+}
+
+func (p *PBNodeRef) String() string {
+	return fmt.Sprintf("<PB @%d %s>", p.GetID(), p.GetBind())
+}
+
 type Server struct {
 	localNode  node.LocalNode
 	grpcServer *grpc.Server
+}
+
+func (s *Server) SetPredecessorNode(ctx context.Context, req *pb.SetPredecessorNodeRequest) (*pb.SetPredecessorNodeResponse, error) {
+	var nodeRef = PBNodeRef(*req.Node)
+	s.localNode.SetPredNode(ctx, &nodeRef)
+	return &pb.SetPredecessorNodeResponse{}, nil
+}
+
+func (s *Server) SetSuccessorNode(ctx context.Context, req *pb.SetSuccessorNodeRequest) (*pb.SetSuccessorNodeResponse, error) {
+	var nodeRef = PBNodeRef(*req.Node)
+	s.localNode.SetSuccNode(ctx, &nodeRef)
+	return &pb.SetSuccessorNodeResponse{}, nil
 }
 
 func (s *Server) GetNodeInfo(_ context.Context, req *pb.GetNodeInfoRequest) (*pb.GetNodeInfoResponse, error) {

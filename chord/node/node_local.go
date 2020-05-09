@@ -179,42 +179,51 @@ func (n *localNode) initFinger(ctx context.Context, remote RemoteNode) error {
 
 	logger := logrus.WithField("method", "localNode.initFinger")
 	logger.Infof("using remote node %s", remote)
-	local := n
-	logger.Debugf("Try to find successor for %d on %s", n.ft.GetEntry(0).Start, remote)
+
 	succ, err := remote.FindSuccessor(ctx, n.ft.GetEntry(0).Start)
 	if err != nil {
 		return err
 	}
-
-	logger.Debugf("Successor node for %d is %s", n.ft.GetEntry(0).Start, succ)
 	n.ft.SetNodeAtEntry(0, succ)
+	n.SetPredNode(succ.GetPredNode())
+	succ.SetPredNode(ctx, n)
 
-	predNode := succ.GetPredNode()
-	if predNode == nil {
-		return errNoPredecessorNode
-	}
-	local.SetPredNode(predNode)
-	logger.Debugf("Local node's predecessor set to %v", predNode)
-
-	logger.Debug("recalc finger table")
-	for i := 0; i < int(n.m)-1; i++ {
-		logger.Debugf("i=%d", i)
-		logger.Debugf("finger[i+1].start=%d", n.ft.GetEntry(i+1).Start)
-		logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.GetID())
-
-		if n.ft.GetEntry(i+1).Start.In(local.id, n.ft.GetEntry(i).Node.GetID(), n.m) {
-			logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.GetID())
-			n.ft.ReplaceNodeWithAnotherEntry(i+1, i)
-		} else {
-			newSucc, err := remote.FindSuccessor(ctx, n.ft.GetEntry(i+1).Start)
-			logger.Debugf("new successor for %d is %v", n.ft.GetEntry(i+1).Start, newSucc)
-			if err != nil {
-				return err
-			}
-			n.ft.SetNodeAtEntry(i+1, newSucc)
-		}
-	}
-	return nil
+	//local := n
+	//logger.Debugf("Try to find successor for %d on %s", n.ft.GetEntry(0).Start, remote)
+	//succ, err := remote.FindSuccessor(ctx, n.ft.GetEntry(0).Start)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//logger.Debugf("Successor node for %d is %s", n.ft.GetEntry(0).Start, succ)
+	//n.ft.SetNodeAtEntry(0, succ)
+	//
+	//predNode := succ.GetPredNode()
+	//if predNode == nil {
+	//	return errNoPredecessorNode
+	//}
+	//local.SetPredNode(predNode)
+	//logger.Debugf("Local node's predecessor set to %v", predNode)
+	//
+	//logger.Debug("recalc finger table")
+	//for i := 0; i < int(n.m)-1; i++ {
+	//	logger.Debugf("i=%d", i)
+	//	logger.Debugf("finger[i+1].start=%d", n.ft.GetEntry(i+1).Start)
+	//	logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.GetID())
+	//
+	//	if n.ft.GetEntry(i+1).Start.In(local.id, n.ft.GetEntry(i).Node.GetID(), n.m) {
+	//		logger.Debugf("interval=[%d, %d)", local.id, n.ft.GetEntry(i).Node.GetID())
+	//		n.ft.ReplaceNodeWithAnotherEntry(i+1, i)
+	//	} else {
+	//		newSucc, err := remote.FindSuccessor(ctx, n.ft.GetEntry(i+1).Start)
+	//		logger.Debugf("new successor for %d is %v", n.ft.GetEntry(i+1).Start, newSucc)
+	//		if err != nil {
+	//			return err
+	//		}
+	//		n.ft.SetNodeAtEntry(i+1, newSucc)
+	//	}
+	//}
+	//return nil
 }
 
 func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {

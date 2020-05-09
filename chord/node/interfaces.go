@@ -31,6 +31,9 @@ type (
 		ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error)
 		// update the finger table entry at index i to node s
 		UpdateFingerTableEntry(ctx context.Context, s Node, i int) error
+
+		SetPredNode(ctx context.Context, n NodeRef)
+		SetSuccNode(ctx context.Context, n NodeRef)
 	}
 
 	LocalNode interface {
@@ -38,8 +41,6 @@ type (
 		GetFingerTable() *FingerTable
 		Join(ctx context.Context, introducerNode RemoteNode) error
 		GetRank() chord.Rank
-		SetPredNode(n NodeRef)
-		SetSuccNode(n NodeRef)
 	}
 
 	RemoteNode interface {

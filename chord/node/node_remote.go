@@ -28,6 +28,14 @@ type remoteNode struct {
 	factory factory
 }
 
+func (rn *remoteNode) SetPredNode(ctx context.Context, n NodeRef) {
+	panic("implement me")
+}
+
+func (rn *remoteNode) SetSuccNode(ctx context.Context, n NodeRef) {
+	panic("implement me")
+}
+
 func (rn *remoteNode) setNodeFactory(f factory) {
 	rn.factory = f
 }

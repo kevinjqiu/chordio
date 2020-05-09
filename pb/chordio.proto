@@ -66,8 +66,23 @@ message UpdateFingerTableRequest {
 message UpdateFingerTableResponse {
 }
 
+message SetPredecessorNodeRequest {
+    Node node = 1;
+}
+
+message SetPredecessorNodeResponse {
+}
+
+message SetSuccessorNodeRequest {
+    Node node = 1;
+}
+
+message SetSuccessorNodeResponse {
+}
+
 service Chord {
-    rpc GetNodeInfo (GetNodeInfoRequest) returns (GetNodeInfoResponse) {}
+    rpc GetNodeInfo (GetNodeInfoRequest) returns (GetNodeInfoResponse) {
+    }
 
     rpc JoinRing (JoinRingRequest) returns (JoinRingResponse) {
     }
@@ -81,6 +96,14 @@ service Chord {
     rpc ClosestPrecedingFinger (ClosestPrecedingFingerRequest) returns (ClosestPrecedingFingerResponse) {
     }
 
-    rpc UpdateFingerTable(UpdateFingerTableRequest) returns (UpdateFingerTableResponse) {
+    rpc UpdateFingerTable (UpdateFingerTableRequest) returns (UpdateFingerTableResponse) {
+    }
+
+    rpc SetPredecessorNode (SetPredecessorNodeRequest) returns (SetPredecessorNodeResponse) {
+
+    }
+
+    rpc SetSuccessorNode (SetSuccessorNodeRequest) returns (SetSuccessorNodeResponse) {
+
     }
 }
