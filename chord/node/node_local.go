@@ -154,7 +154,7 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 		interval := chord.NewInterval(n.m, n.id, id, chord.WithLeftOpen, chord.WithRightOpen)
 		span.AddEvent(ctx, fmt.Sprintf("i=%d,interval=%s, fte=%s", i, interval, fte))
 		if interval.Has(fte.Node.GetID()) {
-			span.AddEvent(ctx, fmt.Sprintf("node %s is in the interval %s", fte.Node.GetID(), interval))
+			span.AddEvent(ctx, fmt.Sprintf("node %s is in the interval %s", fte.Node, interval))
 			node, ok := n.ft.GetNodeByID(fte.Node.GetID())
 			if !ok {
 				err := errNodeNotFound(fte.Node.GetID())
@@ -162,7 +162,7 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 				return nil, errNodeNotFound(fte.Node.GetID())
 			}
 
-			span.AddEvent(ctx, fmt.Sprintf("ClosestPrecedingFinger is : %s", node.String())
+			span.AddEvent(ctx, fmt.Sprintf("ClosestPrecedingFinger is : %s", node.String()))
 			if node.GetID() == n.id {
 				return n.factory.newLocalNode(node.GetID(), node.GetBind(), n.m)
 			} else {

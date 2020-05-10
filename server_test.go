@@ -20,8 +20,8 @@ var defaultServiceConfig = `{
 		"retryPolicy": {
 			"MaxAttempts": 100,
 			"InitialBackoff": ".01s",
-			"MaxBackoff": ".01s",
-			"BackoffMultiplier": 1.0,
+			"MaxBackoff": ".50s",
+			"BackoffMultiplier": 2.0,
 			"RetryableStatusCodes": [ "UNAVAILABLE" ]
 		}
 	}]
