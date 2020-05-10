@@ -29,7 +29,7 @@ func TestNewFingerTable(t *testing.T) {
 	assert.Equal(t, chord.ID(19), ft.entries[2].Start)
 	assert.Equal(t, chord.ID(23), ft.entries[3].Start)
 	assert.Equal(t, chord.ID(31), ft.entries[4].Start)
-	ft.Print(nil)
+	ft.PrettyPrint(nil)
 }
 
 func TestFingerTable_ReplaceNodeAt(t *testing.T) {

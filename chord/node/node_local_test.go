@@ -58,7 +58,7 @@ func setupRank3Network(t *testing.T) (n LocalNode, n2, n5 Node, n2mock, n5mock *
 	n.GetFingerTable().SetNodeAtEntry(0, n2)
 	n.GetFingerTable().SetNodeAtEntry(1, n2)
 	n.GetFingerTable().SetNodeAtEntry(2, n5)
-	//n.GetFingerTable().Print(nil)
+	//n.GetFingerTable().PrettyPrint(nil)
 	return
 }
 

@@ -1,6 +1,7 @@
 package node
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/pb"
@@ -16,6 +17,10 @@ type FingerTableEntry struct {
 	Node     NodeRef
 }
 
+func (fte FingerTableEntry) String() string {
+	return fmt.Sprintf("%d\t%s\t%s", fte.Start, fte.Interval.String(), fte.Node)
+}
+
 type FingerTable struct {
 	ownerID       chord.ID
 	m             chord.Rank
@@ -23,7 +28,16 @@ type FingerTable struct {
 	neighbourhood map[chord.ID]NodeRef
 }
 
-func (ft *FingerTable) Print(w io.Writer) {
+func (ft *FingerTable) String() string {
+	var b bytes.Buffer
+	for _, fte := range ft.entries {
+		b.WriteString(fte.String())
+		b.WriteString("|")
+	}
+	return b.String()
+}
+
+func (ft *FingerTable) PrettyPrint(w io.Writer) {
 	if w == nil {
 		w = os.Stdout
 	}
@@ -129,10 +143,7 @@ func newFingerTable(initNode Node, m chord.Rank) *FingerTable {
 		end := initNode.GetID().Add(chord.ID(2).Pow(k+1), m)
 		ft.entries = append(ft.entries, FingerTableEntry{
 			Start: start,
-			Interval: chord.Interval{
-				Start: start,
-				End:   end,
-			},
+			Interval: chord.NewInterval(m, start, end),
 			Node: initNodeRef,
 		})
 	}

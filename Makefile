@@ -58,8 +58,6 @@ n1-status:
 
 n1-join-n2:
 	CHORDIO_URL=127.0.0.1:1234 dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio client join -i 127.0.0.1:2345
-	make n1-status
-	make n2-status
 
 n2:
 	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server --id 1 -b 127.0.0.1:2345 -l debug -m 3
@@ -75,3 +73,5 @@ n3-status:
 
 n3-join-n1:
 	CHORDIO_URL=127.0.0.1:3456 dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio client join -i 127.0.0.1:1234
+
+test-join: n1-join-n2 n3-join-n1 n1-status n2-status n3-status
