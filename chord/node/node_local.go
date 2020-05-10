@@ -144,23 +144,25 @@ func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error
 }
 
 func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
-	ctx, span := n.Start(ctx, "localNode.ClosestPrecedingFinger")
+	ctx, span := n.Start(ctx, "localNode.ClosestPrecedingFinger", trace.WithAttributes(core.Key("id").Int(id.AsInt())))
 	defer span.End()
-
-	logger := logrus.WithField("method", "localNode.ClosestPrecedingFinger")
-	logger.Debugf("ID=%d", id)
 	// nb: int cast here is IMPORTANT!
 	// because n.m is of type uint32
 	// i >= 0 is always going to be true
 	for i := int(n.m) - 1; i >= 0; i-- {
 		fte := n.ft.GetEntry(i)
 		interval := chord.NewInterval(n.m, n.id, id, chord.WithLeftOpen, chord.WithRightOpen)
+		span.AddEvent(ctx, fmt.Sprintf("i=%d,interval=%s, fte=%s", i, interval, fte))
 		if interval.Has(fte.Node.GetID()) {
+			span.AddEvent(ctx, fmt.Sprintf("node %s is in the interval %s", fte.Node.GetID(), interval))
 			node, ok := n.ft.GetNodeByID(fte.Node.GetID())
 			if !ok {
+				err := errNodeNotFound(fte.Node.GetID())
+				span.RecordError(ctx, err)
 				return nil, errNodeNotFound(fte.Node.GetID())
 			}
 
+			span.AddEvent(ctx, fmt.Sprintf("ClosestPrecedingFinger is : %s", node.String())
 			if node.GetID() == n.id {
 				return n.factory.newLocalNode(node.GetID(), node.GetBind(), n.m)
 			} else {
@@ -168,6 +170,7 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 			}
 		}
 	}
+	span.AddEvent(ctx, fmt.Sprintf("ClosestPrecedingFinger is the local node: %s", n.String()))
 	return n, nil
 }
 
@@ -181,44 +184,53 @@ func (n *localNode) initFinger(ctx context.Context, remote RemoteNode) error {
 		trace.WithAttributes(core.Key("remoteNode").String(remote.String())))
 	defer span.End()
 
-	span.AddEvent(ctx, "find successor", core.Key("fte").Int(0), core.Key("id").Int(n.ft.GetEntry(0).Start.AsInt()))
+	span.AddEvent(ctx, fmt.Sprintf("find successor: i=0, ft[i].start=%d", n.ft.GetEntry(0).Start))
 	succ, err := remote.FindSuccessor(ctx, n.ft.GetEntry(0).Start)
 	if err != nil {
 		span.RecordError(ctx, err)
 		return errors.Wrap(err, "error finding successor")
 	}
-	span.AddEvent(ctx, "found successor node", core.Key("node").String(succ.String()))
+	span.AddEvent(ctx, fmt.Sprintf("found successor node: %s", succ.String()))
 	n.ft.SetNodeAtEntry(0, succ)
-	span.AddEvent(ctx, "set predecessor", core.Key("pred").String(succ.GetPredNode().String()))
+
+	span.AddEvent(ctx, fmt.Sprintf("set predecessor: %s", succ.GetPredNode().String()))
 	n.SetPredNode(ctx, succ.GetPredNode())
-	span.AddEvent(ctx, "set predecessor for pred's successor",
-		core.Key("succ").String(succ.String()),
-		core.Key("pred").String(n.String()),
-	)
+
+	span.AddEvent(ctx, fmt.Sprintf("set this as the pred's new successor: succ=%s, this=%s", succ.String(), n.String()))
 	succ.SetPredNode(ctx, n)
 
-	span.AddEvent(ctx, "FT before update", core.Key("fte").String(n.ft.String()))
+	span.AddEvent(ctx, fmt.Sprintf("FT before update: %s", n.ft.String()))
 	for i := 0; i < n.m.AsInt()-1; i++ {
-		interval := chord.NewInterval(n.m, n.id, n.ft.GetEntry(i).Node.GetID())
 		attrs := []core.KeyValue{
 			core.Key("i").Int(i),
-			core.Key("interval").String(interval.String()),
 		}
 		_ = n.WithSpan(ctx, "localNode.initFinger#updateFingerTable", func(ctx context.Context) error {
+			span := trace.SpanFromContext(ctx)
+			interval := chord.NewInterval(n.m, n.id, n.ft.GetEntry(i).Node.GetID())
+			span.SetAttributes(
+				core.Key("interval").String(interval.String()),
+				core.Key("i").Int(i),
+				core.Key("FT[i]").String(n.ft.GetEntry(i).String()),
+				core.Key("FT[i+1]").String(n.ft.GetEntry(i+1).String()),
+			)
 			if interval.Has(n.ft.GetEntry(i + 1).Start) {
+				span.AddEvent(ctx, fmt.Sprintf("FT[i+1].start in %s", interval))
 				n.ft.ReplaceNodeWithAnotherEntry(i+1, i)
 			} else {
+				span.AddEvent(ctx, fmt.Sprintf("FT[i+1].start not in %s", interval))
+				span.AddEvent(ctx, fmt.Sprintf("find successor for %d", n.ft.GetEntry(i+1).Start))
 				newSucc, err := remote.FindSuccessor(ctx, n.ft.GetEntry(i+1).Start)
 				if err != nil {
+					span.RecordError(ctx, err)
 					return err
 				}
+				span.AddEvent(ctx, fmt.Sprintf("successor found: %s", newSucc.String()))
 				n.ft.SetNodeAtEntry(i+1, newSucc)
 			}
 			return nil
 		}, trace.WithAttributes(attrs...))
 	}
-	span.AddEvent(ctx, "FT after update", core.Key("fte").String(n.ft.String()))
-
+	span.AddEvent(ctx, fmt.Sprintf("FT after update: %s", n.ft.String()))
 	return nil
 }
 
@@ -228,12 +240,12 @@ func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
 	)
 	defer span.End()
 
-	span.AddEvent(ctx, "before updating FT", core.Key("ft").String(n.ft.String()))
+	span.AddEvent(ctx, fmt.Sprintf("before updating FT: %s", n.ft.String()))
 	if err := n.initFinger(ctx, introducerNode); err != nil {
 		span.RecordError(ctx, err)
 		return errors.Wrap(err, "error while init'ing fingertable")
 	}
-	span.AddEvent(ctx, "local node FT updated", core.Key("ft").String(n.ft.String()))
+	span.AddEvent(ctx, fmt.Sprintf("local node FT updated: %s", n.ft.String()))
 	n.ft.PrettyPrint(nil)
 
 	span.AddEvent(ctx, "before updateOthers")
@@ -287,25 +299,25 @@ func (n *localNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) e
 	if interval.Has(s.GetID()) {
 		span.AddEvent(ctx, "s.GetID() in interval")
 		if s.GetID() != n.id {
-			span.AddEvent(ctx, "s is not the local node, update FTE", core.Key("i").Int(i))
-			span.AddEvent(ctx, "FTE before update", core.Key("entry").String(n.ft.GetEntry(i).String()))
+			span.AddEvent(ctx, fmt.Sprintf("s is not the local node, update FT[%d]", i))
+			span.AddEvent(ctx, fmt.Sprintf("FTE before update: %s", n.ft.GetEntry(i).String()))
 			n.mu.Lock()
 			n.ft.SetNodeAtEntry(i, s)
 			n.mu.Unlock()
-			span.AddEvent(ctx, "FTE after update", core.Key("entry").String(n.ft.GetEntry(i).String()))
+			span.AddEvent(ctx, fmt.Sprintf("FTE after update: %s", n.ft.GetEntry(i).String()))
 		}
 
-		span.AddEvent(ctx, "update the predecessor node's FTE at i", core.Key("i").Int(i))
+		span.AddEvent(ctx, fmt.Sprintf("update the predecessor node's FTE[%d]", i))
 		var (
 			predNode Node
 			err      error
 		)
-		predNode, err = n.factory.newRemoteNode(ctx, n.GetPredNode().GetBind())
-		span.AddEvent(ctx, "predecessor node", core.Key("pred").String(predNode.String()))
-		if err != nil {
+		if predNode, err = n.factory.newRemoteNode(ctx, n.GetPredNode().GetBind()); err != nil {
 			span.RecordError(ctx, err)
 			return err
 		}
+
+		span.AddEvent(ctx, fmt.Sprintf("predecessor node: %s", predNode.String()))
 		if err := predNode.UpdateFingerTableEntry(ctx, s, i); err != nil {
 			span.RecordError(ctx, err)
 			return err
