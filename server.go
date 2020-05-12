@@ -148,8 +148,8 @@ func (s *Server) Serve() error {
 	logrus.Info("serving chord grpc server at: ", s.localNode.GetBind())
 	logrus.Infof("nodeID: %d", s.localNode.GetID())
 
-	tickerStabilize := time.Tick(10 * time.Minute)
-	tickerFixFingers := time.Tick(30 * time.Minute)
+	tickerStabilize := time.Tick(10 * time.Second)
+	tickerFixFingers := time.Tick(30 * time.Second)
 
 	go func() {
 		for {
