@@ -186,6 +186,17 @@ func (rn *remoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int)
 	return err
 }
 
+func (rn *remoteNode) Notify(ctx context.Context, node Node) error {
+	ctx, span := rn.Start(ctx, "remoteNode.Notify", trace.WithAttributes(core.Key("node").String(node.String())))
+	defer span.End()
+
+	req := pb.NotifyRequest{
+		Node: node.AsProtobufNode(),
+	}
+	_, err := rn.client.Notify(ctx, &req)
+	return err
+}
+
 func NewRemote(ctx context.Context, bind string) (RemoteNode, error) {
 	conn, err := grpc.Dial(bind,
 		grpc.WithInsecure(),

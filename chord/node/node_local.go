@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel/api/core"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
+	"math/rand"
 	"sync"
 )
 
@@ -327,8 +328,57 @@ func (n *localNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) e
 	return nil
 }
 
+func (n *localNode) Notify(ctx context.Context, n_ Node) error {
+	int := chord.NewInterval(n.m, n.GetPredNode().GetID(), n.GetID(), chord.WithLeftClosed, chord.WithRightOpen)
+	if n.GetPredNode() == nil || int.Has(n_.GetID()) {
+		n.SetPredNode(ctx, n_)
+	}
+	logrus.Info("After notify(): %s", n.String())
+	return nil
+}
+
 func (n *localNode) setNodeFactory(f factory) {
 	n.factory = f
+}
+
+func (n *localNode) Stabilize(ctx context.Context) error {
+	// TODO: do not use remote node if the node is local
+	x, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
+	if err != nil {
+		return err
+	}
+
+	int := chord.NewInterval(n.m, n.GetID(), n.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightOpen)
+	if int.Has(x.GetID()) {
+		n.SetSuccNode(ctx, x)
+	}
+
+	succNode, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
+	if err != nil {
+		return err
+	}
+
+	if err := succNode.Notify(ctx, succNode); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (n *localNode) FixFingers(ctx context.Context) error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
+	// i is the entry to fix
+	i := rand.Int() % n.m.AsInt()
+
+	succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).Start)
+	if err != nil {
+		return err
+	}
+
+	n.GetFingerTable().SetNodeAtEntry(i, succNode)
+	n.GetFingerTable().PrettyPrint(nil)
+	return nil
 }
 
 func NewLocal(id chord.ID, bind string, m chord.Rank) (LocalNode, error) {
