@@ -51,10 +51,14 @@ func (n *localNode) String() string {
 }
 
 func (n *localNode) SetPredNode(_ context.Context, pn NodeRef) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	n.predNode = pn
 }
 
 func (n *localNode) SetSuccNode(_ context.Context, sn NodeRef) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	n.ft.SetNodeAtEntry(0, sn)
 }
 
@@ -241,20 +245,14 @@ func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
 	defer span.End()
 
 	span.AddEvent(ctx, fmt.Sprintf("before updating FT: %s", n.ft.String()))
-	if err := n.initFinger(ctx, introducerNode); err != nil {
-		span.RecordError(ctx, err)
-		return errors.Wrap(err, "error while init'ing fingertable")
-	}
-	span.AddEvent(ctx, fmt.Sprintf("local node FT updated: %s", n.ft.String()))
-	n.ft.PrettyPrint(nil)
 
-	span.AddEvent(ctx, "before updateOthers")
-	if err := n.updateOthers(ctx); err != nil {
+	n.SetPredNode(ctx, nil)
+	succNode, err := introducerNode.FindSuccessor(ctx, n.GetID())
+	if err != nil {
 		span.RecordError(ctx, err)
-		return errors.Wrap(err, "error while updating other node's fingertables")
+		return errors.Wrap(err, "unable to join")
 	}
-	span.AddEvent(ctx, "after updateOthers")
-	n.ft.PrettyPrint(nil)
+	n.SetSuccNode(ctx, succNode)
 	return nil
 }
 
