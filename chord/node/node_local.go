@@ -283,6 +283,9 @@ func (n *localNode) updateOthers(ctx context.Context) error {
 }
 
 func (n *localNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	ctx, span := n.Start(ctx, "LocalNode.updateFingerTableEntry",
 		trace.WithAttributes(core.Key("node").String(s.String()), core.Key("i").Int(i)),
 	)
