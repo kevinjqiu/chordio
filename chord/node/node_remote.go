@@ -13,7 +13,20 @@ import (
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
+	"io"
 )
+
+type closer struct {
+	closefn func() error
+}
+
+func (c closer) Close() error {
+	return c.closefn()
+}
+
+func closerFunc(closefn func() error) closer {
+	return closer{closefn}
+}
 
 // remoteNode is a proxy that implements the Node interface but
 // delegate the calls to the remote node via grpc
@@ -23,12 +36,17 @@ type remoteNode struct {
 	bind     string
 	predNode *pb.Node
 	succNode *pb.Node
-	client   pb.ChordClient
+	//client   pb.ChordClient
 
 	factory factory
 }
 
 func (rn *remoteNode) SetPredNode(ctx context.Context, n NodeRef) {
+	client, closer, err := getChordClient(rn.bind)
+	if err != nil {
+		logrus.Errorf()
+	}
+
 	rn.client.SetPredecessorNode(ctx, &pb.SetPredecessorNodeRequest{
 		Node: &pb.Node{
 			Id:   n.GetID().AsU64(),
@@ -187,16 +205,11 @@ func (rn *remoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int)
 }
 
 func NewRemote(ctx context.Context, bind string) (RemoteNode, error) {
-	conn, err := grpc.Dial(bind,
-		grpc.WithInsecure(),
-		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
-		grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
-	)
+	client, closer, err := getChordClient(bind)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to initiate grpc client for node: %v", bind)
 	}
-
-	client := pb.NewChordClient(conn)
+	defer closer.Close()
 	resp, err := client.GetNodeInfo(ctx, &pb.GetNodeInfoRequest{})
 	if err != nil {
 		return nil, err
@@ -208,9 +221,26 @@ func NewRemote(ctx context.Context, bind string) (RemoteNode, error) {
 		bind:     bind,
 		predNode: resp.Node.GetPred(),
 		succNode: resp.Node.GetSucc(),
-		client:   client,
 		factory:  defaultFactory{},
 	}
 
 	return rn, nil
 }
+
+func getChordClient(bind string) (pb.ChordClient, io.Closer, error) {
+	conn, err := grpc.Dial(bind,
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
+		grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
+	)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client := pb.NewChordClient(conn)
+	return client, closerFunc(func() error {
+		return conn.Close()
+	}),  nil
+}
+
