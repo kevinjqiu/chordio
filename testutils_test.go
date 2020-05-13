@@ -114,6 +114,9 @@ func newNode(id int, m int) testNode {
 		ID:   chord.ID(id),
 		M:    chord.Rank(m),
 		Bind: addr,
+		Stabilization: StabilizationConfig{
+			Disabled: true,
+		},
 	})
 	if err != nil {
 		panic(err)
