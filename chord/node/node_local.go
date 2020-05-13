@@ -254,7 +254,10 @@ func (n *localNode) Notify(ctx context.Context, n_ Node) error {
 	iv := chord.NewInterval(n.m, n.GetPredNode().GetID(), n.GetID(), chord.WithLeftClosed, chord.WithRightOpen)
 	if n.GetPredNode() == nil || iv.Has(n_.GetID()) {
 		if err := n.SetPredNode(ctx, n_); err != nil {
-			return err
+			return errors.Wrap(err, "unable to set predecessor to the remote node")
+		}
+		if err := n_.SetSuccNode(ctx, n); err != nil {
+			return errors.Wrap(err, "unable to set remote node's successor to myself")
 		}
 	}
 	logrus.Info("After notify(): ", n.String())

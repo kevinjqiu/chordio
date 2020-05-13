@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+type closeFunc func() error
+
 // remoteNode is a proxy that implements the Node interface but
 // delegate the calls to the remote node via grpc
 type remoteNode struct {
@@ -23,30 +25,31 @@ type remoteNode struct {
 	bind     string
 	predNode *pb.Node
 	succNode *pb.Node
-	//client   pb.ChordClient
 
 	factory factory
 }
 
-func (rn *remoteNode) getClient() (pb.ChordClient, error) {
+func (rn *remoteNode) getClient() (pb.ChordClient, closeFunc, error) {
 	conn, err := grpc.Dial(rn.bind,
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
 		grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(global.Tracer(telemetry.GetServiceName()))),
 	)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to initiate grpc client for node: %v", rn.bind)
+		return nil, nil, errors.Wrapf(err, "unable to initiate grpc client for node: %v", rn.bind)
 	}
 
 	client := pb.NewChordClient(conn)
-	return client, nil
+	return client, func() error { return conn.Close() }, nil
 }
 
 func (rn *remoteNode) SetPredNode(ctx context.Context, n NodeRef) error {
-	client, err := rn.getClient()
+	client, close, err := rn.getClient()
 	if err != nil {
 		return err
 	}
+	defer close()
+
 	_, err = client.SetPredecessorNode(ctx, &pb.SetPredecessorNodeRequest{
 		Node: &pb.Node{
 			Id:   n.GetID().AsU64(),
@@ -57,10 +60,12 @@ func (rn *remoteNode) SetPredNode(ctx context.Context, n NodeRef) error {
 }
 
 func (rn *remoteNode) SetSuccNode(ctx context.Context, n NodeRef) error {
-	client, err := rn.getClient()
+	client, close, err := rn.getClient()
 	if err != nil {
 		return err
 	}
+	defer close()
+
 	_, err = client.SetSuccessorNode(ctx, &pb.SetSuccessorNodeRequest{
 		Node: &pb.Node{
 			Id:   n.GetID().AsU64(),
@@ -115,10 +120,12 @@ func (rn *remoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, e
 		Id: uint64(id),
 	}
 
-	client, err := rn.getClient()
+	client, close, err := rn.getClient()
 	if err != nil {
 		return nil, err
 	}
+	defer close()
+
 	resp, err := client.FindPredecessor(ctx, &req)
 	if err != nil {
 		return nil, err
@@ -135,10 +142,12 @@ func (rn *remoteNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, err
 		Id: uint64(id),
 	}
 
-	client, err := rn.getClient()
+	client, close, err := rn.getClient()
 	if err != nil {
 		return nil, err
 	}
+	defer close()
+
 	resp, err := client.FindSuccessor(ctx, &req)
 	if err != nil {
 		return nil, err
@@ -152,10 +161,11 @@ func (rn *remoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (
 	defer span.End()
 
 	logrus.Debug("[remoteNode] ClosestPrecedingFinger: ", id)
-	client, err := rn.getClient()
+	client, close, err := rn.getClient()
 	if err != nil {
 		return nil, err
 	}
+	defer close()
 
 	req := pb.ClosestPrecedingFingerRequest{
 		Id: uint64(id),
@@ -206,10 +216,12 @@ func (rn *remoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int)
 		I:    int64(i),
 	}
 
-	client, err := rn.getClient()
+	client, close, err := rn.getClient()
 	if err != nil {
 		return err
 	}
+	defer close()
+
 	_, err = client.UpdateFingerTable(ctx, &req)
 	return err
 }
@@ -222,19 +234,22 @@ func (rn *remoteNode) Notify(ctx context.Context, node Node) error {
 		Node: node.AsProtobufNode(),
 	}
 
-	client, err := rn.getClient()
+	client, close, err := rn.getClient()
 	if err != nil {
 		return err
 	}
+	defer close()
+
 	_, err = client.Notify(ctx, &req)
 	return err
 }
 
 func (rn *remoteNode) init(ctx context.Context) error {
-	client, err := rn.getClient()
+	client, close, err := rn.getClient()
 	if err != nil {
 		return err
 	}
+	defer close()
 
 	resp, err := client.GetNodeInfo(ctx, &pb.GetNodeInfoRequest{})
 	if err != nil {

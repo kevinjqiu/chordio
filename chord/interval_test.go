@@ -127,4 +127,21 @@ func TestInterval_Has(t *testing.T) {
 			assert.False(t, int.Has(ID(i)), i)
 		}
 	})
+
+	t.Run("(start, start) - should contain all", func(t *testing.T) {
+		iv := NewInterval(7, 0, 0, WithLeftOpen, WithRightOpen)
+		assert.Equal(t, "(0, 0)", iv.String())
+		assert.False(t, iv.Has(0), 0)
+		for i := 1; i < 128; i++ {
+			assert.True(t, iv.Has(ID(i)), i)
+		}
+
+		iv = NewInterval(7, 1, 1, WithLeftOpen, WithRightOpen)
+		assert.Equal(t, "(1, 1)", iv.String())
+		assert.True(t, iv.Has(0), 0)
+		assert.False(t, iv.Has(1), 1)
+		for i := 2; i < 128; i++ {
+			assert.True(t, iv.Has(ID(i)), i)
+		}
+	})
 }

@@ -51,8 +51,8 @@ func newStatusCommand() *cobra.Command {
 			}
 			fmt.Println("NodeID:", resp.Node.GetId())
 			fmt.Println("Addr:", resp.Node.GetBind())
-			fmt.Println("Pred:", resp.Node.GetPred())
-			fmt.Println("Succ:", resp.Node.GetSucc())
+			fmt.Println("Pred:", resp.Node.GetPred().String())
+			fmt.Println("Succ:", resp.Node.GetSucc().String())
 			printFT(resp.Ft, nil)
 			return nil
 		},
