@@ -12,9 +12,7 @@ import (
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
-	"math/rand"
 	"net"
-	"time"
 )
 
 type PBNodeRef pb.Node
@@ -35,6 +33,16 @@ type Server struct {
 	localNode     node.LocalNode
 	grpcServer    *grpc.Server
 	clientManager node.ClientManager
+}
+
+func (s *Server) X_Stabilize(ctx context.Context, _ *pb.StabilizeRequest) (*pb.StabilizeResponse, error) {
+	err := s.localNode.Stabilize(ctx)
+	return &pb.StabilizeResponse{}, err
+}
+
+func (s *Server) X_FixFinger(ctx context.Context, _ *pb.FixFingerRequest) (*pb.FixFingerResponse, error) {
+	err := s.localNode.FixFingers(ctx)
+	return &pb.FixFingerResponse{}, err
 }
 
 func (s *Server) SetPredecessorNode(ctx context.Context, req *pb.SetPredecessorNodeRequest) (*pb.SetPredecessorNodeResponse, error) {
@@ -136,26 +144,26 @@ func (s *Server) Serve() error {
 	logrus.Info("serving chord grpc server at: ", s.localNode.GetBind())
 	logrus.Infof("nodeID: %d", s.localNode.GetID())
 
-	jitter := rand.Int() % 3000
-	tickerStabilize := time.Tick(3 * time.Second + (time.Duration(jitter) * time.Millisecond))
-	tickerFixFingers := time.Tick(5 * time.Second + (time.Duration(jitter) * time.Millisecond))
-
-	go func() {
-		for {
-			select {
-			case <-tickerStabilize:
-				logrus.Info("Run Stabilize()")
-				if err := s.localNode.Stabilize(context.Background()); err != nil {
-					logrus.Error("Stabilize failed", err)
-				}
-			case <-tickerFixFingers:
-				logrus.Info("Run FixFingers()")
-				if err := s.localNode.FixFingers(context.Background()); err != nil {
-					logrus.Error("FixFinger failed", err)
-				}
-			}
-		}
-	}()
+	//jitter := rand.Int() % 3000
+	//tickerStabilize := time.Tick(3 * time.Second + (time.Duration(jitter) * time.Millisecond))
+	//tickerFixFingers := time.Tick(5 * time.Second + (time.Duration(jitter) * time.Millisecond))
+	//
+	//go func() {
+	//	for {
+	//		select {
+	//		case <-tickerStabilize:
+	//			logrus.Info("Run Stabilize()")
+	//			if err := s.localNode.Stabilize(context.Background()); err != nil {
+	//				logrus.Error("Stabilize failed", err)
+	//			}
+	//		case <-tickerFixFingers:
+	//			logrus.Info("Run FixFingers()")
+	//			if err := s.localNode.FixFingers(context.Background()); err != nil {
+	//				logrus.Error("FixFinger failed", err)
+	//			}
+	//		}
+	//	}
+	//}()
 	return s.grpcServer.Serve(lis)
 }
 

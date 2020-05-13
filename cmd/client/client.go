@@ -52,5 +52,7 @@ func NewClientCommand() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&loglevel, "loglevel", "l", "info", "log level")
 	cmd.AddCommand(newStatusCommand())
 	cmd.AddCommand(newJoinCommand())
+	cmd.AddCommand(newStabilizeCommand())
+	cmd.AddCommand(newFixFingersCommand())
 	return cmd
 }

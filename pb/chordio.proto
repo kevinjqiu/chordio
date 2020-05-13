@@ -87,6 +87,14 @@ message NotifyRequest {
 message NotifyResponse {
 }
 
+message StabilizeRequest {}
+
+message StabilizeResponse {}
+
+message FixFingerRequest {}
+
+message FixFingerResponse {}
+
 service Chord {
     rpc GetNodeInfo (GetNodeInfoRequest) returns (GetNodeInfoResponse) {
     }
@@ -110,5 +118,11 @@ service Chord {
     }
 
     rpc Notify (NotifyRequest) returns (NotifyResponse) {
+    }
+
+    rpc __Stabilize(StabilizeRequest) returns (StabilizeResponse) {
+    }
+
+    rpc __FixFinger(FixFingerRequest) returns (FixFingerResponse) {
     }
 }

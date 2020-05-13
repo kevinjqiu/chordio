@@ -82,6 +82,14 @@ func (tn testNode) join(other testNode) {
 	fmt.Println(resp)
 }
 
+func (tn testNode) stabilize() {
+	_, _ = tn.c.X_Stabilize(context.Background(), &pb.StabilizeRequest{})
+}
+
+func (tn testNode) fixFingers() {
+	_, _ = tn.c.X_FixFinger(context.Background(), &pb.FixFingerRequest{})
+}
+
 func newNode(id int, m int) testNode {
 	port, err := freeport.GetFreePort()
 	if err != nil {
@@ -121,11 +129,9 @@ func newNode(id int, m int) testNode {
 func TestServer(t *testing.T) {
 	n0 := newNode(0, 3)
 	n1 := newNode(1, 3)
-	n3 := newNode(3, 3)
 
 	defer n0.stop()
 	defer n1.stop()
-	defer n3.stop()
 
 	t.Run("initially the finger tables contain their owner nodes", func(t *testing.T) {
 		n0.assertFingerTable(t, []string{
@@ -139,16 +145,16 @@ func TestServer(t *testing.T) {
 			"3,5,1",
 			"5,1,1",
 		})
-
-		n3.assertFingerTable(t, []string{
-			"4,5,3",
-			"5,7,3",
-			"7,3,3",
-		})
 	})
 
 	t.Run("after n0 and n1 join to each other, they have each other in their finger tables", func(t *testing.T) {
 		n0.join(n1)
+		n0.stabilize()
+		n0.fixFingers()
+
+		n1.stabilize()
+		n1.fixFingers()
+
 		n0.assertFingerTable(t, []string{
 			"1,2,1",
 			"2,4,1",
@@ -160,23 +166,23 @@ func TestServer(t *testing.T) {
 			"5,1,0",
 		})
 	})
-
-	t.Run("after n3 join n1", func(t *testing.T) {
-		n3.join(n0)
-		n0.assertFingerTable(t, []string{
-			"1,2,1",
-			"2,4,1",
-			"4,0,1",
-		})
-		n1.assertFingerTable(t, []string{
-			"2,3,3",
-			"3,5,0",  // FIXME: verify this
-			"5,1,3",
-		})
-		n3.assertFingerTable(t, []string{
-			"4,5,0",
-			"5,7,0",
-			"7,3,0",
-		})
-	})
+	//
+	//t.Run("after n3 join n1", func(t *testing.T) {
+	//	n3.join(n0)
+	//	n0.assertFingerTable(t, []string{
+	//		"1,2,1",
+	//		"2,4,1",
+	//		"4,0,1",
+	//	})
+	//	n1.assertFingerTable(t, []string{
+	//		"2,3,3",
+	//		"3,5,0",  // FIXME: verify this
+	//		"5,1,3",
+	//	})
+	//	n3.assertFingerTable(t, []string{
+	//		"4,5,0",
+	//		"5,7,0",
+	//		"7,3,0",
+	//	})
+	//})
 }
