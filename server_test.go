@@ -13,6 +13,39 @@ import (
 	"testing"
 )
 
+type nodeOp struct {
+	nodeIdx int
+	op      string
+}
+
+func permutations(ops []nodeOp) [][]nodeOp {
+	var helper func([]nodeOp, int)
+	res := [][]nodeOp{}
+
+	helper = func(arr []nodeOp, n int) {
+		if n == 1 {
+			tmp := make([]nodeOp, len(arr))
+			copy(tmp, arr)
+			res = append(res, tmp)
+		} else {
+			for i := 0; i < n; i++ {
+				helper(arr, n-1)
+				if n%2 == 1 {
+					tmp := arr[i]
+					arr[i] = arr[n-1]
+					arr[n-1] = tmp
+				} else {
+					tmp := arr[0]
+					arr[0] = arr[n-1]
+					arr[n-1] = tmp
+				}
+			}
+		}
+	}
+	helper(ops, len(ops))
+	return res
+}
+
 var defaultServiceConfig = `{
 	"methodConfig": [{
 		"waitForReady": true,
@@ -127,50 +160,90 @@ func newNode(id int, m int) testNode {
 	}
 }
 
-func TestServer(t *testing.T) {
+func withTwoNodeCluster(f func(n0, n1 testNode)) {
 	n0 := newNode(0, 3)
 	n1 := newNode(1, 3)
 
 	defer n0.stop()
 	defer n1.stop()
 
-	t.Run("initially the finger tables contain their owner nodes", func(t *testing.T) {
-		n0.assertNeighbours(t, 0, 0)
-		n0.assertFingerTable(t, []string{
-			"1,2,0",
-			"2,4,0",
-			"4,0,0",
-		})
+	f(n0, n1)
+}
 
-		n1.assertNeighbours(t, 1, 1)
-		n1.assertFingerTable(t, []string{
-			"2,3,1",
-			"3,5,1",
-			"5,1,1",
+func TestServer(t *testing.T) {
+	t.Run("initially the finger tables contain their owner nodes", func(t *testing.T) {
+		withTwoNodeCluster(func(n0, n1 testNode) {
+			n0.assertNeighbours(t, 0, 0)
+			n0.assertFingerTable(t, []string{
+				"1,2,0",
+				"2,4,0",
+				"4,0,0",
+			})
+
+			n1.assertNeighbours(t, 1, 1)
+			n1.assertFingerTable(t, []string{
+				"2,3,1",
+				"3,5,1",
+				"5,1,1",
+			})
 		})
 	})
 
 	t.Run("after n0 and n1 join to each other, they have each other in their finger tables", func(t *testing.T) {
-		n0.join(n1)
-		n0.stabilize()
-		n0.fixFingers()
+		nodeOps := []nodeOp{
+			{
+				nodeIdx: 0,
+				op: "stabilize",
+			},
+			{
+				nodeIdx: 0,
+				op: "fixFingers",
+			},
+			{
+				nodeIdx: 1,
+				op: "stabilize",
+			},
+			{
+				nodeIdx: 1,
+				op: "fixFingers",
+			},
+		}
 
-		n1.stabilize()
-		n1.fixFingers()
+		for _, ops := range permutations(nodeOps) {
+			t.Run(fmt.Sprintf("%v", ops), func(t *testing.T) {
+				withTwoNodeCluster(func(n0, n1 testNode) {
+					nodes := []testNode{n0, n1}
+					n0.join(n1)
 
-		n0.assertNeighbours(t, 1, 1)
-		n0.assertFingerTable(t, []string{
-			"1,2,1",
-			"2,4,1",
-			"4,0,1",
-		})
+					for _, op := range ops {
+						switch op.op {
+						case "stabilize": nodes[op.nodeIdx].stabilize()
+						case "fixFingers": nodes[op.nodeIdx].fixFingers()
+						}
+					}
+					//n0.stabilize()
+					//n0.fixFingers()
+					//
+					//n1.stabilize()
+					//n1.fixFingers()
 
-		n1.assertNeighbours(t, 0, 0)
-		n1.assertFingerTable(t, []string{
-			"2,3,0",
-			"3,5,0",
-			"5,1,0",
-		})
+					n0.assertNeighbours(t, 1, 1)
+					n0.assertFingerTable(t, []string{
+						"1,2,1",
+						"2,4,1",
+						"4,0,1",
+					})
+
+					n1.assertNeighbours(t, 0, 0)
+					n1.assertFingerTable(t, []string{
+						"2,3,0",
+						"3,5,0",
+						"5,1,0",
+					})
+				})
+
+			})
+		}
 	})
 	//
 	//t.Run("after n3 join n1", func(t *testing.T) {
