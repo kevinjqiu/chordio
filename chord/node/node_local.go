@@ -3,13 +3,13 @@ package node
 import (
 	"context"
 	"fmt"
+	"github.com/kevinjqiu/chordio/attrs"
 	"sync"
 
 	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"go.opentelemetry.io/otel/api/core"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
 )
@@ -51,14 +51,20 @@ func (n *localNode) String() string {
 	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
 }
 
-func (n *localNode) SetPredNode(_ context.Context, pn NodeRef) error {
+func (n *localNode) SetPredNode(ctx context.Context, pn NodeRef) error {
+	_, span := n.Start(ctx, "localNode.SetPredNode", trace.WithAttributes(attrs.Node("pred", pn)))
+	defer span.End()
+
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	n.predNode = pn
 	return nil
 }
 
-func (n *localNode) SetSuccNode(_ context.Context, sn NodeRef) error {
+func (n *localNode) SetSuccNode(ctx context.Context, sn NodeRef) error {
+	_, span := n.Start(ctx, "localNode.SetSuccNode", trace.WithAttributes(attrs.Node("succ", sn)))
+	defer span.End()
+
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	n.ft.SetNodeAtEntry(0, sn)
@@ -130,7 +136,7 @@ func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, err
 }
 
 func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error) {
-	ctx, span := n.Start(ctx, "localNode.FindSuccessor")
+	ctx, span := n.Start(ctx, "localNode.FindSuccessor", trace.WithAttributes(attrs.ID("id", id)))
 	defer span.End()
 
 	predNode, err := n.FindPredecessor(ctx, id)
@@ -151,7 +157,7 @@ func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error
 }
 
 func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
-	ctx, span := n.Start(ctx, "localNode.ClosestPrecedingFinger", trace.WithAttributes(core.Key("id").Int(id.AsInt())))
+	ctx, span := n.Start(ctx, "localNode.ClosestPrecedingFinger", trace.WithAttributes(attrs.ID("id", id)))
 	defer span.End()
 	// nb: int cast here is IMPORTANT!
 	// because n.m is of type uint32
@@ -182,9 +188,7 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 }
 
 func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
-	ctx, span := n.Start(ctx, "localNode.Join",
-		trace.WithAttributes(core.Key("introducerNode").String(introducerNode.String())),
-	)
+	ctx, span := n.Start(ctx, "localNode.Join", trace.WithAttributes(attrs.Node("introducer", introducerNode)))
 	defer span.End()
 
 	span.AddEvent(ctx, fmt.Sprintf("before updating FT: %s", n.ft.String()))
@@ -205,6 +209,9 @@ func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
 }
 
 func (n *localNode) Notify(ctx context.Context, n_ Node) error {
+	ctx, span := n.Start(ctx, "localNode.Notify", trace.WithAttributes(attrs.Node("n_", n_)))
+	defer span.End()
+
 	iv := chord.NewInterval(n.m, n.GetPredNode().GetID(), n.GetID(), chord.WithLeftClosed, chord.WithRightOpen)
 	if n.GetPredNode() == nil || iv.Has(n_.GetID()) {
 		if err := n.SetPredNode(ctx, n_); err != nil {
@@ -223,6 +230,9 @@ func (n *localNode) setNodeFactory(f factory) {
 }
 
 func (n *localNode) Stabilize(ctx context.Context) error {
+	ctx, span := n.Start(ctx, "localNode.Stabilize")
+	defer span.End()
+
 	// TODO: do not use remote node if the node is local
 	succ, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
 	if err != nil {
@@ -256,6 +266,9 @@ func (n *localNode) Stabilize(ctx context.Context) error {
 }
 
 func (n *localNode) FixFingers(ctx context.Context) error {
+	ctx, span := n.Start(ctx, "localNode.FixFingers")
+	defer span.End()
+
 	n.mu.Lock()
 	defer n.mu.Unlock()
 

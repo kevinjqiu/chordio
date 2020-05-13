@@ -22,7 +22,7 @@ func newFixFingersCommand() *cobra.Command {
 			)
 			ctx := metadata.NewOutgoingContext(context.Background(), md)
 
-			_, err := chordClient.X_FixFinger(ctx, &pb.FixFingerRequest{})
+			_, err := chordClient.X_FixFingers(ctx, &pb.FixFingersRequest{})
 			return err
 		},
 	}
