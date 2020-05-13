@@ -271,11 +271,18 @@ func (n *localNode) Stabilize(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
 	x := succ.GetPredNode()
 	iv := chord.NewInterval(n.m, n.GetID(), n.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightOpen)
+	logrus.Infof("succ: %s, x: %s, iv: %s", succ.String(), x.String(), iv.String())
 	if iv.Has(x.GetID()) {
 		if err := n.SetSuccNode(ctx, x); err != nil {
+			return err
+		}
+		xRemote, err := n.factory.newRemoteNode(ctx, x.GetBind())
+		if err != nil {
+			return err
+		}
+		if err := xRemote.SetPredNode(ctx, n); err != nil {
 			return err
 		}
 	}
@@ -285,7 +292,7 @@ func (n *localNode) Stabilize(ctx context.Context) error {
 		return err
 	}
 
-	if err := succNode.Notify(ctx, succNode); err != nil {
+	if err := succNode.Notify(ctx, n); err != nil {
 		return err
 	}
 	return nil
@@ -303,10 +310,16 @@ func (n *localNode) FixFingers(ctx context.Context) error {
 		return err
 	}
 
-	err = n.UpdateFingerTableEntry(ctx, succNode, i)
-	if err != nil {
-		return err
-	}
+	n.GetFingerTable().SetNodeAtEntry(i, succNode)
+
+	//for i := 0; i < n.m.AsInt(); i++ {
+	//	succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).Start)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	logrus.Infof("i=%d, fte[%d]=%s, succ=%s", i, i, n.GetFingerTable().GetEntry(i).String(), succNode.String())
+	//	n.GetFingerTable().SetNodeAtEntry(i, succNode)
+	//}
 	n.GetFingerTable().PrettyPrint(nil)
 	return nil
 }
