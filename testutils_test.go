@@ -38,8 +38,6 @@ func runOperation(op string, nodes map[int]testNode) {
 	switch parts[1] {
 	case "stabilize":
 		node.stabilize()
-	case "fixFingers":
-		node.fixFingers()
 	default:
 		panic(fmt.Sprintf("unrecognized command: %s", parts[1]))
 	}
@@ -105,9 +103,9 @@ func (tn testNode) stabilize() {
 	_, _ = tn.c.X_Stabilize(context.Background(), &pb.StabilizeRequest{})
 }
 
-func (tn testNode) fixFingers() {
-	_, _ = tn.c.X_FixFinger(context.Background(), &pb.FixFingerRequest{})
-}
+//func (tn testNode) fixFingers() {
+//	_, _ = tn.c.X_FixFingers(context.Background(), &pb.FixFingersRequest{})
+//}
 
 func newNode(id int, m int) testNode {
 	port, err := freeport.GetFreePort()

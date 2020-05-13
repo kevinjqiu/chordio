@@ -32,7 +32,7 @@ type (
 		SetSuccNode(ctx context.Context, n NodeRef) error
 
 		// For stabilization
-		Notify(ctx context.Context, n_ Node) error
+		Notify(ctx context.Context, n_ RemoteNode) error
 	}
 
 	LocalNode interface {

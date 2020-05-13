@@ -192,6 +192,7 @@ func (n *localNode) Join(ctx context.Context, introducerNode chord.RemoteNode) e
 	span.AddEvent(ctx, fmt.Sprintf("before updating FT: %s", n.ft.String()))
 
 	if err := n.SetPredNode(ctx, nil); err != nil {
+		span.RecordError(ctx, err)
 		return err
 	}
 	succNode, err := introducerNode.FindSuccessor(ctx, n.GetID())
@@ -201,21 +202,24 @@ func (n *localNode) Join(ctx context.Context, introducerNode chord.RemoteNode) e
 	}
 
 	if err := n.SetSuccNode(ctx, succNode); err != nil {
+		span.RecordError(ctx, err)
 		return err
 	}
 	return nil
 }
 
-func (n *localNode) Notify(ctx context.Context, n_ chord.Node) error {
+func (n *localNode) Notify(ctx context.Context, n_ chord.RemoteNode) error {
 	ctx, span := n.Start(ctx, "localNode.Notify", trace.WithAttributes(attrs.Node("n_", n_)))
 	defer span.End()
 
 	iv := chord.NewInterval(n.m, n.GetPredNode().GetID(), n.GetID(), chord.WithLeftClosed, chord.WithRightOpen)
 	if n.GetPredNode() == nil || iv.Has(n_.GetID()) {
 		if err := n.SetPredNode(ctx, n_); err != nil {
+			span.RecordError(ctx, err)
 			return errors.Wrap(err, "unable to set predecessor to the remote node")
 		}
 		if err := n_.SetSuccNode(ctx, n); err != nil {
+			span.RecordError(ctx, err)
 			return errors.Wrap(err, "unable to set remote node's successor to myself")
 		}
 	}
@@ -230,30 +234,41 @@ func (n *localNode) Stabilize(ctx context.Context) error {
 	// TODO: do not use remote node if the node is local
 	succ, err := NewRemote(ctx, n.GetSuccNode().GetBind())
 	if err != nil {
+		span.RecordError(ctx, err)
 		return err
 	}
 	x := succ.GetPredNode()
 	iv := chord.NewInterval(n.m, n.GetID(), n.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightOpen)
-	logrus.Infof("succ: %s, x: %s, iv: %s", succ.String(), x.String(), iv.String())
+	span.AddEvent(ctx, fmt.Sprintf("succ: %s, x: %s, iv: %s", succ.String(), x.String(), iv.String()))
 	if iv.Has(x.GetID()) {
 		if err := n.SetSuccNode(ctx, x); err != nil {
+			span.RecordError(ctx, err)
 			return err
 		}
 		xRemote, err := NewRemote(ctx, x.GetBind())
 		if err != nil {
+			span.RecordError(ctx, err)
 			return err
 		}
 		if err := xRemote.SetPredNode(ctx, n); err != nil {
+			span.RecordError(ctx, err)
 			return err
 		}
 	}
 
 	succNode, err := NewRemote(ctx, n.GetSuccNode().GetBind())
 	if err != nil {
+		span.RecordError(ctx, err)
 		return err
 	}
 
 	if err := succNode.Notify(ctx, n); err != nil {
+		span.RecordError(ctx, err)
+		return err
+	}
+
+	if err := n.FixFingers(ctx); err != nil {
+		span.RecordError(ctx, err)
 		return err
 	}
 	return nil
@@ -279,9 +294,10 @@ func (n *localNode) FixFingers(ctx context.Context) error {
 	for i := 0; i < n.m.AsInt(); i++ {
 		succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).GetStart())
 		if err != nil {
+			span.RecordError(ctx, err)
 			return err
 		}
-		logrus.Infof("i=%d, fte[%d]=%s, succ=%s", i, i, n.GetFingerTable().GetEntry(i).String(), succNode.String())
+		span.AddEvent(ctx, fmt.Sprintf("i=%d, fte[%d]=%s, succ=%s", i, i, n.GetFingerTable().GetEntry(i).String(), succNode.String()))
 		n.GetFingerTable().SetNodeAtEntry(i, succNode)
 	}
 	n.GetFingerTable().PrettyPrint(nil)

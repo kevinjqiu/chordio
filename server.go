@@ -123,11 +123,12 @@ func (s *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb
 func (s *Server) Notify(ctx context.Context, request *pb.NotifyRequest) (*pb.NotifyResponse, error) {
 	logger := logrus.WithField("method", "Server.Notify")
 	logger.Debugf("node=%v", request.Node)
-	node, err := node.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, s.localNode.GetRank())
+	//node, err := node.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, s.localNode.GetRank())
+	n, err := node.NewRemote(ctx, request.Node.Bind)
 	if err != nil {
 		return nil, err
 	}
-	if err := s.localNode.Notify(ctx, node); err != nil {
+	if err := s.localNode.Notify(ctx, n); err != nil {
 		return nil, err
 	}
 	return &pb.NotifyResponse{}, nil

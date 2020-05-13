@@ -3,12 +3,11 @@ package node
 import (
 	"context"
 	"fmt"
+	"github.com/kevinjqiu/chordio/attrs"
 	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"go.opentelemetry.io/otel/api/core"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
 	"go.opentelemetry.io/otel/plugin/grpctrace"
@@ -108,7 +107,7 @@ func (rn *remoteNode) GetSuccNode() chord.NodeRef {
 }
 
 func (rn *remoteNode) FindPredecessor(ctx context.Context, id chord.ID) (chord.Node, error) {
-	ctx, span := rn.Start(ctx, "remoteNode.FindPredecessor", trace.WithAttributes(core.Key("id").Int(id.AsInt())))
+	ctx, span := rn.Start(ctx, "remoteNode.FindPredecessor", trace.WithAttributes(attrs.ID("id", id)))
 	defer span.End()
 	req := pb.FindPredecessorRequest{
 		Id: uint64(id),
@@ -129,9 +128,9 @@ func (rn *remoteNode) FindPredecessor(ctx context.Context, id chord.ID) (chord.N
 }
 
 func (rn *remoteNode) FindSuccessor(ctx context.Context, id chord.ID) (chord.Node, error) {
-	ctx, span := rn.Start(ctx, "remoteNode.FindSuccessor", trace.WithAttributes(core.Key("id").Int(id.AsInt())))
+	ctx, span := rn.Start(ctx, "remoteNode.FindSuccessor", trace.WithAttributes(attrs.ID("id", id)))
 	defer span.End()
-	logrus.Debug("[remoteNode] FindSuccessor: ", id)
+
 	req := pb.FindSuccessorRequest{
 		Id: uint64(id),
 	}
@@ -151,10 +150,9 @@ func (rn *remoteNode) FindSuccessor(ctx context.Context, id chord.ID) (chord.Nod
 }
 
 func (rn *remoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (chord.Node, error) {
-	ctx, span := rn.Start(ctx, "remoteNode.ClosestPrecedingFinger", trace.WithAttributes(core.Key("id").Int(id.AsInt())))
+	ctx, span := rn.Start(ctx, "remoteNode.ClosestPrecedingFinger", trace.WithAttributes(attrs.ID("id", id)))
 	defer span.End()
 
-	logrus.Debug("[remoteNode] ClosestPrecedingFinger: ", id)
 	client, close, err := rn.getClient()
 	if err != nil {
 		return nil, err
@@ -200,16 +198,17 @@ func (rn *remoteNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
-func (rn *remoteNode) Notify(ctx context.Context, node chord.Node) error {
-	ctx, span := rn.Start(ctx, "remoteNode.Notify", trace.WithAttributes(core.Key("node").String(node.String())))
+func (rn *remoteNode) Notify(ctx context.Context, n_ chord.RemoteNode) error {
+	ctx, span := rn.Start(ctx, "remoteNode.Notify", trace.WithAttributes(attrs.Node("n_", n_)))
 	defer span.End()
 
 	req := pb.NotifyRequest{
-		Node: node.AsProtobufNode(),
+		Node: n_.AsProtobufNode(),
 	}
 
 	client, close, err := rn.getClient()
 	if err != nil {
+		span.RecordError(ctx, err)
 		return err
 	}
 	defer close()
