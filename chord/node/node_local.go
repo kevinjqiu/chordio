@@ -257,7 +257,7 @@ func (n *localNode) Notify(ctx context.Context, n_ Node) error {
 			return err
 		}
 	}
-	logrus.Info("After notify(): %s", n.String())
+	logrus.Info("After notify(): ", n.String())
 	return nil
 }
 
@@ -267,11 +267,12 @@ func (n *localNode) setNodeFactory(f factory) {
 
 func (n *localNode) Stabilize(ctx context.Context) error {
 	// TODO: do not use remote node if the node is local
-	x, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
+	succ, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
 	if err != nil {
 		return err
 	}
 
+	x := succ.GetPredNode()
 	iv := chord.NewInterval(n.m, n.GetID(), n.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightOpen)
 	if iv.Has(x.GetID()) {
 		if err := n.SetSuccNode(ctx, x); err != nil {

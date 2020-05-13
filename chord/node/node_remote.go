@@ -152,14 +152,15 @@ func (rn *remoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (
 	defer span.End()
 
 	logrus.Debug("[remoteNode] ClosestPrecedingFinger: ", id)
-	req := pb.ClosestPrecedingFingerRequest{
-		Id: uint64(id),
-	}
-
 	client, err := rn.getClient()
 	if err != nil {
 		return nil, err
 	}
+
+	req := pb.ClosestPrecedingFingerRequest{
+		Id: uint64(id),
+	}
+
 	resp, err := client.ClosestPrecedingFinger(ctx, &req)
 	if err != nil {
 		return nil, err
@@ -200,13 +201,16 @@ func (rn *remoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int)
 		trace.WithAttributes(core.Key("s").String(s.String())))
 	defer span.End()
 
-	logrus.Debugf("[remoteNode] UpdateFingerTableEntry: ID=%d, i=%d", s.GetID(), i)
 	req := pb.UpdateFingerTableRequest{
 		Node: s.AsProtobufNode(),
 		I:    int64(i),
 	}
 
-	_, err := rn.client.UpdateFingerTable(ctx, &req)
+	client, err := rn.getClient()
+	if err != nil {
+		return err
+	}
+	_, err = client.UpdateFingerTable(ctx, &req)
 	return err
 }
 

@@ -42,9 +42,9 @@ run-local:
 
 vendor:
 	# needed temporarily before https://github.com/open-telemetry/opentelemetry-go/issues/682 is fixed
-	mkdir -p vendor/
-	git clone https://github.com/kevinjqiu/opentelemetry-go.git vendor/opentelemetry-go
-	cd vendor/opentelemetry-go && git checkout fix-grpc-method-name-regexp
+	mkdir -p gomod/
+	git clone https://github.com/kevinjqiu/opentelemetry-go.git gomod/opentelemetry-go
+	cd gomod/opentelemetry-go && git checkout fix-grpc-method-name-regexp
 
 jaeger:
 	docker-compose run --service-ports jaeger
