@@ -10,6 +10,10 @@ import (
 	"sync"
 )
 
+type ClientManager interface {
+	Get(bind string) (pb.ChordClient, error)
+}
+
 type clientManager struct {
 	mu *sync.Mutex
 	clients map[string]pb.ChordClient
@@ -29,7 +33,7 @@ func (cm *clientManager) newCient(bind string) (pb.ChordClient, error) {
 	return client, nil
 }
 
-func (cm *clientManager) getClient(bind string) (pb.ChordClient, error) {
+func (cm *clientManager) Get(bind string) (pb.ChordClient, error) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
@@ -45,7 +49,7 @@ func (cm *clientManager) getClient(bind string) (pb.ChordClient, error) {
 	return conn, nil
 }
 
-func newClientManager() *clientManager {
+func NewClientManager() ClientManager {
 	return &clientManager{
 		mu: new(sync.Mutex),
 		clients: make(map[string]pb.ChordClient),

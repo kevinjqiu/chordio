@@ -33,6 +33,7 @@ func (p *PBNodeRef) String() string {
 type Server struct {
 	localNode  node.LocalNode
 	grpcServer *grpc.Server
+	clientManager node.ClientManager
 }
 
 func (s *Server) SetPredecessorNode(ctx context.Context, req *pb.SetPredecessorNodeRequest) (*pb.SetPredecessorNodeResponse, error) {
