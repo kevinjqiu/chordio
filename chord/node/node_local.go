@@ -19,14 +19,12 @@ type localNode struct {
 	mu       *sync.Mutex
 	id       chord.ID
 	bind     string
-	predNode NodeRef
+	predNode chord.NodeRef
 	m        chord.Rank
-	ft       *FingerTable
-
-	factory factory
+	ft       chord.FingerTable
 }
 
-func (n *localNode) GetFingerTable() *FingerTable {
+func (n *localNode) GetFingerTable() chord.FingerTable {
 	return n.ft
 }
 
@@ -51,7 +49,7 @@ func (n *localNode) String() string {
 	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
 }
 
-func (n *localNode) SetPredNode(ctx context.Context, pn NodeRef) error {
+func (n *localNode) SetPredNode(ctx context.Context, pn chord.NodeRef) error {
 	_, span := n.Start(ctx, "localNode.SetPredNode", trace.WithAttributes(attrs.Node("pred", pn)))
 	defer span.End()
 
@@ -61,7 +59,7 @@ func (n *localNode) SetPredNode(ctx context.Context, pn NodeRef) error {
 	return nil
 }
 
-func (n *localNode) SetSuccNode(ctx context.Context, sn NodeRef) error {
+func (n *localNode) SetSuccNode(ctx context.Context, sn chord.NodeRef) error {
 	_, span := n.Start(ctx, "localNode.SetSuccNode", trace.WithAttributes(attrs.Node("succ", sn)))
 	defer span.End()
 
@@ -105,20 +103,20 @@ func (n *localNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
-func (n *localNode) GetPredNode() NodeRef {
+func (n *localNode) GetPredNode() chord.NodeRef {
 	return n.predNode
 }
 
-func (n *localNode) GetSuccNode() NodeRef {
-	return n.ft.GetEntry(0).Node
+func (n *localNode) GetSuccNode() chord.NodeRef {
+	return n.ft.GetEntry(0).GetNode()
 }
 
-func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
+func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (chord.Node, error) {
 	ctx, span := n.Start(ctx, "localNode.FindPredecessor")
 	defer span.End()
 
 	var (
-		n_  Node = n
+		n_  chord.Node = n
 		err error
 	)
 	for {
@@ -135,7 +133,7 @@ func (n *localNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, err
 	return n_, nil
 }
 
-func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error) {
+func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (chord.Node, error) {
 	ctx, span := n.Start(ctx, "localNode.FindSuccessor", trace.WithAttributes(attrs.ID("id", id)))
 	defer span.End()
 
@@ -153,10 +151,10 @@ func (n *localNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error
 		return n, nil
 	}
 
-	return n.factory.newRemoteNode(ctx, succNode.GetBind())
+	return NewRemote(ctx, succNode.GetBind())
 }
 
-func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
+func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (chord.Node, error) {
 	ctx, span := n.Start(ctx, "localNode.ClosestPrecedingFinger", trace.WithAttributes(attrs.ID("id", id)))
 	defer span.End()
 	// nb: int cast here is IMPORTANT!
@@ -166,20 +164,20 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 		fte := n.ft.GetEntry(i)
 		interval := chord.NewInterval(n.m, n.id, id, chord.WithLeftOpen, chord.WithRightOpen)
 		span.AddEvent(ctx, fmt.Sprintf("i=%d,interval=%s, fte=%s", i, interval, fte))
-		if interval.Has(fte.Node.GetID()) {
-			span.AddEvent(ctx, fmt.Sprintf("node %s is in the interval %s", fte.Node, interval))
-			node, ok := n.ft.GetNodeByID(fte.Node.GetID())
+		if interval.Has(fte.GetNode().GetID()) {
+			span.AddEvent(ctx, fmt.Sprintf("node %s is in the interval %s", fte.GetNode(), interval))
+			node, ok := n.ft.GetNodeByID(fte.GetNode().GetID())
 			if !ok {
-				err := errNodeNotFound(fte.Node.GetID())
+				err := errNodeNotFound(fte.GetNode().GetID())
 				span.RecordError(ctx, err)
-				return nil, errNodeNotFound(fte.Node.GetID())
+				return nil, errNodeNotFound(fte.GetNode().GetID())
 			}
 
 			span.AddEvent(ctx, fmt.Sprintf("ClosestPrecedingFinger is : %s", node.String()))
 			if node.GetID() == n.id {
-				return n.factory.newLocalNode(node.GetID(), node.GetBind(), n.m)
+				return NewLocal(node.GetID(), node.GetBind(), n.m)
 			} else {
-				return n.factory.newRemoteNode(ctx, node.GetBind())
+				return NewRemote(ctx, node.GetBind())
 			}
 		}
 	}
@@ -187,7 +185,7 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (No
 	return n, nil
 }
 
-func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
+func (n *localNode) Join(ctx context.Context, introducerNode chord.RemoteNode) error {
 	ctx, span := n.Start(ctx, "localNode.Join", trace.WithAttributes(attrs.Node("introducer", introducerNode)))
 	defer span.End()
 
@@ -208,7 +206,7 @@ func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
 	return nil
 }
 
-func (n *localNode) Notify(ctx context.Context, n_ Node) error {
+func (n *localNode) Notify(ctx context.Context, n_ chord.Node) error {
 	ctx, span := n.Start(ctx, "localNode.Notify", trace.WithAttributes(attrs.Node("n_", n_)))
 	defer span.End()
 
@@ -225,16 +223,12 @@ func (n *localNode) Notify(ctx context.Context, n_ Node) error {
 	return nil
 }
 
-func (n *localNode) setNodeFactory(f factory) {
-	n.factory = f
-}
-
 func (n *localNode) Stabilize(ctx context.Context) error {
 	ctx, span := n.Start(ctx, "localNode.Stabilize")
 	defer span.End()
 
 	// TODO: do not use remote node if the node is local
-	succ, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
+	succ, err := NewRemote(ctx, n.GetSuccNode().GetBind())
 	if err != nil {
 		return err
 	}
@@ -245,7 +239,7 @@ func (n *localNode) Stabilize(ctx context.Context) error {
 		if err := n.SetSuccNode(ctx, x); err != nil {
 			return err
 		}
-		xRemote, err := n.factory.newRemoteNode(ctx, x.GetBind())
+		xRemote, err := NewRemote(ctx, x.GetBind())
 		if err != nil {
 			return err
 		}
@@ -254,7 +248,7 @@ func (n *localNode) Stabilize(ctx context.Context) error {
 		}
 	}
 
-	succNode, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
+	succNode, err := NewRemote(ctx, n.GetSuccNode().GetBind())
 	if err != nil {
 		return err
 	}
@@ -283,7 +277,7 @@ func (n *localNode) FixFingers(ctx context.Context) error {
 	//n.GetFingerTable().SetNodeAtEntry(i, succNode)
 
 	for i := 0; i < n.m.AsInt(); i++ {
-		succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).Start)
+		succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).GetStart())
 		if err != nil {
 			return err
 		}
@@ -294,7 +288,7 @@ func (n *localNode) FixFingers(ctx context.Context) error {
 	return nil
 }
 
-func NewLocal(id chord.ID, bind string, m chord.Rank) (LocalNode, error) {
+func NewLocal(id chord.ID, bind string, m chord.Rank) (chord.LocalNode, error) {
 	localNodeRef := &nodeRef{
 		ID: id, Bind: bind,
 	}
@@ -306,8 +300,6 @@ func NewLocal(id chord.ID, bind string, m chord.Rank) (LocalNode, error) {
 		predNode: localNodeRef,
 		ft:       nil,
 		m:        m,
-
-		factory: defaultFactory{},
 	}
 	localNode.ft = newFingerTable(localNode, m)
 	return localNode, nil

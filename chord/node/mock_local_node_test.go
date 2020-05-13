@@ -34,15 +34,15 @@ func (_m *MockLocalNode) AsProtobufNode() *pb.Node {
 }
 
 // ClosestPrecedingFinger provides a mock function with given fields: ctx, id
-func (_m *MockLocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
+func (_m *MockLocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (chord.Node, error) {
 	ret := _m.Called(ctx, id)
 
-	var r0 Node
-	if rf, ok := ret.Get(0).(func(context.Context, chord.ID) Node); ok {
+	var r0 chord.Node
+	if rf, ok := ret.Get(0).(func(context.Context, chord.ID) chord.Node); ok {
 		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(Node)
+			r0 = ret.Get(0).(chord.Node)
 		}
 	}
 
@@ -57,15 +57,15 @@ func (_m *MockLocalNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID
 }
 
 // FindPredecessor provides a mock function with given fields: ctx, id
-func (_m *MockLocalNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
+func (_m *MockLocalNode) FindPredecessor(ctx context.Context, id chord.ID) (chord.Node, error) {
 	ret := _m.Called(ctx, id)
 
-	var r0 Node
-	if rf, ok := ret.Get(0).(func(context.Context, chord.ID) Node); ok {
+	var r0 chord.Node
+	if rf, ok := ret.Get(0).(func(context.Context, chord.ID) chord.Node); ok {
 		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(Node)
+			r0 = ret.Get(0).(chord.Node)
 		}
 	}
 
@@ -80,15 +80,15 @@ func (_m *MockLocalNode) FindPredecessor(ctx context.Context, id chord.ID) (Node
 }
 
 // FindSuccessor provides a mock function with given fields: ctx, id
-func (_m *MockLocalNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error) {
+func (_m *MockLocalNode) FindSuccessor(ctx context.Context, id chord.ID) (chord.Node, error) {
 	ret := _m.Called(ctx, id)
 
-	var r0 Node
-	if rf, ok := ret.Get(0).(func(context.Context, chord.ID) Node); ok {
+	var r0 chord.Node
+	if rf, ok := ret.Get(0).(func(context.Context, chord.ID) chord.Node); ok {
 		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(Node)
+			r0 = ret.Get(0).(chord.Node)
 		}
 	}
 
@@ -117,15 +117,15 @@ func (_m *MockLocalNode) GetBind() string {
 }
 
 // GetFingerTable provides a mock function with given fields:
-func (_m *MockLocalNode) GetFingerTable() *FingerTable {
+func (_m *MockLocalNode) GetFingerTable() *fingerTable {
 	ret := _m.Called()
 
-	var r0 *FingerTable
-	if rf, ok := ret.Get(0).(func() *FingerTable); ok {
+	var r0 *fingerTable
+	if rf, ok := ret.Get(0).(func() *fingerTable); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*FingerTable)
+			r0 = ret.Get(0).(*fingerTable)
 		}
 	}
 
@@ -147,15 +147,15 @@ func (_m *MockLocalNode) GetID() chord.ID {
 }
 
 // GetPredNode provides a mock function with given fields:
-func (_m *MockLocalNode) GetPredNode() NodeRef {
+func (_m *MockLocalNode) GetPredNode() chord.NodeRef {
 	ret := _m.Called()
 
-	var r0 NodeRef
-	if rf, ok := ret.Get(0).(func() NodeRef); ok {
+	var r0 chord.NodeRef
+	if rf, ok := ret.Get(0).(func() chord.NodeRef); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(NodeRef)
+			r0 = ret.Get(0).(chord.NodeRef)
 		}
 	}
 
@@ -177,15 +177,15 @@ func (_m *MockLocalNode) GetRank() chord.Rank {
 }
 
 // GetSuccNode provides a mock function with given fields:
-func (_m *MockLocalNode) GetSuccNode() NodeRef {
+func (_m *MockLocalNode) GetSuccNode() chord.NodeRef {
 	ret := _m.Called()
 
-	var r0 NodeRef
-	if rf, ok := ret.Get(0).(func() NodeRef); ok {
+	var r0 chord.NodeRef
+	if rf, ok := ret.Get(0).(func() chord.NodeRef); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(NodeRef)
+			r0 = ret.Get(0).(chord.NodeRef)
 		}
 	}
 
@@ -193,11 +193,11 @@ func (_m *MockLocalNode) GetSuccNode() NodeRef {
 }
 
 // Join provides a mock function with given fields: ctx, introducerNode
-func (_m *MockLocalNode) Join(ctx context.Context, introducerNode RemoteNode) error {
+func (_m *MockLocalNode) Join(ctx context.Context, introducerNode chord.RemoteNode) error {
 	ret := _m.Called(ctx, introducerNode)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, RemoteNode) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, chord.RemoteNode) error); ok {
 		r0 = rf(ctx, introducerNode)
 	} else {
 		r0 = ret.Error(0)
@@ -207,12 +207,12 @@ func (_m *MockLocalNode) Join(ctx context.Context, introducerNode RemoteNode) er
 }
 
 // SetPredNode provides a mock function with given fields: ctx, n
-func (_m *MockLocalNode) SetPredNode(ctx context.Context, n NodeRef) {
+func (_m *MockLocalNode) SetPredNode(ctx context.Context, n chord.NodeRef) {
 	_m.Called(ctx, n)
 }
 
 // SetSuccNode provides a mock function with given fields: ctx, n
-func (_m *MockLocalNode) SetSuccNode(ctx context.Context, n NodeRef) {
+func (_m *MockLocalNode) SetSuccNode(ctx context.Context, n chord.NodeRef) {
 	_m.Called(ctx, n)
 }
 
@@ -231,11 +231,11 @@ func (_m *MockLocalNode) String() string {
 }
 
 // UpdateFingerTableEntry provides a mock function with given fields: ctx, s, i
-func (_m *MockLocalNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) error {
+func (_m *MockLocalNode) UpdateFingerTableEntry(ctx context.Context, s chord.Node, i int) error {
 	ret := _m.Called(ctx, s, i)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, Node, int) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, chord.Node, int) error); ok {
 		r0 = rf(ctx, s, i)
 	} else {
 		r0 = ret.Error(0)

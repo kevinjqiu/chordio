@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func setupNetwork(t *testing.T) LocalNode {
+func setupNetwork(t *testing.T) chord.LocalNode {
 	n0, n0mock := newMockNode(0, "n0")
 	n1, n1mock := newMockNode(1, "n1")
 	n3, n3mock := newMockNode(3, "n3")
@@ -42,7 +42,7 @@ func setupNetwork(t *testing.T) LocalNode {
 	return n
 }
 
-func setupRank3Network(t *testing.T) (n LocalNode, n2, n5 Node, n2mock, n5mock *mock.Mock){
+func setupRank3Network(t *testing.T) (n chord.LocalNode, n2, n5 chord.Node, n2mock, n5mock *mock.Mock){
 	n2, n2mock = newMockNode(2, "n2")
 	n5, n5mock = newMockNode(5, "n5")
 

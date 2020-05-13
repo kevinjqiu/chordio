@@ -25,8 +25,6 @@ type remoteNode struct {
 	bind     string
 	predNode *pb.Node
 	succNode *pb.Node
-
-	factory factory
 }
 
 func (rn *remoteNode) getClient() (pb.ChordClient, closeFunc, error) {
@@ -43,7 +41,7 @@ func (rn *remoteNode) getClient() (pb.ChordClient, closeFunc, error) {
 	return client, func() error { return conn.Close() }, nil
 }
 
-func (rn *remoteNode) SetPredNode(ctx context.Context, n NodeRef) error {
+func (rn *remoteNode) SetPredNode(ctx context.Context, n chord.NodeRef) error {
 	client, close, err := rn.getClient()
 	if err != nil {
 		return err
@@ -59,7 +57,7 @@ func (rn *remoteNode) SetPredNode(ctx context.Context, n NodeRef) error {
 	return err
 }
 
-func (rn *remoteNode) SetSuccNode(ctx context.Context, n NodeRef) error {
+func (rn *remoteNode) SetSuccNode(ctx context.Context, n chord.NodeRef) error {
 	client, close, err := rn.getClient()
 	if err != nil {
 		return err
@@ -73,10 +71,6 @@ func (rn *remoteNode) SetSuccNode(ctx context.Context, n NodeRef) error {
 		},
 	})
 	return err
-}
-
-func (rn *remoteNode) setNodeFactory(f factory) {
-	rn.factory = f
 }
 
 func (rn *remoteNode) String() string {
@@ -105,15 +99,15 @@ func (rn *remoteNode) GetBind() string {
 	return rn.bind
 }
 
-func (rn *remoteNode) GetPredNode() NodeRef {
+func (rn *remoteNode) GetPredNode() chord.NodeRef {
 	return &nodeRef{chord.ID(rn.predNode.Id), rn.predNode.Bind}
 }
 
-func (rn *remoteNode) GetSuccNode() NodeRef {
+func (rn *remoteNode) GetSuccNode() chord.NodeRef {
 	return &nodeRef{chord.ID(rn.succNode.Id), rn.succNode.Bind}
 }
 
-func (rn *remoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, error) {
+func (rn *remoteNode) FindPredecessor(ctx context.Context, id chord.ID) (chord.Node, error) {
 	ctx, span := rn.Start(ctx, "remoteNode.FindPredecessor", trace.WithAttributes(core.Key("id").Int(id.AsInt())))
 	defer span.End()
 	req := pb.FindPredecessorRequest{
@@ -131,10 +125,10 @@ func (rn *remoteNode) FindPredecessor(ctx context.Context, id chord.ID) (Node, e
 		return nil, err
 	}
 
-	return rn.factory.newRemoteNode(ctx, resp.Node.Bind)
+	return NewRemote(ctx, resp.Node.Bind)
 }
 
-func (rn *remoteNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, error) {
+func (rn *remoteNode) FindSuccessor(ctx context.Context, id chord.ID) (chord.Node, error) {
 	ctx, span := rn.Start(ctx, "remoteNode.FindSuccessor", trace.WithAttributes(core.Key("id").Int(id.AsInt())))
 	defer span.End()
 	logrus.Debug("[remoteNode] FindSuccessor: ", id)
@@ -153,10 +147,10 @@ func (rn *remoteNode) FindSuccessor(ctx context.Context, id chord.ID) (Node, err
 		return nil, err
 	}
 
-	return rn.factory.newRemoteNode(ctx, resp.Node.Bind)
+	return NewRemote(ctx, resp.Node.Bind)
 }
 
-func (rn *remoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error) {
+func (rn *remoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (chord.Node, error) {
 	ctx, span := rn.Start(ctx, "remoteNode.ClosestPrecedingFinger", trace.WithAttributes(core.Key("id").Int(id.AsInt())))
 	defer span.End()
 
@@ -176,7 +170,7 @@ func (rn *remoteNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (
 		return nil, err
 	}
 
-	return rn.factory.newRemoteNode(ctx, resp.Node.Bind)
+	return NewRemote(ctx, resp.Node.Bind)
 }
 
 func (rn *remoteNode) AsProtobufNode() *pb.Node {
@@ -206,7 +200,7 @@ func (rn *remoteNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
-func (rn *remoteNode) Notify(ctx context.Context, node Node) error {
+func (rn *remoteNode) Notify(ctx context.Context, node chord.Node) error {
 	ctx, span := rn.Start(ctx, "remoteNode.Notify", trace.WithAttributes(core.Key("node").String(node.String())))
 	defer span.End()
 
@@ -242,11 +236,10 @@ func (rn *remoteNode) init(ctx context.Context) error {
 	return nil
 }
 
-func NewRemote(ctx context.Context, bind string) (RemoteNode, error) {
+func NewRemote(ctx context.Context, bind string) (chord.RemoteNode, error) {
 	rn := &remoteNode{
 		Tracer:  global.Tracer(""),
 		bind:    bind,
-		factory: defaultFactory{},
 	}
 	if err := rn.init(ctx); err != nil {
 		return nil, err

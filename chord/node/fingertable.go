@@ -11,24 +11,48 @@ import (
 	"strconv"
 )
 
-type FingerTableEntry struct {
+type fingerTableEntry struct {
 	Start    chord.ID
 	Interval chord.Interval
-	Node     NodeRef
+	Node     chord.NodeRef
 }
 
-func (fte FingerTableEntry) String() string {
+func (fte *fingerTableEntry) SetStart(start chord.ID) {
+	fte.Start = start
+}
+
+func (fte *fingerTableEntry) SetInterval(iv chord.Interval) {
+	fte.Interval = iv
+}
+
+func (fte *fingerTableEntry) SetNode(n chord.NodeRef) {
+	fte.Node = n
+}
+
+func (fte fingerTableEntry) GetStart() chord.ID {
+	return fte.Start
+}
+
+func (fte fingerTableEntry) GetInterval() chord.Interval {
+	return fte.Interval
+}
+
+func (fte fingerTableEntry) GetNode() chord.NodeRef {
+	return fte.Node
+}
+
+func (fte fingerTableEntry) String() string {
 	return fmt.Sprintf("%d\t%s\t%s", fte.Start, fte.Interval.String(), fte.Node)
 }
 
-type FingerTable struct {
+type fingerTable struct {
 	ownerID       chord.ID
 	m             chord.Rank
-	entries       []FingerTableEntry
-	neighbourhood map[chord.ID]NodeRef
+	entries       []chord.FingerTableEntry
+	neighbourhood map[chord.ID]chord.NodeRef
 }
 
-func (ft *FingerTable) String() string {
+func (ft *fingerTable) String() string {
 	var b bytes.Buffer
 	for _, fte := range ft.entries {
 		b.WriteString(fte.String())
@@ -37,7 +61,7 @@ func (ft *FingerTable) String() string {
 	return b.String()
 }
 
-func (ft *FingerTable) PrettyPrint(w io.Writer) {
+func (ft *fingerTable) PrettyPrint(w io.Writer) {
 	if w == nil {
 		w = os.Stdout
 	}
@@ -45,18 +69,18 @@ func (ft *FingerTable) PrettyPrint(w io.Writer) {
 	writer.SetHeader([]string{"Start", "[Start, End)", "Successor Node #"})
 	for _, fte := range ft.entries {
 		writer.Append([]string{
-			strconv.Itoa(int(fte.Start)),
-			fmt.Sprintf("[%d, %d)", fte.Start, fte.Interval.End),
-			fte.Node.String(),
+			strconv.Itoa(int(fte.GetStart())),
+			fmt.Sprintf(fte.GetInterval().String()),
+			fte.GetNode().String(),
 		})
 	}
 	writer.Render()
 }
 
-// Replace the node in FingerTable entry at i with the node at j
-func (ft *FingerTable) ReplaceNodeWithAnotherEntry(i, j int) {
-	newNodeRef := ft.entries[j].Node
-	oldNodeRef := ft.entries[i].Node
+// Replace the node in fingerTable entry at i with the node at j
+func (ft *fingerTable) ReplaceNodeWithAnotherEntry(i, j int) {
+	newNodeRef := ft.entries[j].GetNode()
+	oldNodeRef := ft.entries[i].GetNode()
 	if oldNodeRef.GetID() == newNodeRef.GetID() {
 		return
 	}
@@ -65,8 +89,8 @@ func (ft *FingerTable) ReplaceNodeWithAnotherEntry(i, j int) {
 }
 
 // SetNodeAtEntry the i'th finger table entry's NodeID to n
-func (ft *FingerTable) SetNodeAtEntry(i int, n NodeRef) {
-	oldNodeRef := ft.entries[i].Node
+func (ft *fingerTable) SetNodeAtEntry(i int, n chord.NodeRef) {
+	oldNodeRef := ft.entries[i].GetNode()
 	if oldNodeRef.GetID() == n.GetID() {
 		return
 	}
@@ -80,7 +104,7 @@ func (ft *FingerTable) SetNodeAtEntry(i int, n NodeRef) {
 		ft.neighbourhood[n.GetID()] = newNodeRef
 	}
 
-	ft.entries[i].Node = newNodeRef
+	ft.entries[i].SetNode(newNodeRef)
 
 	if oldNodeRef.GetID() == ft.ownerID {
 		// Do not delete the node from the neighbourhood if it's the owner of the fingertable
@@ -88,7 +112,7 @@ func (ft *FingerTable) SetNodeAtEntry(i int, n NodeRef) {
 	}
 
 	for _, fte := range ft.entries {
-		if fte.Node.GetID() == oldNodeRef.GetID() {
+		if fte.GetNode().GetID() == oldNodeRef.GetID() {
 			// Old node still in the finger table
 			// Do not delete it from the neighbourhood
 			return
@@ -97,40 +121,40 @@ func (ft *FingerTable) SetNodeAtEntry(i int, n NodeRef) {
 	delete(ft.neighbourhood, oldNodeRef.GetID())
 }
 
-func (ft *FingerTable) GetEntry(i int) FingerTableEntry {
+func (ft *fingerTable) GetEntry(i int) chord.FingerTableEntry {
 	return ft.entries[i]
 }
 
-func (ft *FingerTable) GetNodeByID(nodeID chord.ID) (NodeRef, bool) {
+func (ft *fingerTable) GetNodeByID(nodeID chord.ID) (chord.NodeRef, bool) {
 	nodeRef, ok := ft.neighbourhood[nodeID]
 	return nodeRef, ok
 }
 
-func (ft *FingerTable) HasNode(id chord.ID) bool {
+func (ft *fingerTable) HasNode(id chord.ID) bool {
 	_, ok := ft.neighbourhood[id]
 	return ok
 }
 
-func (ft *FingerTable) AsProtobufFT() *pb.FingerTable {
+func (ft *fingerTable) AsProtobufFT() *pb.FingerTable {
 	pbft := pb.FingerTable{}
 	entries := make([]*pb.FingerTableEntry, 0, len(ft.entries))
 	for _, fte := range ft.entries {
 		entries = append(entries, &pb.FingerTableEntry{
-			Start:  uint64(fte.Start),
-			End:    uint64(fte.Interval.End),
-			NodeID: uint64(fte.Node.GetID()),
+			Start:  uint64(fte.GetStart()),
+			End:    uint64(fte.GetInterval().End),
+			NodeID: uint64(fte.GetNode().GetID()),
 		})
 	}
 	pbft.Entries = entries
 	return &pbft
 }
 
-func newFingerTable(initNode Node, m chord.Rank) *FingerTable {
-	ft := FingerTable{
+func newFingerTable(initNode chord.Node, m chord.Rank) chord.FingerTable {
+	ft := fingerTable{
 		m:             m,
 		ownerID:       initNode.GetID(),
-		neighbourhood: make(map[chord.ID]NodeRef),
-		entries: make([]FingerTableEntry, 0, m),
+		neighbourhood: make(map[chord.ID]chord.NodeRef),
+		entries:       make([]chord.FingerTableEntry, 0, m),
 	}
 
 	initNodeRef := &nodeRef{
@@ -141,10 +165,10 @@ func newFingerTable(initNode Node, m chord.Rank) *FingerTable {
 	for k := 0; k < int(m); k++ {
 		start := initNode.GetID().Add(chord.ID(2).Pow(k), m)
 		end := initNode.GetID().Add(chord.ID(2).Pow(k+1), m)
-		ft.entries = append(ft.entries, FingerTableEntry{
-			Start: start,
+		ft.entries = append(ft.entries, &fingerTableEntry{
+			Start:    start,
 			Interval: chord.NewInterval(m, start, end),
-			Node: initNodeRef,
+			Node:     initNodeRef,
 		})
 	}
 

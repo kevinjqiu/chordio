@@ -2,11 +2,10 @@ package attrs
 
 import (
 	"github.com/kevinjqiu/chordio/chord"
-	"github.com/kevinjqiu/chordio/chord/node"
 	"go.opentelemetry.io/otel/api/core"
 )
 
-func Node(key string, node node.NodeRef) core.KeyValue {
+func Node(key string, node chord.NodeRef) core.KeyValue {
 	nodeStr := "<nil>"
 	if node != nil {
 		nodeStr = node.String()

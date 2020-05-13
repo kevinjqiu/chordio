@@ -16,15 +16,15 @@ type mockFactory struct {
 }
 
 // newLocalNode provides a mock function with given fields: id, bind, m
-func (_m *mockFactory) newLocalNode(id chord.ID, bind string, m chord.Rank) (LocalNode, error) {
+func (_m *mockFactory) newLocalNode(id chord.ID, bind string, m chord.Rank) (chord.LocalNode, error) {
 	ret := _m.Called(id, bind, m)
 
-	var r0 LocalNode
-	if rf, ok := ret.Get(0).(func(chord.ID, string, chord.Rank) LocalNode); ok {
+	var r0 chord.LocalNode
+	if rf, ok := ret.Get(0).(func(chord.ID, string, chord.Rank) chord.LocalNode); ok {
 		r0 = rf(id, bind, m)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(LocalNode)
+			r0 = ret.Get(0).(chord.LocalNode)
 		}
 	}
 
@@ -39,15 +39,15 @@ func (_m *mockFactory) newLocalNode(id chord.ID, bind string, m chord.Rank) (Loc
 }
 
 // newRemoteNode provides a mock function with given fields: ctx, bind
-func (_m *mockFactory) newRemoteNode(ctx context.Context, bind string) (RemoteNode, error) {
+func (_m *mockFactory) newRemoteNode(ctx context.Context, bind string) (chord.RemoteNode, error) {
 	ret := _m.Called(ctx, bind)
 
-	var r0 RemoteNode
-	if rf, ok := ret.Get(0).(func(context.Context, string) RemoteNode); ok {
+	var r0 chord.RemoteNode
+	if rf, ok := ret.Get(0).(func(context.Context, string) chord.RemoteNode); ok {
 		r0 = rf(ctx, bind)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(RemoteNode)
+			r0 = ret.Get(0).(chord.RemoteNode)
 		}
 	}
 

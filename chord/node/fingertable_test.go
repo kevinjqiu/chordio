@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-type extraSetupStep func(t *testing.T, node LocalNode, ft *FingerTable)
+type extraSetupStep func(t *testing.T, node chord.LocalNode, ft *fingerTable)
 
-func setup(t *testing.T, extraSteps ...extraSetupStep) (LocalNode, *FingerTable) {
+func setup(t *testing.T, extraSteps ...extraSetupStep) (chord.LocalNode, *fingerTable) {
 	m := chord.Rank(5)
 	node, _ := NewLocal(15, "localhost:1234", m)
 	assert.Equal(t, chord.ID(15), node.GetID())
@@ -34,7 +34,7 @@ func TestNewFingerTable(t *testing.T) {
 
 func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 	t.Run("the replaced node is the owner node", func(t *testing.T) {
-		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
+		_, ft := setup(t, func(t *testing.T, node chord.LocalNode, ft *fingerTable) {
 			replacingNode := &nodeRef{
 				ID:   35,
 				Bind: "n35",
@@ -52,7 +52,7 @@ func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 	})
 
 	t.Run("the replaced node is no longer in the finger table", func(t *testing.T) {
-		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
+		_, ft := setup(t, func(t *testing.T, node chord.LocalNode, ft *fingerTable) {
 			nodeToBeReplaced := &nodeRef{
 				ID:   35,
 				Bind: "n35",
@@ -78,7 +78,7 @@ func TestFingerTable_ReplaceNodeAt(t *testing.T) {
 
 func TestFingerTable_SetEntryAt(t *testing.T) {
 	t.Run("the replaced node is the owner node", func(t *testing.T) {
-		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
+		_, ft := setup(t, func(t *testing.T, node chord.LocalNode, ft *fingerTable) {
 			replacingNode := &nodeRef{
 				ID:   35,
 				Bind: "n35",
@@ -97,7 +97,7 @@ func TestFingerTable_SetEntryAt(t *testing.T) {
 	})
 
 	t.Run("the replaced node is no longer in the finger table", func(t *testing.T) {
-		_, ft := setup(t, func(t *testing.T, node LocalNode, ft *FingerTable) {
+		_, ft := setup(t, func(t *testing.T, node chord.LocalNode, ft *fingerTable) {
 			nodeToBeReplaced := &nodeRef{
 				ID:   35,
 				Bind: "n35",

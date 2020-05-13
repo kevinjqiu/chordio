@@ -13,7 +13,7 @@ func newMockFactory() (*mockFactory, *mock.Mock) {
 	return &mf, &mf.Mock
 }
 
-func newMockNode(id chord.ID, bind string, builders ...mockBuilder) (Node, *mock.Mock) {
+func newMockNode(id chord.ID, bind string, builders ...mockBuilder) (chord.Node, *mock.Mock) {
 	mn := MockNode{}
 	mn.Mock.On("GetID").Return(id)
 	mn.Mock.On("GetBind").Return(bind)

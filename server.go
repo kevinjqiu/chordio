@@ -30,9 +30,8 @@ func (p *PBNodeRef) String() string {
 }
 
 type Server struct {
-	localNode     node.LocalNode
+	localNode     chord.LocalNode
 	grpcServer    *grpc.Server
-	clientManager node.ClientManager
 }
 
 func (s *Server) X_Stabilize(ctx context.Context, _ *pb.StabilizeRequest) (*pb.StabilizeResponse, error) {
@@ -188,7 +187,6 @@ func NewServer(config Config) (*Server, error) {
 	s := Server{
 		localNode:     localNode,
 		grpcServer:    grpcServer,
-		clientManager: node.NewClientManager(),
 	}
 	return &s, nil
 }

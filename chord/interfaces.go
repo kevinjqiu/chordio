@@ -1,16 +1,16 @@
-package node
+package chord
 
 import (
 	"context"
 	"fmt"
-	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/pb"
+	"io"
 )
 
 type (
 	NodeRef interface {
 		fmt.Stringer
-		GetID() chord.ID
+		GetID() ID
 		GetBind() string
 	}
 
@@ -21,14 +21,12 @@ type (
 		GetSuccNode() NodeRef
 		AsProtobufNode() *pb.Node
 
-		setNodeFactory(f factory)
-
 		// FindPredecessor for the given ID
-		FindPredecessor(ctx context.Context, id chord.ID) (Node, error)
+		FindPredecessor(ctx context.Context, id ID) (Node, error)
 		// FindSuccessor for the given ID
-		FindSuccessor(ctx context.Context, id chord.ID) (Node, error)
+		FindSuccessor(ctx context.Context, id ID) (Node, error)
 		// find the closest finger entry that's preceding the ID
-		ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error)
+		ClosestPrecedingFinger(ctx context.Context, id ID) (Node, error)
 
 		SetPredNode(ctx context.Context, n NodeRef) error
 		SetSuccNode(ctx context.Context, n NodeRef) error
@@ -39,9 +37,9 @@ type (
 
 	LocalNode interface {
 		Node
-		GetFingerTable() *FingerTable
+		GetFingerTable() FingerTable
 		Join(ctx context.Context, introducerNode RemoteNode) error
-		GetRank() chord.Rank
+		GetRank() Rank
 		// For stabilization
 		Stabilize(ctx context.Context) error
 		FixFingers(ctx context.Context) error
@@ -49,5 +47,26 @@ type (
 
 	RemoteNode interface {
 		Node
+	}
+
+	FingerTable interface {
+		fmt.Stringer
+		PrettyPrint(writer io.Writer)
+		ReplaceNodeWithAnotherEntry(i, j int)
+		SetNodeAtEntry(i int, n NodeRef)
+		GetEntry(i int) FingerTableEntry
+		GetNodeByID(nodeID ID) (NodeRef, bool)
+		HasNode(id ID) bool
+		AsProtobufFT() *pb.FingerTable
+	}
+
+	FingerTableEntry interface {
+		fmt.Stringer
+		GetStart() ID
+		SetStart(start ID)
+		GetInterval() Interval
+		SetInterval(iv Interval)
+		GetNode() NodeRef
+		SetNode(n NodeRef)
 	}
 )
