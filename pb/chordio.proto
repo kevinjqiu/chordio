@@ -103,9 +103,6 @@ service Chord {
     rpc ClosestPrecedingFinger (ClosestPrecedingFingerRequest) returns (ClosestPrecedingFingerResponse) {
     }
 
-    rpc UpdateFingerTable (UpdateFingerTableRequest) returns (UpdateFingerTableResponse) {
-    }
-
     rpc SetPredecessorNode (SetPredecessorNodeRequest) returns (SetPredecessorNodeResponse) {
     }
 

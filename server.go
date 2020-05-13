@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
+	"math/rand"
 	"net"
 	"time"
 )
@@ -112,20 +113,6 @@ func (s *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb
 	return &pb.JoinRingResponse{}, nil
 }
 
-func (s *Server) UpdateFingerTable(ctx context.Context, request *pb.UpdateFingerTableRequest) (*pb.UpdateFingerTableResponse, error) {
-	logger := logrus.WithField("method", "Server.UpdateFingerTable")
-	logger.Debugf("node=%v, i=%d", request.Node, request.I)
-	node, err := node.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, s.localNode.GetRank())
-	if err != nil {
-		return nil, err
-	}
-	if err := s.localNode.UpdateFingerTableEntry(ctx, node, int(request.I)); err != nil {
-		return nil, err
-	}
-
-	return &pb.UpdateFingerTableResponse{}, nil
-}
-
 func (s *Server) Notify(ctx context.Context, request *pb.NotifyRequest) (*pb.NotifyResponse, error) {
 	logger := logrus.WithField("method", "Server.Notify")
 	logger.Debugf("node=%v", request.Node)
@@ -149,8 +136,9 @@ func (s *Server) Serve() error {
 	logrus.Info("serving chord grpc server at: ", s.localNode.GetBind())
 	logrus.Infof("nodeID: %d", s.localNode.GetID())
 
-	tickerStabilize := time.Tick(3 * time.Second)
-	tickerFixFingers := time.Tick(5 * time.Second)
+	jitter := rand.Int() % 3000
+	tickerStabilize := time.Tick(3 * time.Second + (time.Duration(jitter) * time.Millisecond))
+	tickerFixFingers := time.Tick(5 * time.Second + (time.Duration(jitter) * time.Millisecond))
 
 	go func() {
 		for {

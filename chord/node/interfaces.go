@@ -29,8 +29,6 @@ type (
 		FindSuccessor(ctx context.Context, id chord.ID) (Node, error)
 		// find the closest finger entry that's preceding the ID
 		ClosestPrecedingFinger(ctx context.Context, id chord.ID) (Node, error)
-		// update the finger table entry at index i to node s
-		UpdateFingerTableEntry(ctx context.Context, s Node, i int) error
 
 		SetPredNode(ctx context.Context, n NodeRef) error
 		SetSuccNode(ctx context.Context, n NodeRef) error

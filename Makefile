@@ -38,7 +38,7 @@ cover:
 	go tool cover -html=coverage.out
 
 run-local:
-	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server -b 127.0.0.1:$(port) -l debug -m 5
+	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server -b 127.0.0.1:$(port) -m 5
 
 vendor:
 	# needed temporarily before https://github.com/open-telemetry/opentelemetry-go/issues/682 is fixed
@@ -50,7 +50,7 @@ jaeger:
 	docker-compose run --service-ports jaeger
 
 n1:
-	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server --id 0 -b 127.0.0.1:1234 -l debug -m 3
+	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server --id 0 -b 127.0.0.1:1234  -m 3
 
 n1-status:
 	CHORDIO_URL=127.0.0.1:1234 dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio client status
@@ -60,13 +60,13 @@ n1-join-n2:
 	CHORDIO_URL=127.0.0.1:1234 dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio client join -i 127.0.0.1:2345
 
 n2:
-	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server --id 1 -b 127.0.0.1:2345 -l debug -m 3
+	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server --id 1 -b 127.0.0.1:2345 -m 3
 
 n2-status:
 	CHORDIO_URL=127.0.0.1:2345 dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio client status
 
 n3:
-	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server --id 3 -b 127.0.0.1:3456 -l debug -m 3
+	dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio server --id 3 -b 127.0.0.1:3456 -m 3
 
 n3-status:
 	CHORDIO_URL=127.0.0.1:3456 dist/chordio_$$(uname | tr '[:upper:]' '[:lower:]')_amd64/chordio client status

@@ -206,26 +206,6 @@ func (rn *remoteNode) AsProtobufNode() *pb.Node {
 	return pbn
 }
 
-func (rn *remoteNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) error {
-	ctx, span := rn.Start(ctx, "remoteNode.UpdateFingerTableEntry",
-		trace.WithAttributes(core.Key("s").String(s.String())))
-	defer span.End()
-
-	req := pb.UpdateFingerTableRequest{
-		Node: s.AsProtobufNode(),
-		I:    int64(i),
-	}
-
-	client, close, err := rn.getClient()
-	if err != nil {
-		return err
-	}
-	defer close()
-
-	_, err = client.UpdateFingerTable(ctx, &req)
-	return err
-}
-
 func (rn *remoteNode) Notify(ctx context.Context, node Node) error {
 	ctx, span := rn.Start(ctx, "remoteNode.Notify", trace.WithAttributes(core.Key("node").String(node.String())))
 	defer span.End()

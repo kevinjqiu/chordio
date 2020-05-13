@@ -3,7 +3,6 @@ package node
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"sync"
 
 	"github.com/kevinjqiu/chordio/chord"
@@ -205,51 +204,6 @@ func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
 	return nil
 }
 
-func (n *localNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) error {
-	n.mu.Lock()
-	defer n.mu.Unlock()
-
-	ctx, span := n.Start(ctx, "LocalNode.updateFingerTableEntry",
-		trace.WithAttributes(core.Key("node").String(s.String()), core.Key("i").Int(i)),
-	)
-	defer span.End()
-
-	// if s is the ith finger of n, then update n's finger table with s
-	interval := chord.NewInterval(n.m, n.id, n.ft.GetEntry(i).Node.GetID())
-	span.AddEvent(ctx, "interval.Has(s.GetID())",
-		core.Key("interval").String(interval.String()),
-		core.Key("id").Int(s.GetID().AsInt()),
-	)
-	if interval.Has(s.GetID()) {
-		span.AddEvent(ctx, "s.GetID() in interval")
-		if s.GetID() != n.id {
-			span.AddEvent(ctx, fmt.Sprintf("s is not the local node, update FT[%d]", i))
-			span.AddEvent(ctx, fmt.Sprintf("FTE before update: %s", n.ft.GetEntry(i).String()))
-			n.mu.Lock()
-			n.ft.SetNodeAtEntry(i, s)
-			n.mu.Unlock()
-			span.AddEvent(ctx, fmt.Sprintf("FTE after update: %s", n.ft.GetEntry(i).String()))
-		}
-
-		span.AddEvent(ctx, fmt.Sprintf("update the predecessor node's FTE[%d]", i))
-		var (
-			predNode Node
-			err      error
-		)
-		if predNode, err = n.factory.newRemoteNode(ctx, n.GetPredNode().GetBind()); err != nil {
-			span.RecordError(ctx, err)
-			return err
-		}
-
-		span.AddEvent(ctx, fmt.Sprintf("predecessor node: %s", predNode.String()))
-		if err := predNode.UpdateFingerTableEntry(ctx, s, i); err != nil {
-			span.RecordError(ctx, err)
-			return err
-		}
-	}
-	return nil
-}
-
 func (n *localNode) Notify(ctx context.Context, n_ Node) error {
 	iv := chord.NewInterval(n.m, n.GetPredNode().GetID(), n.GetID(), chord.WithLeftClosed, chord.WithRightOpen)
 	if n.GetPredNode() == nil || iv.Has(n_.GetID()) {
@@ -305,24 +259,24 @@ func (n *localNode) FixFingers(ctx context.Context) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
-	// i is the entry to fix
-	i := rand.Int() % n.m.AsInt()
-
-	succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).Start)
-	if err != nil {
-		return err
-	}
-
-	n.GetFingerTable().SetNodeAtEntry(i, succNode)
-
-	//for i := 0; i < n.m.AsInt(); i++ {
-	//	succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).Start)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	logrus.Infof("i=%d, fte[%d]=%s, succ=%s", i, i, n.GetFingerTable().GetEntry(i).String(), succNode.String())
-	//	n.GetFingerTable().SetNodeAtEntry(i, succNode)
+	//// i is the entry to fix
+	//i := rand.Int() % n.m.AsInt()
+	//
+	//succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).Start)
+	//if err != nil {
+	//	return err
 	//}
+	//
+	//n.GetFingerTable().SetNodeAtEntry(i, succNode)
+
+	for i := 0; i < n.m.AsInt(); i++ {
+		succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).Start)
+		if err != nil {
+			return err
+		}
+		logrus.Infof("i=%d, fte[%d]=%s, succ=%s", i, i, n.GetFingerTable().GetEntry(i).String(), succNode.String())
+		n.GetFingerTable().SetNodeAtEntry(i, succNode)
+	}
 	n.GetFingerTable().PrettyPrint(nil)
 	return nil
 }
