@@ -48,25 +48,26 @@ func (tn testNode) stop() {
 	tn.s.GracefulStop()
 }
 
-func (tn testNode) status() {
+func (tn testNode) status() *pb.GetNodeInfoResponse {
 	resp, err := tn.c.GetNodeInfo(context.Background(), &pb.GetNodeInfoRequest{
 		IncludeFingerTable: true,
 	})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(ftCSV(resp.Ft))
+	return resp
 }
 
 func (tn testNode) assertFingerTable(t *testing.T, expectedFTEs []string) {
-	resp, err := tn.c.GetNodeInfo(context.Background(), &pb.GetNodeInfoRequest{
-		IncludeFingerTable: true,
-	})
-	if err != nil {
-		panic(err)
-	}
+	resp := tn.status()
 	actualFTEs := strings.Split(strings.TrimSpace(ftCSV(resp.Ft)), "\n")
 	assert.Equal(t, expectedFTEs, actualFTEs)
+}
+
+func (tn testNode) assertNeighbours(t *testing.T, predID, succID uint64) {
+	resp := tn.status()
+	assert.Equal(t, predID, resp.Node.GetPred().GetId())
+	assert.Equal(t, succID, resp.Node.GetSucc().GetId())
 }
 
 func (tn testNode) join(other testNode) {
@@ -134,12 +135,14 @@ func TestServer(t *testing.T) {
 	defer n1.stop()
 
 	t.Run("initially the finger tables contain their owner nodes", func(t *testing.T) {
+		n0.assertNeighbours(t, 0, 0)
 		n0.assertFingerTable(t, []string{
 			"1,2,0",
 			"2,4,0",
 			"4,0,0",
 		})
 
+		n1.assertNeighbours(t, 1, 1)
 		n1.assertFingerTable(t, []string{
 			"2,3,1",
 			"3,5,1",
@@ -155,11 +158,14 @@ func TestServer(t *testing.T) {
 		n1.stabilize()
 		n1.fixFingers()
 
+		n0.assertNeighbours(t, 1, 1)
 		n0.assertFingerTable(t, []string{
 			"1,2,1",
 			"2,4,1",
 			"4,0,1",
 		})
+
+		n1.assertNeighbours(t, 0, 0)
 		n1.assertFingerTable(t, []string{
 			"2,3,0",
 			"3,5,0",
