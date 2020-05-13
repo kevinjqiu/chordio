@@ -91,9 +91,9 @@ message StabilizeRequest {}
 
 message StabilizeResponse {}
 
-message FixFingerRequest {}
+message FixFingersRequest {}
 
-message FixFingerResponse {}
+message FixFingersResponse {}
 
 service Chord {
     rpc GetNodeInfo (GetNodeInfoRequest) returns (GetNodeInfoResponse) {
@@ -123,6 +123,6 @@ service Chord {
     rpc __Stabilize(StabilizeRequest) returns (StabilizeResponse) {
     }
 
-    rpc __FixFinger(FixFingerRequest) returns (FixFingerResponse) {
+    rpc __FixFingers(FixFingersRequest) returns (FixFingersResponse) {
     }
 }

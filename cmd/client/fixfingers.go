@@ -11,6 +11,7 @@ import (
 func newFixFingersCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "fixfingers",
+		Short:        "Run fixfingers (debugging)",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			defer flushFunc()
@@ -27,4 +28,3 @@ func newFixFingersCommand() *cobra.Command {
 	}
 	return cmd
 }
-

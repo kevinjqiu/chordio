@@ -11,6 +11,7 @@ import (
 func newStabilizeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "stabilize",
+		Short:        "Run stabilize (debug)",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			defer flushFunc()
@@ -27,4 +28,3 @@ func newStabilizeCommand() *cobra.Command {
 	}
 	return cmd
 }
-

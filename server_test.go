@@ -39,8 +39,9 @@ func TestServer(t *testing.T) {
 
 	t.Run("after n0 and n1 join to each other, they have each other in their finger tables", func(t *testing.T) {
 		testCases := [][]string{
-			{"0.stabilize", "0.fixFingers", "1.stabilize", "1.fixFingers"},
+			//{"0.stabilize", "0.fixFingers", "1.stabilize", "1.fixFingers"},
 			{"0.stabilize", "1.stabilize", "0.fixFingers", "1.fixFingers"},
+			//{"1.stabilize", "1.fixFingers", "0.stabilize", "0.fixFingers"},
 		}
 
 		for _, tc := range testCases {

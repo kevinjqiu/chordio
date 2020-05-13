@@ -40,9 +40,9 @@ func (s *Server) X_Stabilize(ctx context.Context, _ *pb.StabilizeRequest) (*pb.S
 	return &pb.StabilizeResponse{}, err
 }
 
-func (s *Server) X_FixFinger(ctx context.Context, _ *pb.FixFingerRequest) (*pb.FixFingerResponse, error) {
+func (s *Server) X_FixFingers(ctx context.Context, _ *pb.FixFingersRequest) (*pb.FixFingersResponse, error) {
 	err := s.localNode.FixFingers(ctx)
-	return &pb.FixFingerResponse{}, err
+	return &pb.FixFingersResponse{}, err
 }
 
 func (s *Server) SetPredecessorNode(ctx context.Context, req *pb.SetPredecessorNodeRequest) (*pb.SetPredecessorNodeResponse, error) {
