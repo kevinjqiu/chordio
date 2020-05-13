@@ -32,8 +32,8 @@ type (
 		// update the finger table entry at index i to node s
 		UpdateFingerTableEntry(ctx context.Context, s Node, i int) error
 
-		SetPredNode(ctx context.Context, n NodeRef)
-		SetSuccNode(ctx context.Context, n NodeRef)
+		SetPredNode(ctx context.Context, n NodeRef) error
+		SetSuccNode(ctx context.Context, n NodeRef) error
 
 		// For stabilization
 		Notify(ctx context.Context, n_ Node) error

@@ -31,8 +31,9 @@ func (p *PBNodeRef) String() string {
 }
 
 type Server struct {
-	localNode  node.LocalNode
-	grpcServer *grpc.Server
+	localNode     node.LocalNode
+	grpcServer    *grpc.Server
+	clientManager node.ClientManager
 }
 
 func (s *Server) SetPredecessorNode(ctx context.Context, req *pb.SetPredecessorNodeRequest) (*pb.SetPredecessorNodeResponse, error) {
@@ -148,8 +149,8 @@ func (s *Server) Serve() error {
 	logrus.Info("serving chord grpc server at: ", s.localNode.GetBind())
 	logrus.Infof("nodeID: %d", s.localNode.GetID())
 
-	tickerStabilize := time.Tick(10 * time.Second)
-	tickerFixFingers := time.Tick(30 * time.Second)
+	tickerStabilize := time.Tick(3 * time.Second)
+	tickerFixFingers := time.Tick(5 * time.Second)
 
 	go func() {
 		for {
@@ -189,8 +190,9 @@ func NewServer(config Config) (*Server, error) {
 	)
 
 	s := Server{
-		localNode:  localNode,
-		grpcServer: grpcServer,
+		localNode:     localNode,
+		grpcServer:    grpcServer,
+		clientManager: node.NewClientManager(),
 	}
 	return &s, nil
 }

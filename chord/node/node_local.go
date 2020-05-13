@@ -3,6 +3,9 @@ package node
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"sync"
+
 	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/pkg/errors"
@@ -10,8 +13,6 @@ import (
 	"go.opentelemetry.io/otel/api/core"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
-	"math/rand"
-	"sync"
 )
 
 type localNode struct {
@@ -51,16 +52,18 @@ func (n *localNode) String() string {
 	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
 }
 
-func (n *localNode) SetPredNode(_ context.Context, pn NodeRef) {
+func (n *localNode) SetPredNode(_ context.Context, pn NodeRef) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	n.predNode = pn
+	return nil
 }
 
-func (n *localNode) SetSuccNode(_ context.Context, sn NodeRef) {
+func (n *localNode) SetSuccNode(_ context.Context, sn NodeRef) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	n.ft.SetNodeAtEntry(0, sn)
+	return nil
 }
 
 func (n *localNode) GetID() chord.ID {
@@ -187,13 +190,18 @@ func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
 
 	span.AddEvent(ctx, fmt.Sprintf("before updating FT: %s", n.ft.String()))
 
-	n.SetPredNode(ctx, nil)
+	if err := n.SetPredNode(ctx, nil); err != nil {
+		return err
+	}
 	succNode, err := introducerNode.FindSuccessor(ctx, n.GetID())
 	if err != nil {
 		span.RecordError(ctx, err)
 		return errors.Wrap(err, "unable to join")
 	}
-	n.SetSuccNode(ctx, succNode)
+
+	if err := n.SetSuccNode(ctx, succNode); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -243,11 +251,13 @@ func (n *localNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) e
 }
 
 func (n *localNode) Notify(ctx context.Context, n_ Node) error {
-	int := chord.NewInterval(n.m, n.GetPredNode().GetID(), n.GetID(), chord.WithLeftClosed, chord.WithRightOpen)
-	if n.GetPredNode() == nil || int.Has(n_.GetID()) {
-		n.SetPredNode(ctx, n_)
+	iv := chord.NewInterval(n.m, n.GetPredNode().GetID(), n.GetID(), chord.WithLeftClosed, chord.WithRightOpen)
+	if n.GetPredNode() == nil || iv.Has(n_.GetID()) {
+		if err := n.SetPredNode(ctx, n_); err != nil {
+			return err
+		}
 	}
-	logrus.Info("After notify(): %s", n.String())
+	logrus.Info("After notify(): ", n.String())
 	return nil
 }
 
@@ -257,14 +267,24 @@ func (n *localNode) setNodeFactory(f factory) {
 
 func (n *localNode) Stabilize(ctx context.Context) error {
 	// TODO: do not use remote node if the node is local
-	x, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
+	succ, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
 	if err != nil {
 		return err
 	}
-
-	int := chord.NewInterval(n.m, n.GetID(), n.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightOpen)
-	if int.Has(x.GetID()) {
-		n.SetSuccNode(ctx, x)
+	x := succ.GetPredNode()
+	iv := chord.NewInterval(n.m, n.GetID(), n.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightOpen)
+	logrus.Infof("succ: %s, x: %s, iv: %s", succ.String(), x.String(), iv.String())
+	if iv.Has(x.GetID()) {
+		if err := n.SetSuccNode(ctx, x); err != nil {
+			return err
+		}
+		xRemote, err := n.factory.newRemoteNode(ctx, x.GetBind())
+		if err != nil {
+			return err
+		}
+		if err := xRemote.SetPredNode(ctx, n); err != nil {
+			return err
+		}
 	}
 
 	succNode, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
@@ -272,7 +292,7 @@ func (n *localNode) Stabilize(ctx context.Context) error {
 		return err
 	}
 
-	if err := succNode.Notify(ctx, succNode); err != nil {
+	if err := succNode.Notify(ctx, n); err != nil {
 		return err
 	}
 	return nil
@@ -291,6 +311,15 @@ func (n *localNode) FixFingers(ctx context.Context) error {
 	}
 
 	n.GetFingerTable().SetNodeAtEntry(i, succNode)
+
+	//for i := 0; i < n.m.AsInt(); i++ {
+	//	succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).Start)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	logrus.Infof("i=%d, fte[%d]=%s, succ=%s", i, i, n.GetFingerTable().GetEntry(i).String(), succNode.String())
+	//	n.GetFingerTable().SetNodeAtEntry(i, succNode)
+	//}
 	n.GetFingerTable().PrettyPrint(nil)
 	return nil
 }
