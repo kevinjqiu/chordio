@@ -103,10 +103,6 @@ func (tn testNode) stabilize() {
 	_, _ = tn.c.X_Stabilize(context.Background(), &pb.StabilizeRequest{})
 }
 
-//func (tn testNode) fixFingers() {
-//	_, _ = tn.c.X_FixFingers(context.Background(), &pb.FixFingersRequest{})
-//}
-
 func newNode(id int, m int) testNode {
 	port, err := freeport.GetFreePort()
 	if err != nil {

@@ -41,6 +41,8 @@ func TestServer(t *testing.T) {
 		testCases := [][]string{
 			{"0.stabilize", "1.stabilize"},
 			{"1.stabilize", "0.stabilize", "1.stabilize"},
+			{"0.stabilize", "0.stabilize", "1.stabilize"},
+			{"1.stabilize", "1.stabilize", "0.stabilize", "1.stabilize"},
 		}
 
 		for _, tc := range testCases {
