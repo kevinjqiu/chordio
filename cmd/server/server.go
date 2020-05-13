@@ -12,13 +12,17 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type runFlags struct {
-	id       string
-	m        uint32
-	bind     string
-	loglevel string
+	id                    string
+	m                     uint32
+	bind                  string
+	loglevel              string
+	stabilizationDisabled bool
+	stabilizationPeriod   time.Duration
+	stabilizationJitter   time.Duration
 }
 
 func mustBind(bind string) string {
@@ -77,6 +81,11 @@ func NewServerCommand() *cobra.Command {
 				ID:   id,
 				M:    chord.Rank(flags.m),
 				Bind: flags.bind,
+				Stabilization: chordio.StabilizationConfig{
+					Disabled: flags.stabilizationDisabled,
+					Period:   flags.stabilizationPeriod,
+					Jitter:   flags.stabilizationJitter,
+				},
 			}
 
 			server, err := chordio.NewServer(config)
@@ -94,5 +103,8 @@ func NewServerCommand() *cobra.Command {
 	cmd.Flags().Uint32VarP(&flags.m, "rank", "m", 0, "the rank of the ring")
 	cmd.Flags().StringVarP(&flags.bind, "bind", "b", "localhost:2000", "bind address")
 	cmd.Flags().StringVarP(&flags.loglevel, "loglevel", "l", "info", "log level")
+	cmd.Flags().BoolVarP(&flags.stabilizationDisabled, "stabilization-disabled", "d", false, "disable stabilization for debugging")
+	cmd.Flags().DurationVarP(&flags.stabilizationPeriod, "stabilization-period", "p", 10*time.Second, "set the stabilization run interval")
+	cmd.Flags().DurationVarP(&flags.stabilizationJitter, "stabilization-jitter", "j", 5*time.Second, "set the stabilization run jitter to avoid all nodes run stabilization at the same time")
 	return cmd
 }

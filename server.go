@@ -12,7 +12,9 @@ import (
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
+	"math/rand"
 	"net"
+	"time"
 )
 
 type PBNodeRef pb.Node
@@ -30,8 +32,9 @@ func (p *PBNodeRef) String() string {
 }
 
 type Server struct {
-	localNode     chord.LocalNode
-	grpcServer    *grpc.Server
+	localNode           chord.LocalNode
+	grpcServer          *grpc.Server
+	stabilizationConfig StabilizationConfig
 }
 
 func (s *Server) X_Stabilize(ctx context.Context, _ *pb.StabilizeRequest) (*pb.StabilizeResponse, error) {
@@ -134,6 +137,18 @@ func (s *Server) Notify(ctx context.Context, request *pb.NotifyRequest) (*pb.Not
 	return &pb.NotifyResponse{}, nil
 }
 
+func (s *Server) runStabilizer(ticker *time.Ticker) {
+	for {
+		select {
+		case <-ticker.C:
+			logrus.Info("Run Stabilize()")
+			if err := s.localNode.Stabilize(context.Background()); err != nil {
+				logrus.Error("Stabilize failed", err)
+			}
+		}
+	}
+}
+
 func (s *Server) Serve() error {
 	lis, err := net.Listen("tcp", s.localNode.GetBind())
 	if err != nil {
@@ -144,26 +159,15 @@ func (s *Server) Serve() error {
 	logrus.Info("serving chord grpc server at: ", s.localNode.GetBind())
 	logrus.Infof("nodeID: %d", s.localNode.GetID())
 
-	//jitter := rand.Int() % 3000
-	//tickerStabilize := time.Tick(3 * time.Second + (time.Duration(jitter) * time.Millisecond))
-	//tickerFixFingers := time.Tick(5 * time.Second + (time.Duration(jitter) * time.Millisecond))
-	//
-	//go func() {
-	//	for {
-	//		select {
-	//		case <-tickerStabilize:
-	//			logrus.Info("Run Stabilize()")
-	//			if err := s.localNode.Stabilize(context.Background()); err != nil {
-	//				logrus.Error("Stabilize failed", err)
-	//			}
-	//		case <-tickerFixFingers:
-	//			logrus.Info("Run FixFingers()")
-	//			if err := s.localNode.FixFingers(context.Background()); err != nil {
-	//				logrus.Error("FixFinger failed", err)
-	//			}
-	//		}
-	//	}
-	//}()
+	if !s.stabilizationConfig.Disabled {
+		rand.Seed(time.Now().UnixNano())
+		jitter := time.Duration(rand.Int63() % s.stabilizationConfig.Jitter.Nanoseconds())
+		runInterval := jitter + s.stabilizationConfig.Period
+		logrus.Infof("jitter: %s, interval: %s", jitter, runInterval)
+		tickerStabilize := time.NewTicker(runInterval)
+		go s.runStabilizer(tickerStabilize)
+	}
+
 	return s.grpcServer.Serve(lis)
 }
 
@@ -186,8 +190,9 @@ func NewServer(config Config) (*Server, error) {
 	)
 
 	s := Server{
-		localNode:     localNode,
-		grpcServer:    grpcServer,
+		localNode:  localNode,
+		grpcServer: grpcServer,
+		stabilizationConfig: config.Stabilization,
 	}
 	return &s, nil
 }
