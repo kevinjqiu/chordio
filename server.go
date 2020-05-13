@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/plugin/grpctrace"
 	"google.golang.org/grpc"
 	"net"
+	"time"
 )
 
 type PBNodeRef pb.Node
@@ -124,6 +125,19 @@ func (s *Server) UpdateFingerTable(ctx context.Context, request *pb.UpdateFinger
 	return &pb.UpdateFingerTableResponse{}, nil
 }
 
+func (s *Server) Notify(ctx context.Context, request *pb.NotifyRequest) (*pb.NotifyResponse, error) {
+	logger := logrus.WithField("method", "Server.Notify")
+	logger.Debugf("node=%v", request.Node)
+	node, err := node.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, s.localNode.GetRank())
+	if err != nil {
+		return nil, err
+	}
+	if err := s.localNode.Notify(ctx, node); err != nil {
+		return nil, err
+	}
+	return &pb.NotifyResponse{}, nil
+}
+
 func (s *Server) Serve() error {
 	lis, err := net.Listen("tcp", s.localNode.GetBind())
 	if err != nil {
@@ -133,6 +147,26 @@ func (s *Server) Serve() error {
 	pb.RegisterChordServer(s.grpcServer, s)
 	logrus.Info("serving chord grpc server at: ", s.localNode.GetBind())
 	logrus.Infof("nodeID: %d", s.localNode.GetID())
+
+	tickerStabilize := time.Tick(10 * time.Second)
+	tickerFixFingers := time.Tick(30 * time.Second)
+
+	go func() {
+		for {
+			select {
+			case <-tickerStabilize:
+				logrus.Info("Run Stabilize()")
+				if err := s.localNode.Stabilize(context.Background()); err != nil {
+					logrus.Error("Stabilize failed", err)
+				}
+			case <-tickerFixFingers:
+				logrus.Info("Run FixFingers()")
+				if err := s.localNode.FixFingers(context.Background()); err != nil {
+					logrus.Error("FixFinger failed", err)
+				}
+			}
+		}
+	}()
 	return s.grpcServer.Serve(lis)
 }
 

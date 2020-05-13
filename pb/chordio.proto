@@ -80,6 +80,13 @@ message SetSuccessorNodeRequest {
 message SetSuccessorNodeResponse {
 }
 
+message NotifyRequest {
+    Node node = 1;
+}
+
+message NotifyResponse {
+}
+
 service Chord {
     rpc GetNodeInfo (GetNodeInfoRequest) returns (GetNodeInfoResponse) {
     }
@@ -100,10 +107,11 @@ service Chord {
     }
 
     rpc SetPredecessorNode (SetPredecessorNodeRequest) returns (SetPredecessorNodeResponse) {
-
     }
 
     rpc SetSuccessorNode (SetSuccessorNodeRequest) returns (SetSuccessorNodeResponse) {
+    }
 
+    rpc Notify (NotifyRequest) returns (NotifyResponse) {
     }
 }

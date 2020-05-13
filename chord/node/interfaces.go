@@ -34,6 +34,9 @@ type (
 
 		SetPredNode(ctx context.Context, n NodeRef)
 		SetSuccNode(ctx context.Context, n NodeRef)
+
+		// For stabilization
+		Notify(ctx context.Context, n_ Node) error
 	}
 
 	LocalNode interface {
@@ -41,6 +44,9 @@ type (
 		GetFingerTable() *FingerTable
 		Join(ctx context.Context, introducerNode RemoteNode) error
 		GetRank() chord.Rank
+		// For stabilization
+		Stabilize(ctx context.Context) error
+		FixFingers(ctx context.Context) error
 	}
 
 	RemoteNode interface {
