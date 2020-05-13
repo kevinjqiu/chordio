@@ -31,8 +31,8 @@ func (p *PBNodeRef) String() string {
 }
 
 type Server struct {
-	localNode  node.LocalNode
-	grpcServer *grpc.Server
+	localNode     node.LocalNode
+	grpcServer    *grpc.Server
 	clientManager node.ClientManager
 }
 
@@ -190,8 +190,9 @@ func NewServer(config Config) (*Server, error) {
 	)
 
 	s := Server{
-		localNode:  localNode,
-		grpcServer: grpcServer,
+		localNode:     localNode,
+		grpcServer:    grpcServer,
+		clientManager: node.NewClientManager(),
 	}
 	return &s, nil
 }

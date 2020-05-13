@@ -3,6 +3,9 @@ package node
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"sync"
+
 	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/pkg/errors"
@@ -10,8 +13,6 @@ import (
 	"go.opentelemetry.io/otel/api/core"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
-	"math/rand"
-	"sync"
 )
 
 type localNode struct {
@@ -51,16 +52,18 @@ func (n *localNode) String() string {
 	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
 }
 
-func (n *localNode) SetPredNode(_ context.Context, pn NodeRef) {
+func (n *localNode) SetPredNode(_ context.Context, pn NodeRef) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	n.predNode = pn
+	return nil
 }
 
-func (n *localNode) SetSuccNode(_ context.Context, sn NodeRef) {
+func (n *localNode) SetSuccNode(_ context.Context, sn NodeRef) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	n.ft.SetNodeAtEntry(0, sn)
+	return nil
 }
 
 func (n *localNode) GetID() chord.ID {
@@ -187,13 +190,18 @@ func (n *localNode) Join(ctx context.Context, introducerNode RemoteNode) error {
 
 	span.AddEvent(ctx, fmt.Sprintf("before updating FT: %s", n.ft.String()))
 
-	n.SetPredNode(ctx, nil)
+	if err := n.SetPredNode(ctx, nil); err != nil {
+		return err
+	}
 	succNode, err := introducerNode.FindSuccessor(ctx, n.GetID())
 	if err != nil {
 		span.RecordError(ctx, err)
 		return errors.Wrap(err, "unable to join")
 	}
-	n.SetSuccNode(ctx, succNode)
+
+	if err := n.SetSuccNode(ctx, succNode); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -243,9 +251,11 @@ func (n *localNode) UpdateFingerTableEntry(ctx context.Context, s Node, i int) e
 }
 
 func (n *localNode) Notify(ctx context.Context, n_ Node) error {
-	int := chord.NewInterval(n.m, n.GetPredNode().GetID(), n.GetID(), chord.WithLeftClosed, chord.WithRightOpen)
-	if n.GetPredNode() == nil || int.Has(n_.GetID()) {
-		n.SetPredNode(ctx, n_)
+	iv := chord.NewInterval(n.m, n.GetPredNode().GetID(), n.GetID(), chord.WithLeftClosed, chord.WithRightOpen)
+	if n.GetPredNode() == nil || iv.Has(n_.GetID()) {
+		if err := n.SetPredNode(ctx, n_); err != nil {
+			return err
+		}
 	}
 	logrus.Info("After notify(): %s", n.String())
 	return nil
@@ -262,9 +272,11 @@ func (n *localNode) Stabilize(ctx context.Context) error {
 		return err
 	}
 
-	int := chord.NewInterval(n.m, n.GetID(), n.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightOpen)
-	if int.Has(x.GetID()) {
-		n.SetSuccNode(ctx, x)
+	iv := chord.NewInterval(n.m, n.GetID(), n.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightOpen)
+	if iv.Has(x.GetID()) {
+		if err := n.SetSuccNode(ctx, x); err != nil {
+			return err
+		}
 	}
 
 	succNode, err := n.factory.newRemoteNode(ctx, n.GetSuccNode().GetBind())
@@ -290,7 +302,10 @@ func (n *localNode) FixFingers(ctx context.Context) error {
 		return err
 	}
 
-	n.GetFingerTable().SetNodeAtEntry(i, succNode)
+	err = n.UpdateFingerTableEntry(ctx, succNode, i)
+	if err != nil {
+		return err
+	}
 	n.GetFingerTable().PrettyPrint(nil)
 	return nil
 }

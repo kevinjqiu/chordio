@@ -28,22 +28,24 @@ type remoteNode struct {
 	factory factory
 }
 
-func (rn *remoteNode) SetPredNode(ctx context.Context, n NodeRef) {
-	rn.client.SetPredecessorNode(ctx, &pb.SetPredecessorNodeRequest{
+func (rn *remoteNode) SetPredNode(ctx context.Context, n NodeRef) error {
+	_, err := rn.client.SetPredecessorNode(ctx, &pb.SetPredecessorNodeRequest{
 		Node: &pb.Node{
 			Id:   n.GetID().AsU64(),
 			Bind: n.GetBind(),
 		},
 	})
+	return err
 }
 
-func (rn *remoteNode) SetSuccNode(ctx context.Context, n NodeRef) {
-	rn.client.SetSuccessorNode(ctx, &pb.SetSuccessorNodeRequest{
+func (rn *remoteNode) SetSuccNode(ctx context.Context, n NodeRef) error {
+	_, err := rn.client.SetSuccessorNode(ctx, &pb.SetSuccessorNodeRequest{
 		Node: &pb.Node{
 			Id:   n.GetID().AsU64(),
 			Bind: n.GetBind(),
 		},
 	})
+	return err
 }
 
 func (rn *remoteNode) setNodeFactory(f factory) {
