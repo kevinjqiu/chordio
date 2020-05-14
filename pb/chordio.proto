@@ -87,13 +87,12 @@ message NotifyRequest {
 message NotifyResponse {
 }
 
-message StabilizeRequest {}
+message StabilizeRequest {
+}
 
-message StabilizeResponse {}
-
-message FixFingersRequest {}
-
-message FixFingersResponse {}
+message StabilizeResponse {
+    int32 numFingerTableEntryChanges = 1;
+}
 
 service Chord {
     rpc GetNodeInfo (GetNodeInfoRequest) returns (GetNodeInfoResponse) {
@@ -121,8 +120,5 @@ service Chord {
     }
 
     rpc __Stabilize(StabilizeRequest) returns (StabilizeResponse) {
-    }
-
-    rpc __FixFingers(FixFingersRequest) returns (FixFingersResponse) {
     }
 }

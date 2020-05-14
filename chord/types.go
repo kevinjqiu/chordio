@@ -40,9 +40,9 @@ type (
 		GetFingerTable() FingerTable
 		Join(ctx context.Context, introducerNode RemoteNode) error
 		GetRank() Rank
-		// For stabilization
-		Stabilize(ctx context.Context) error
-		FixFingers(ctx context.Context) error
+		// Stabilize the successor and finger table entries
+		// Returns the number of finger table entry changes
+		Stabilize(ctx context.Context) (int, error)
 	}
 
 	RemoteNode interface {

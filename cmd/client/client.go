@@ -53,6 +53,5 @@ func NewClientCommand() *cobra.Command {
 	cmd.AddCommand(newStatusCommand())
 	cmd.AddCommand(newJoinCommand())
 	cmd.AddCommand(newStabilizeCommand())
-	cmd.AddCommand(newFixFingersCommand())
 	return cmd
 }

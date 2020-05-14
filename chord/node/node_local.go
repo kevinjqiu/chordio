@@ -214,7 +214,9 @@ func (n *localNode) Notify(ctx context.Context, n_ chord.RemoteNode) error {
 	return nil
 }
 
-func (n *localNode) Stabilize(ctx context.Context) error {
+func (n *localNode) Stabilize(ctx context.Context) (int, error) {
+	var numChanges int
+
 	ctx, span := n.Start(ctx, "localNode.Stabilize")
 	defer span.End()
 
@@ -222,7 +224,7 @@ func (n *localNode) Stabilize(ctx context.Context) error {
 	succ, err := NewRemote(ctx, n.GetSuccNode().GetBind())
 	if err != nil {
 		span.RecordError(ctx, err)
-		return err
+		return numChanges, err
 	}
 	x := succ.GetPredNode()
 	iv := chord.NewInterval(n.m, n.GetID(), n.GetSuccNode().GetID(), chord.WithLeftOpen, chord.WithRightOpen)
@@ -230,38 +232,39 @@ func (n *localNode) Stabilize(ctx context.Context) error {
 	if iv.Has(x.GetID()) {
 		if err := n.SetSuccNode(ctx, x); err != nil {
 			span.RecordError(ctx, err)
-			return err
+			return numChanges, err
 		}
 		xRemote, err := NewRemote(ctx, x.GetBind())
 		if err != nil {
 			span.RecordError(ctx, err)
-			return err
+			return numChanges, err
 		}
 		if err := xRemote.SetPredNode(ctx, n); err != nil {
 			span.RecordError(ctx, err)
-			return err
+			return numChanges, err
 		}
 	}
 
 	succNode, err := NewRemote(ctx, n.GetSuccNode().GetBind())
 	if err != nil {
 		span.RecordError(ctx, err)
-		return err
+		return numChanges, err
 	}
 
 	if err := succNode.Notify(ctx, n); err != nil {
 		span.RecordError(ctx, err)
-		return err
+		return numChanges, err
 	}
 
-	if err := n.FixFingers(ctx); err != nil {
+	numChanges, err = n.FixFingers(ctx)
+	if err != nil {
 		span.RecordError(ctx, err)
-		return err
+		return numChanges, err
 	}
-	return nil
+	return numChanges, nil
 }
 
-func (n *localNode) FixFingers(ctx context.Context) error {
+func (n *localNode) FixFingers(ctx context.Context) (int, error) {
 	ctx, span := n.Start(ctx, "localNode.FixFingers")
 	defer span.End()
 
@@ -278,17 +281,21 @@ func (n *localNode) FixFingers(ctx context.Context) error {
 	//
 	//n.GetFingerTable().SetNodeAtEntry(i, succNode)
 
+	numChanges := 0
 	for i := 0; i < n.m.AsInt(); i++ {
 		succNode, err := n.FindSuccessor(ctx, n.GetFingerTable().GetEntry(i).GetStart())
 		if err != nil {
 			span.RecordError(ctx, err)
-			return err
+			return numChanges, err
 		}
 		span.AddEvent(ctx, fmt.Sprintf("i=%d, fte[%d]=%s, succ=%s", i, i, n.GetFingerTable().GetEntry(i).String(), succNode.String()))
-		n.GetFingerTable().SetNodeAtEntry(i, succNode)
+		if n.GetFingerTable().GetEntry(i).GetNode().GetID() != succNode.GetID() {
+			numChanges++
+			n.GetFingerTable().SetNodeAtEntry(i, succNode)
+		}
 	}
 	n.GetFingerTable().PrettyPrint(nil)
-	return nil
+	return numChanges, nil
 }
 
 func NewLocal(id chord.ID, bind string, m chord.Rank) (chord.LocalNode, error) {

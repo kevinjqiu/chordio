@@ -38,13 +38,10 @@ type Server struct {
 }
 
 func (s *Server) X_Stabilize(ctx context.Context, _ *pb.StabilizeRequest) (*pb.StabilizeResponse, error) {
-	err := s.localNode.Stabilize(ctx)
-	return &pb.StabilizeResponse{}, err
-}
-
-func (s *Server) X_FixFingers(ctx context.Context, _ *pb.FixFingersRequest) (*pb.FixFingersResponse, error) {
-	err := s.localNode.FixFingers(ctx)
-	return &pb.FixFingersResponse{}, err
+	numChanges, err := s.localNode.Stabilize(ctx)
+	return &pb.StabilizeResponse{
+		NumFingerTableEntryChanges: int32(numChanges),
+	}, err
 }
 
 func (s *Server) SetPredecessorNode(ctx context.Context, req *pb.SetPredecessorNodeRequest) (*pb.SetPredecessorNodeResponse, error) {
@@ -112,7 +109,7 @@ func (s *Server) ClosestPrecedingFinger(ctx context.Context, request *pb.Closest
 
 func (s *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb.JoinRingResponse, error) {
 	logger := logrus.WithField("method", "Server.JoinRing")
-	logger.Debugf("introducer=%v", request.Introducer)
+	logger.WithField("introducer", request.Introducer.String()).Info("join request")
 	introNode, err := node.NewRemote(ctx, request.Introducer.Bind)
 	if err != nil {
 		return nil, err
@@ -125,7 +122,7 @@ func (s *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb
 
 func (s *Server) Notify(ctx context.Context, request *pb.NotifyRequest) (*pb.NotifyResponse, error) {
 	logger := logrus.WithField("method", "Server.Notify")
-	logger.Debugf("node=%v", request.Node)
+	logger.Info("node=%v", request.Node)
 	n, err := node.NewRemote(ctx, request.Node.Bind)
 	if err != nil {
 		return nil, err
@@ -141,9 +138,12 @@ func (s *Server) runStabilizer(ticker *time.Ticker) {
 		select {
 		case <-ticker.C:
 			logrus.Info("Run Stabilize()")
-			if err := s.localNode.Stabilize(context.Background()); err != nil {
+			numChanges, err := s.localNode.Stabilize(context.Background())
+			if err != nil {
 				logrus.Error("Stabilize failed", err)
+				continue
 			}
+			logrus.Infof("Number of finger table entries changed by stabilization: %d", numChanges)
 		}
 	}
 }
