@@ -15,6 +15,7 @@ require (
 	go.opentelemetry.io/otel/exporters/trace/jaeger v0.4.3
 	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
 	google.golang.org/grpc v1.27.1
+	google.golang.org/protobuf v1.22.0
 )
 
 replace go.opentelemetry.io/otel => ./gomod/opentelemetry-go/

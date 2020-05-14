@@ -56,7 +56,6 @@ type testNode struct {
 	m    uint32
 	id   uint64
 	s    *Server
-	c    pb.ChordClient
 	addr string
 }
 
@@ -65,7 +64,9 @@ func (tn testNode) stop() {
 }
 
 func (tn testNode) status() *pb.GetNodeInfoResponse {
-	resp, err := tn.c.GetNodeInfo(context.Background(), &pb.GetNodeInfoRequest{
+	c, close := tn.getClient()
+	defer close()
+	resp, err := c.GetNodeInfo(context.Background(), &pb.GetNodeInfoRequest{
 		IncludeFingerTable: true,
 	})
 	if err != nil {
@@ -87,7 +88,10 @@ func (tn testNode) assertNeighbours(t *testing.T, predID, succID uint64) {
 }
 
 func (tn testNode) join(other testNode) {
-	resp, err := tn.c.JoinRing(context.Background(), &pb.JoinRingRequest{
+	c, close := tn.getClient()
+	defer close()
+
+	resp, err := c.JoinRing(context.Background(), &pb.JoinRingRequest{
 		Introducer: &pb.Node{
 			Id:   other.id,
 			Bind: other.addr,
@@ -100,7 +104,21 @@ func (tn testNode) join(other testNode) {
 }
 
 func (tn testNode) stabilize() {
-	_, _ = tn.c.X_Stabilize(context.Background(), &pb.StabilizeRequest{})
+	c, close := tn.getClient()
+	defer close()
+
+	_, _ = c.X_Stabilize(context.Background(), &pb.StabilizeRequest{})
+}
+
+func (tn testNode) getClient() (pb.ChordClient, func() error) {
+	conn, err := grpc.Dial(tn.addr, grpc.WithInsecure(), grpc.WithDefaultServiceConfig(defaultServiceConfig))
+
+	if err != nil {
+		panic(err)
+	}
+	client := pb.NewChordClient(conn)
+
+	return client, func() error { return conn.Close() }
 }
 
 func newNode(id int, m int) testNode {
@@ -128,15 +146,9 @@ func newNode(id int, m int) testNode {
 		}
 	}()
 
-	conn, err := grpc.Dial(addr, grpc.WithInsecure(), grpc.WithDefaultServiceConfig(defaultServiceConfig))
-	if err != nil {
-		panic(err)
-	}
-	client := pb.NewChordClient(conn)
 	return testNode{
 		m:    uint32(m),
 		id:   uint64(id),
-		c:    client,
 		s:    server,
 		addr: addr,
 	}
