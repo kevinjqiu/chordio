@@ -28,7 +28,7 @@ func (p *PBNodeRef) GetBind() string {
 }
 
 func (p *PBNodeRef) String() string {
-	return fmt.Sprintf("<PB @%d %s>", p.GetID(), p.GetBind())
+	return fmt.Sprintf("<P %d@%s>", p.GetID(), p.GetBind())
 }
 
 type Server struct {
@@ -49,14 +49,14 @@ func (s *Server) X_FixFingers(ctx context.Context, _ *pb.FixFingersRequest) (*pb
 
 func (s *Server) SetPredecessorNode(ctx context.Context, req *pb.SetPredecessorNodeRequest) (*pb.SetPredecessorNodeResponse, error) {
 	var nodeRef = PBNodeRef(*req.Node)
-	s.localNode.SetPredNode(ctx, &nodeRef)
-	return &pb.SetPredecessorNodeResponse{}, nil
+	err := s.localNode.SetPredNode(ctx, &nodeRef)
+	return &pb.SetPredecessorNodeResponse{}, err
 }
 
 func (s *Server) SetSuccessorNode(ctx context.Context, req *pb.SetSuccessorNodeRequest) (*pb.SetSuccessorNodeResponse, error) {
 	var nodeRef = PBNodeRef(*req.Node)
-	s.localNode.SetSuccNode(ctx, &nodeRef)
-	return &pb.SetSuccessorNodeResponse{}, nil
+	err := s.localNode.SetSuccNode(ctx, &nodeRef)
+	return &pb.SetSuccessorNodeResponse{}, err
 }
 
 func (s *Server) GetNodeInfo(_ context.Context, req *pb.GetNodeInfoRequest) (*pb.GetNodeInfoResponse, error) {
@@ -77,36 +77,36 @@ func (s *Server) FindPredecessor(ctx context.Context, request *pb.FindPredecesso
 	logger := logrus.WithField("method", "server.findPredecessor")
 	logger.Debug("id=", request.Id)
 
-	node, err := s.localNode.FindPredecessor(ctx, chord.ID(request.Id))
+	n, err := s.localNode.FindPredecessor(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
 	return &pb.FindPredecessorResponse{
-		Node: node.AsProtobufNode(),
+		Node: n.AsProtobufNode(),
 	}, nil
 }
 
 func (s *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
 	logger := logrus.WithField("method", "Server.findSuccessor")
 	logger.Debugf("id=%d", request.Id)
-	node, err := s.localNode.FindSuccessor(ctx, chord.ID(request.Id))
+	n, err := s.localNode.FindSuccessor(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
 	return &pb.FindSuccessorResponse{
-		Node: node.AsProtobufNode(),
+		Node: n.AsProtobufNode(),
 	}, nil
 }
 
 func (s *Server) ClosestPrecedingFinger(ctx context.Context, request *pb.ClosestPrecedingFingerRequest) (*pb.ClosestPrecedingFingerResponse, error) {
 	logger := logrus.WithField("method", "Server.closestPrecedingFinger")
 	logger.Debugf("id=%d", request.Id)
-	node, err := s.localNode.ClosestPrecedingFinger(ctx, chord.ID(request.Id))
+	n, err := s.localNode.ClosestPrecedingFinger(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
 	return &pb.ClosestPrecedingFingerResponse{
-		Node: node.AsProtobufNode(),
+		Node: n.AsProtobufNode(),
 	}, nil
 }
 
@@ -126,7 +126,6 @@ func (s *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb
 func (s *Server) Notify(ctx context.Context, request *pb.NotifyRequest) (*pb.NotifyResponse, error) {
 	logger := logrus.WithField("method", "Server.Notify")
 	logger.Debugf("node=%v", request.Node)
-	//node, err := node.NewLocal(chord.ID(request.Node.Id), request.Node.Bind, s.localNode.GetRank())
 	n, err := node.NewRemote(ctx, request.Node.Bind)
 	if err != nil {
 		return nil, err
