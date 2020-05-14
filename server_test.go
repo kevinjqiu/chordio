@@ -1,10 +1,10 @@
 package chordio
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
-	"time"
 )
 
 func withCluster(m int, nodeIDs []int, f func(nodes map[int]testNode)) {
@@ -86,26 +86,25 @@ func TestServer(t *testing.T) {
 	})
 
 	t.Run("after n3 join n1", func(t *testing.T) {
-		testCases := [][]string{
-			{"0.stabilize", "1.stabilize", "3.stabilize"},
-		}
+		withCluster(3, []int{0, 1, 3}, func(nodes map[int]testNode) {
+			nodes[0].join(nodes[1])
+			nodes[3].join(nodes[0])
 
-		for _, tc := range testCases {
-			t.Run(fmt.Sprintf("%v", tc), func(t *testing.T) {
-				withCluster(3, []int{0, 1, 3}, func(nodes map[int]testNode) {
-					nodes[0].join(nodes[1])
-					nodes[3].join(nodes[0])
+			//ctx, _ := context.WithTimeout(context.Background(), 1*time.Minute)
+			waitForStabilization(context.Background(), nodes)
 
-					for _, op := range tc {
-						runOperation(op, nodes)
-						time.Sleep(1 * time.Second)
-					}
+			fmt.Println(nodes[0].status().Node.GetPred())
+			fmt.Println(nodes[0].status().Node.GetSucc())
 
-					fmt.Println(ftCSV(nodes[0].status().GetFt()))
-					fmt.Println(ftCSV(nodes[1].status().GetFt()))
-					fmt.Println(ftCSV(nodes[3].status().GetFt()))
-				})
-			})
-		}
+			fmt.Println(nodes[1].status().Node.GetPred())
+			fmt.Println(nodes[1].status().Node.GetSucc())
+
+			fmt.Println(nodes[3].status().Node.GetPred())
+			fmt.Println(nodes[3].status().Node.GetSucc())
+
+			fmt.Println(ftCSV(nodes[0].status().GetFt()))
+			fmt.Println(ftCSV(nodes[1].status().GetFt()))
+			fmt.Println(ftCSV(nodes[3].status().GetFt()))
+		})
 	})
 }

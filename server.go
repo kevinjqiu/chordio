@@ -122,7 +122,7 @@ func (s *Server) JoinRing(ctx context.Context, request *pb.JoinRingRequest) (*pb
 
 func (s *Server) Notify(ctx context.Context, request *pb.NotifyRequest) (*pb.NotifyResponse, error) {
 	logger := logrus.WithField("method", "Server.Notify")
-	logger.Info("node=%v", request.Node)
+	logger.Infof("node=%v", request.Node)
 	n, err := node.NewRemote(ctx, request.Node.Bind)
 	if err != nil {
 		return nil, err

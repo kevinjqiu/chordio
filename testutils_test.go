@@ -9,9 +9,12 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+	"math/rand"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 var defaultServiceConfig = `{
@@ -105,11 +108,12 @@ func (tn testNode) join(other testNode) {
 	fmt.Println(resp)
 }
 
-func (tn testNode) stabilize() {
+func (tn testNode) stabilize() (int, error) {
 	c, close := tn.getClient()
 	defer close()
 
-	_, _ = c.X_Stabilize(context.Background(), &pb.StabilizeRequest{})
+	resp, err := c.X_Stabilize(context.Background(), &pb.StabilizeRequest{})
+	return int(resp.NumFingerTableEntryChanges), err
 }
 
 func (tn testNode) getClient() (pb.ChordClient, func() error) {
@@ -154,4 +158,44 @@ func newNode(id int, m int) testNode {
 		s:    server,
 		addr: addr,
 	}
+}
+
+func noChangeInHistory(threshold int, numChangesHistory []int) bool {
+	thresholdIdx := len(numChangesHistory) - threshold
+	for i := thresholdIdx; i < len(numChangesHistory); i++ {
+		if numChangesHistory[i] != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func waitForStabilization(ctx context.Context, nodes map[int]testNode) {
+	wg := sync.WaitGroup{}
+	wg.Add(len(nodes))
+
+	// X consecutive stabilization calls with 0 numChanges
+	// and then it's deemed "stable"
+	threshold := 5
+
+	for _, n := range nodes {
+		go func() {
+			var numChangesHistory = make([]int, 0, 0)
+			for {
+				numChanges, err := n.stabilize()
+				if err == nil {
+					numChangesHistory = append(numChangesHistory, numChanges)
+					fmt.Printf("%v: %v\n", n, numChangesHistory)
+					if numChanges == 0 && len(numChangesHistory) >= threshold && noChangeInHistory(threshold, numChangesHistory) {
+						wg.Done()
+						return
+					}
+				}
+				duration := time.Duration(rand.Int63() % 1e10)
+				fmt.Println(duration)
+				time.Sleep(duration)
+			}
+		}()
+	}
+	wg.Wait()
 }

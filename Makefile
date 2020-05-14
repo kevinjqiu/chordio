@@ -11,6 +11,9 @@ build: gen
 fmt:
 	go fmt ./...
 
+vet:
+	go vet ./...
+
 gen:
 	protoc -I pb pb/chordio.proto --go_out=plugins=grpc:pb
 
