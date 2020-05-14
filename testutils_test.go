@@ -16,14 +16,16 @@ import (
 
 var defaultServiceConfig = `{
 	"methodConfig": [{
+		"name": [{
+			"service": "Chord"
+		}],
 		"waitForReady": true,
 
 		"retryPolicy": {
 			"MaxAttempts": 100,
-			"InitialBackoff": ".01s",
-			"MaxBackoff": ".50s",
-			"BackoffMultiplier": 2.0,
-			"RetryableStatusCodes": [ "UNAVAILABLE" ]
+			"InitialBackoff": "1s",
+			"MaxBackoff": "5s",
+			"BackoffMultiplier": 2.0
 		}
 	}]
 }`
