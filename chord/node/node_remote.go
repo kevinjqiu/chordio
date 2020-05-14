@@ -73,21 +73,7 @@ func (rn *remoteNode) SetSuccNode(ctx context.Context, n chord.NodeRef) error {
 }
 
 func (rn *remoteNode) String() string {
-	var pred, succ string
-
-	if rn.predNode == nil {
-		pred = "<nil>"
-	} else {
-		pred = fmt.Sprintf("%d@%s", rn.predNode.GetId(), rn.predNode.GetBind())
-	}
-
-	if rn.succNode == nil {
-		succ = "<nil>"
-	} else {
-		succ = fmt.Sprintf("%d@%s", rn.succNode.GetId(), rn.succNode.GetBind())
-	}
-
-	return fmt.Sprintf("<R: %d@%s, p=%s, s=%s>", rn.id, rn.bind, pred, succ)
+	return fmt.Sprintf("<R %d@%s>", rn.id, rn.bind)
 }
 
 func (rn *remoteNode) GetID() chord.ID {

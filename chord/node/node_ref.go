@@ -23,7 +23,7 @@ func (nr *nodeRef) GetBind() string {
 }
 
 func (nr nodeRef) String() string {
-	return fmt.Sprintf("<@%d %s>", nr.ID, nr.Bind)
+	return fmt.Sprintf("<* %d@%s>", nr.ID, nr.Bind)
 }
 
 func AssignID(key []byte, m chord.Rank) chord.ID {

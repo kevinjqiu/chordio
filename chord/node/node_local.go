@@ -33,20 +33,7 @@ func (n *localNode) GetRank() chord.Rank {
 }
 
 func (n *localNode) String() string {
-	var pred, succ string
-
-	if n.predNode == nil {
-		pred = "<nil>"
-	} else {
-		pred = n.predNode.String()
-	}
-
-	if n.GetSuccNode() == nil {
-		succ = "<nil>"
-	} else {
-		succ = n.GetSuccNode().String()
-	}
-	return fmt.Sprintf("<L: %d@%s, p=%s, s=%s>", n.id, n.bind, pred, succ)
+	return fmt.Sprintf("<L %d@%s>", n.id, n.bind)
 }
 
 func (n *localNode) SetPredNode(ctx context.Context, pn chord.NodeRef) error {
