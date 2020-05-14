@@ -51,8 +51,8 @@ type (
 
 	FingerTable interface {
 		fmt.Stringer
+		Len() int
 		PrettyPrint(writer io.Writer)
-		ReplaceNodeWithAnotherEntry(i, j int)
 		SetNodeAtEntry(i int, n NodeRef)
 		GetEntry(i int) FingerTableEntry
 		GetNodeByID(nodeID ID) (NodeRef, bool)

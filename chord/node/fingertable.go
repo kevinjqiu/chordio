@@ -77,15 +77,8 @@ func (ft *fingerTable) PrettyPrint(w io.Writer) {
 	writer.Render()
 }
 
-// Replace the node in fingerTable entry at i with the node at j
-func (ft *fingerTable) ReplaceNodeWithAnotherEntry(i, j int) {
-	newNodeRef := ft.entries[j].GetNode()
-	oldNodeRef := ft.entries[i].GetNode()
-	if oldNodeRef.GetID() == newNodeRef.GetID() {
-		return
-	}
-
-	ft.SetNodeAtEntry(i, newNodeRef)
+func (ft *fingerTable) Len() int {
+	return len(ft.entries)
 }
 
 // SetNodeAtEntry the i'th finger table entry's NodeID to n
