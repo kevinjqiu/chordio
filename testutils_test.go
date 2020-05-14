@@ -12,7 +12,6 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 )
@@ -160,7 +159,11 @@ func newNode(id int, m int) testNode {
 	}
 }
 
-func noChangeInHistory(threshold int, numChangesHistory []int) bool {
+func isStable(threshold int, numChangesHistory []int) bool {
+	if len(numChangesHistory) < threshold {
+		return false
+	}
+
 	thresholdIdx := len(numChangesHistory) - threshold
 	for i := thresholdIdx; i < len(numChangesHistory); i++ {
 		if numChangesHistory[i] != 0 {
@@ -170,32 +173,68 @@ func noChangeInHistory(threshold int, numChangesHistory []int) bool {
 	return true
 }
 
-func waitForStabilization(ctx context.Context, nodes map[int]testNode) {
-	wg := sync.WaitGroup{}
-	wg.Add(len(nodes))
+// X consecutive stabilization calls with 0 numChanges
+// and then it's deemed "stable"
+func waitForStabilization(threshold int, nodes map[int]testNode) {
+	numChangesChan := make(chan [2]int)
+	stopChans := make(map[int]chan bool)
 
-	// X consecutive stabilization calls with 0 numChanges
-	// and then it's deemed "stable"
-	threshold := 5
+	for id, n := range nodes {
+		shouldStop := make(chan bool)
+		stopChans[id] = shouldStop
 
-	for _, n := range nodes {
-		go func() {
-			var numChangesHistory = make([]int, 0, 0)
+		go func(id int, shouldStop <- chan bool) {
+			rand.Seed(time.Now().UnixNano())
 			for {
-				numChanges, err := n.stabilize()
-				if err == nil {
-					numChangesHistory = append(numChangesHistory, numChanges)
-					fmt.Printf("%v: %v\n", n, numChangesHistory)
-					if numChanges == 0 && len(numChangesHistory) >= threshold && noChangeInHistory(threshold, numChangesHistory) {
-						wg.Done()
-						return
+				duration := time.Duration(rand.Int63() % 5e9) + time.Second
+				fmt.Println("sleep duration: ", duration)
+				timer := time.NewTimer(duration)
+
+				select {
+				case <- timer.C:
+					n, err := n.stabilize()
+					if err == nil {
+						numChangesChan <- [2]int{id, n}
 					}
+				case <- shouldStop:
+					return
 				}
-				duration := time.Duration(rand.Int63() % 1e10)
-				fmt.Println(duration)
-				time.Sleep(duration)
 			}
-		}()
+		}(id, shouldStop)
 	}
-	wg.Wait()
+
+	nodeChangeHistory := map[int][]int{}
+
+	for {
+		select {
+		case res := <- numChangesChan:
+			id := res[0]
+			n := res[1]
+			hist, ok := nodeChangeHistory[id]
+			if !ok {
+				hist = make([]int, 0, 0)
+			}
+			hist = append(hist, n)
+			nodeChangeHistory[id] = hist
+
+			for id, hist := range nodeChangeHistory {
+				fmt.Printf("%d: %v\n", id, hist)
+			}
+
+			var notStable bool
+			for _, hist := range nodeChangeHistory {
+				if !isStable(threshold, hist) {
+					notStable = true
+					break
+				}
+			}
+			if !notStable {
+				// if everything is stable, send signal to all proc to stop stabilizing
+				for _, stopChan := range stopChans {
+					stopChan <- true
+				}
+				return
+			}
+		}
+	}
 }

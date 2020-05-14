@@ -1,7 +1,6 @@
 package chordio
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -91,7 +90,7 @@ func TestServer(t *testing.T) {
 			nodes[3].join(nodes[0])
 
 			//ctx, _ := context.WithTimeout(context.Background(), 1*time.Minute)
-			waitForStabilization(context.Background(), nodes)
+			waitForStabilization(5, nodes)
 
 			fmt.Println(nodes[0].status().Node.GetPred())
 			fmt.Println(nodes[0].status().Node.GetSucc())
