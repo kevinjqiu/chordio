@@ -10,6 +10,7 @@
 A distributed hash table (DHT) based on Chord
 
 ![build status](https://github.com/kevinjqiu/chordio/workflows/Go/badge.svg)
+[![DeepSource](https://static.deepsource.io/deepsource-badge-dark-mini.svg)](https://deepsource.io/gh/kevinjqiu/chordio/?ref=repository-badge)
 
 
 # Design
