@@ -74,24 +74,38 @@ func (s *Server) FindPredecessor(ctx context.Context, request *pb.FindPredecesso
 	logger := logrus.WithField("method", "server.findPredecessor")
 	logger.Debug("id=", request.Id)
 
+	hops := request.Hops
+	hops = append(hops, &pb.Hop{
+		Id:   s.localNode.GetID().AsU64(),
+		Bind: s.localNode.GetBind(),
+	})
 	n, err := s.localNode.FindPredecessor(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
 	return &pb.FindPredecessorResponse{
 		Node: n.AsProtobufNode(),
+		Hops: hops,
 	}, nil
 }
 
 func (s *Server) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.FindSuccessorResponse, error) {
 	logger := logrus.WithField("method", "Server.findSuccessor")
 	logger.Debugf("id=%d", request.Id)
+
+	hops := request.Hops
+	hops = append(hops, &pb.Hop{
+		Id: s.localNode.GetID().AsU64(),
+		Bind: s.localNode.GetBind(),
+	})
+
 	n, err := s.localNode.FindSuccessor(ctx, chord.ID(request.Id))
 	if err != nil {
 		return nil, err
 	}
 	return &pb.FindSuccessorResponse{
 		Node: n.AsProtobufNode(),
+		Hops: hops,
 	}, nil
 }
 
@@ -189,8 +203,8 @@ func NewServer(config Config) (*Server, error) {
 	)
 
 	s := Server{
-		localNode:  localNode,
-		grpcServer: grpcServer,
+		localNode:           localNode,
+		grpcServer:          grpcServer,
 		stabilizationConfig: config.Stabilization,
 	}
 	return &s, nil

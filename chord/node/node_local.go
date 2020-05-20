@@ -160,7 +160,7 @@ func (n *localNode) ClosestPrecedingFinger(ctx context.Context, id chord.ID) (ch
 				return nil, errNodeNotFound(fte.GetNode().GetID())
 			}
 
-			span.AddEvent(ctx, fmt.Sprintf("ClosestPrecedingFinger is : %s", node.String()))
+			span.AddEvent(ctx, fmt.Sprintf("ClosestPrecedingFinger is: %s", node.String()))
 			if node.GetID() == n.id {
 				return NewLocal(node.GetID(), node.GetBind(), n.m)
 			} else {
