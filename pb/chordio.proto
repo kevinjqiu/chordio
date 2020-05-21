@@ -8,6 +8,11 @@ message Node {
     Node succ = 4;
 }
 
+message Hop {
+    uint64 id = 1;
+    string bind = 2;
+}
+
 message FingerTableEntry {
     uint64 start = 1;
     uint64 end = 2;
@@ -35,18 +40,22 @@ message JoinRingResponse {
 
 message FindPredecessorRequest {
     uint64 id = 1;
+    repeated Hop hops = 2;
 }
 
 message FindPredecessorResponse {
     Node node = 1;
+    repeated Hop hops = 2;
 }
 
 message FindSuccessorRequest {
     uint64 id = 1;
+    repeated Hop hops = 2;
 }
 
 message FindSuccessorResponse {
     Node node = 2;
+    repeated Hop hops = 3;
 }
 
 message GetNodeInfoRequest {
