@@ -1,8 +1,12 @@
 package chordio
 
-import "github.com/sirupsen/logrus"
+import (
+	"fmt"
+	"github.com/sirupsen/logrus"
+)
 
 func SetLogLevel(loglevel string) {
+	fmt.Printf("Setting loglevel to: %s\n", loglevel)
 	switch loglevel {
 	case "trace":
 		logrus.SetLevel(logrus.TraceLevel)

@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/kevinjqiu/chordio"
+	"github.com/kevinjqiu/chordio/cmd/common"
 	"github.com/kevinjqiu/chordio/pb"
 	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/sirupsen/logrus"
@@ -14,7 +14,6 @@ import (
 
 var (
 	chordClient pb.ChordClient
-	loglevel    string
 	flushFunc   telemetry.FlushFunc
 )
 
@@ -22,13 +21,17 @@ func NewClientCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "client",
 		Short: "chord client commands",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
-			chordio.SetLogLevel(loglevel)
 
-			flushFunc, err = telemetry.Init("chordio/client", telemetry.Config{})
+			tcon, err := common.GetTelemetryConfig(cmd.Parent())
 			if err != nil {
-				logrus.Fatal(err)
+				return err
+			}
+
+			flushFunc, err = telemetry.Init("chordio/client", tcon)
+			if err != nil {
+				return err
 			}
 
 			chordioURL := os.Getenv("CHORDIO_URL")
@@ -43,13 +46,13 @@ func NewClientCommand() *cobra.Command {
 				grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(global.Tracer("chordio/client"))),
 			)
 			if err != nil {
-				logrus.Fatal(err)
+				return err
 			}
 			chordClient = pb.NewChordClient(conn)
+			return nil
 		},
 	}
 
-	cmd.PersistentFlags().StringVarP(&loglevel, "loglevel", "l", "info", "log level")
 	cmd.AddCommand(newStatusCommand())
 	cmd.AddCommand(newJoinCommand())
 	cmd.AddCommand(newStabilizeCommand())

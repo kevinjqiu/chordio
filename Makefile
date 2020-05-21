@@ -55,7 +55,7 @@ jaeger:
 	docker-compose run --service-ports jaeger
 
 n1:
-	$(CMD) server --id 0 -b 127.0.0.1:1234  -m 3
+	$(CMD) server --id 0 -b 127.0.0.1:1234  -m 3 -l debug
 
 n1-status:
 	CHORDIO_URL=127.0.0.1:1234 $(CMD) client status

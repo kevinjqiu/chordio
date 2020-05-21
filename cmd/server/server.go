@@ -5,6 +5,7 @@ import (
 	"github.com/kevinjqiu/chordio"
 	"github.com/kevinjqiu/chordio/chord"
 	"github.com/kevinjqiu/chordio/chord/node"
+	"github.com/kevinjqiu/chordio/cmd/common"
 	"github.com/kevinjqiu/chordio/telemetry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -16,10 +17,10 @@ import (
 )
 
 type runFlags struct {
+	common.CommonFlags
 	id                    string
 	m                     uint32
 	bind                  string
-	loglevel              string
 	stabilizationDisabled bool
 	stabilizationPeriod   time.Duration
 	stabilizationJitter   time.Duration
@@ -58,7 +59,6 @@ func NewServerCommand() *cobra.Command {
 			if flags.m == 0 {
 				return errors.New("Chord ring rank (m) must be specified")
 			}
-			chordio.SetLogLevel(flags.loglevel)
 
 			bind := mustBind(flags.bind)
 
@@ -76,17 +76,15 @@ func NewServerCommand() *cobra.Command {
 				id = chord.ID(uintID)
 			}
 
-			tracingConfig := telemetry.Config{
-				Enabled:  flags.tracingEnabled,
-				Exporter: telemetry.ExporterConfig{
-					Type:   "jaeger",
-					Jaeger: telemetry.JaegerExporterConfig{
-						CollectorEndpoint: flags.jaegerCollectorURL,
-					},
-				},
+			tcon, err := common.GetTelemetryConfig(cmd.Parent())
+			if err != nil {
+				return err
 			}
 
-			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/#%d", id), tracingConfig)
+			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/#%d", id), tcon)
+			if err != nil {
+				return err
+			}
 			defer flushFunc()
 
 			config := chordio.Config{
@@ -114,11 +112,8 @@ func NewServerCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&flags.id, "id", "i", "", "assign an ID to the node")
 	cmd.Flags().Uint32VarP(&flags.m, "rank", "m", 0, "the rank of the ring")
 	cmd.Flags().StringVarP(&flags.bind, "bind", "b", "localhost:2000", "bind address")
-	cmd.Flags().StringVarP(&flags.loglevel, "loglevel", "l", "info", "log level")
 	cmd.Flags().BoolVarP(&flags.stabilizationDisabled, "stabilization-disabled", "d", false, "disable stabilization for debugging")
 	cmd.Flags().DurationVarP(&flags.stabilizationPeriod, "stabilization-period", "p", 10*time.Second, "set the stabilization run interval")
 	cmd.Flags().DurationVarP(&flags.stabilizationJitter, "stabilization-jitter", "j", 5*time.Second, "set the stabilization run jitter to avoid all nodes run stabilization at the same time")
-	cmd.Flags().BoolVarP(&flags.tracingEnabled, "tracing.enabled", "t", true, "enable opentracing")
-	cmd.Flags().StringVarP(&flags.jaegerCollectorURL, "tracing.jaeger-collector-url", "r", telemetry.DefaultJaegerCollectorEndpoint, "jaeger collector URL")
 	return cmd
 }
