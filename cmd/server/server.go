@@ -16,16 +16,18 @@ import (
 	"time"
 )
 
+type stabilizationConfig struct {
+	disabled bool
+	period   time.Duration
+	jitter   time.Duration
+}
+
 type runFlags struct {
 	common.CommonFlags
-	id                    string
-	m                     uint32
-	bind                  string
-	stabilizationDisabled bool
-	stabilizationPeriod   time.Duration
-	stabilizationJitter   time.Duration
-	tracingEnabled        bool
-	jaegerCollectorURL    string
+	id            string
+	m             uint32
+	bind          string
+	stabilization stabilizationConfig
 }
 
 func mustBind(bind string) string {
@@ -92,9 +94,9 @@ func NewServerCommand() *cobra.Command {
 				M:    chord.Rank(flags.m),
 				Bind: flags.bind,
 				Stabilization: chordio.StabilizationConfig{
-					Disabled: flags.stabilizationDisabled,
-					Period:   flags.stabilizationPeriod,
-					Jitter:   flags.stabilizationJitter,
+					Disabled: flags.stabilization.disabled,
+					Period:   flags.stabilization.period,
+					Jitter:   flags.stabilization.jitter,
 				},
 			}
 
@@ -112,8 +114,8 @@ func NewServerCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&flags.id, "id", "i", "", "assign an ID to the node")
 	cmd.Flags().Uint32VarP(&flags.m, "rank", "m", 0, "the rank of the ring")
 	cmd.Flags().StringVarP(&flags.bind, "bind", "b", "localhost:2000", "bind address")
-	cmd.Flags().BoolVarP(&flags.stabilizationDisabled, "stabilization-disabled", "d", false, "disable stabilization for debugging")
-	cmd.Flags().DurationVarP(&flags.stabilizationPeriod, "stabilization-period", "p", 10*time.Second, "set the stabilization run interval")
-	cmd.Flags().DurationVarP(&flags.stabilizationJitter, "stabilization-jitter", "j", 5*time.Second, "set the stabilization run jitter to avoid all nodes run stabilization at the same time")
+	cmd.Flags().BoolVarP(&flags.stabilization.disabled, "stabilization.disabled", "d", true, "disable stabilization for debugging")
+	cmd.Flags().DurationVarP(&flags.stabilization.period, "stabilization.period", "p", 10*time.Second, "set the stabilization run interval")
+	cmd.Flags().DurationVarP(&flags.stabilization.jitter, "stabilization.jitter", "j", 5*time.Second, "set the stabilization run jitter to avoid all nodes run stabilization at the same time")
 	return cmd
 }
