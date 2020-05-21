@@ -114,7 +114,7 @@ func NewServerCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&flags.id, "id", "i", "", "assign an ID to the node")
 	cmd.Flags().Uint32VarP(&flags.m, "rank", "m", 0, "the rank of the ring")
 	cmd.Flags().StringVarP(&flags.bind, "bind", "b", "localhost:2000", "bind address")
-	cmd.Flags().BoolVarP(&flags.stabilization.disabled, "stabilization.disabled", "d", true, "disable stabilization for debugging")
+	cmd.Flags().BoolVarP(&flags.stabilization.disabled, "stabilization.disabled", "d", false, "disable stabilization for debugging")
 	cmd.Flags().DurationVarP(&flags.stabilization.period, "stabilization.period", "p", 10*time.Second, "set the stabilization run interval")
 	cmd.Flags().DurationVarP(&flags.stabilization.jitter, "stabilization.jitter", "j", 5*time.Second, "set the stabilization run jitter to avoid all nodes run stabilization at the same time")
 	return cmd

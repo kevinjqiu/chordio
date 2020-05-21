@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/golang/protobuf v1.4.1
+	github.com/magefile/mage v1.9.0
 	github.com/magiconair/properties v1.8.0
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
