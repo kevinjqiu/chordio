@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"fmt"
 	"go.opentelemetry.io/otel/api/core"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/key"
@@ -23,7 +24,7 @@ func GetServiceName() string {
 
 type FlushFunc func()
 
-const jaegerCollectorEndpoint = "http://localhost:14268/api/traces"
+const DefaultJaegerCollectorEndpoint = "http://localhost:14268/api/traces"
 
 func Init(serviceName string, config Config) (FlushFunc, error) {
 	var (
@@ -34,22 +35,29 @@ func Init(serviceName string, config Config) (FlushFunc, error) {
 
 	SetServiceName(serviceName)
 
-	if config.Enabled {
+	if !config.Enabled {
 		tp = trace.NoopProvider{}
 	} else {
-		tp, flush, err = jaeger.NewExportPipeline(
-			jaeger.WithCollectorEndpoint(jaegerCollectorEndpoint),
-			jaeger.WithProcess(jaeger.Process{
-				ServiceName: serviceName,
-				Tags: []core.KeyValue{
-					key.String("exporter", "jaeger"),
-				},
-			}),
-			jaeger.WithSDK(&sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
-		)
+		switch config.Exporter.Type {
+		case "jaeger":
+			jaegerConfig := config.Exporter.Jaeger
+			tp, flush, err = jaeger.NewExportPipeline(
+				jaeger.WithCollectorEndpoint(jaegerConfig.CollectorEndpoint),
+				jaeger.WithProcess(jaeger.Process{
+					ServiceName: serviceName,
+					Tags: []core.KeyValue{
+						key.String("exporter", "jaeger"),
+					},
+				}),
+				jaeger.WithSDK(&sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
+			)
 
-		if err != nil {
-			return nil, err
+			if err != nil {
+				return nil, err
+			}
+
+		default:
+			return nil, fmt.Errorf("unsupported exporter type: %s", config.Exporter.Type)
 		}
 	}
 

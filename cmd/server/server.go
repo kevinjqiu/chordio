@@ -23,6 +23,8 @@ type runFlags struct {
 	stabilizationDisabled bool
 	stabilizationPeriod   time.Duration
 	stabilizationJitter   time.Duration
+	tracingEnabled        bool
+	jaegerCollectorURL    string
 }
 
 func mustBind(bind string) string {
@@ -74,7 +76,17 @@ func NewServerCommand() *cobra.Command {
 				id = chord.ID(uintID)
 			}
 
-			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/#%d", id), telemetry.Config{})
+			tracingConfig := telemetry.Config{
+				Enabled:  flags.tracingEnabled,
+				Exporter: telemetry.ExporterConfig{
+					Type:   "jaeger",
+					Jaeger: telemetry.JaegerExporterConfig{
+						CollectorEndpoint: flags.jaegerCollectorURL,
+					},
+				},
+			}
+
+			flushFunc, err := telemetry.Init(fmt.Sprintf("chordio/#%d", id), tracingConfig)
 			defer flushFunc()
 
 			config := chordio.Config{
@@ -106,5 +118,7 @@ func NewServerCommand() *cobra.Command {
 	cmd.Flags().BoolVarP(&flags.stabilizationDisabled, "stabilization-disabled", "d", false, "disable stabilization for debugging")
 	cmd.Flags().DurationVarP(&flags.stabilizationPeriod, "stabilization-period", "p", 10*time.Second, "set the stabilization run interval")
 	cmd.Flags().DurationVarP(&flags.stabilizationJitter, "stabilization-jitter", "j", 5*time.Second, "set the stabilization run jitter to avoid all nodes run stabilization at the same time")
+	cmd.Flags().BoolVarP(&flags.tracingEnabled, "tracing.enabled", "t", true, "enable opentracing")
+	cmd.Flags().StringVarP(&flags.jaegerCollectorURL, "tracing.jaeger-collector-url", "r", telemetry.DefaultJaegerCollectorEndpoint, "jaeger collector URL")
 	return cmd
 }
